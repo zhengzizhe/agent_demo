@@ -1,0 +1,72 @@
+package com.example.ddd.domain.agent.service.armory;
+
+import com.example.ddd.common.utils.BeanUtil;
+import com.example.ddd.common.utils.ILogicHandler;
+import com.example.ddd.common.utils.JSON;
+import com.example.ddd.domain.agent.model.entity.ArmoryCommandEntity;
+import com.example.ddd.domain.agent.model.entity.ChatModelEntity;
+import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.openai.OpenAiChatModel;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+import lombok.extern.slf4j.Slf4j;
+
+import java.util.List;
+import java.util.Map;
+
+import static com.example.ddd.common.constant.IAgentConstant.MODEL_KEY;
+
+@Singleton
+@Slf4j
+public class ChatModelNode extends AbstractArmorySupport {
+    @Inject
+    BeanUtil beanUtil;
+    @Inject
+    AiServiceNode aiServiceNode;
+
+    @Override
+    public String handle(ArmoryCommandEntity armoryCommandEntity, DynamicContext dynamicContext) {
+        Long agentId = armoryCommandEntity.getAgentId();
+        log.info("Ai agent构建中 开始构建model:{} agentId:{}", "默认配置", agentId);
+        String chatModelJson = dynamicContext.get(MODEL_KEY);
+        Map<Long, List<ChatModelEntity>> modelMap = JSON.parseObject(chatModelJson,
+                new com.fasterxml.jackson.core.type.TypeReference<Map<Long, List<ChatModelEntity>>>() {
+                });
+        if (modelMap == null || modelMap.isEmpty()) {
+            log.warn("Agent {} 没有配置Model，跳过Model构建", agentId);
+            return router(armoryCommandEntity, dynamicContext);
+        }
+
+        modelMap.values().stream()
+                .flatMap(List::stream)
+                .forEach(chatModelEntity -> {
+                    log.info("Ai agent构建中 构建model:{} agentId:{}", chatModelEntity.getName(), agentId);
+                    ChatModel chatModel = getChatModel(chatModelEntity);
+                    beanUtil.registerChatModel(chatModelEntity.getId(), chatModel);
+                });
+
+        return router(armoryCommandEntity, dynamicContext);
+    }
+
+    public ChatModel getChatModel(ChatModelEntity chatModelEntity) {
+        ChatModel chatModel = null;
+        switch (chatModelEntity.getProvider()) {
+            case "OPENAI":
+                chatModel = OpenAiChatModel.builder()
+                        .baseUrl(chatModelEntity.getApiEndpoint())
+                        .apiKey(chatModelEntity.getApiKey())
+                        .modelName(chatModelEntity.getModelType())
+                        .temperature(chatModelEntity.getTemperature())
+                        .maxTokens(chatModelEntity.getMaxTokens())
+                        .build();
+                return chatModel;
+            default:
+                throw new RuntimeException("不支持的模型");
+        }
+    }
+
+    @Override
+    public ILogicHandler<ArmoryCommandEntity, DynamicContext, String> getNextHandler() {
+        return aiServiceNode; // AiServiceNode will be injected if needed
+    }
+}

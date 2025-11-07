@@ -1,0 +1,33 @@
+
+
+datasources:
+  default:
+    url: jdbc:postgresql://localhost:5432/agent
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+    dialect: POSTGRES
+    schema-generate: NONE
+jooq:
+  generator:
+    database:
+      name: org.jooq.meta.postgres.PostgresDatabase
+      includes: .*
+      excludes: ""
+      input-schema: public
+    target:
+      package-name: org.agent.jooq
+      directory: src/main/java
+    generate:
+      records: true
+      pojos: true
+      daos: false
+      interfaces: false
+      fluent-setters: true
+
+# OpenAI API配置
+openai:
+  api:
+    url: https://apis.itedus.cn/v1/
+    key: sk-uw6scttcKPDJZt8DDfD0135c85A04570Ae780c5f350dDf72
+    model: gpt-4o

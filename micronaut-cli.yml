@@ -1,0 +1,6 @@
+applicationType: default
+defaultPackage: org.agent
+testFramework: junit
+sourceLanguage: java
+buildTool: maven
+features: [ app-name, http-client-test, java, java-application, junit, langchain4j-openai, logback, lombok, maven, maven-enforcer-plugin, micronaut-aot, micronaut-http-validation, netty-server, readme, serialization-jackson, shade, static-resources, yaml, yaml-build ]

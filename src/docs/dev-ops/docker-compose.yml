@@ -1,0 +1,27 @@
+# docker-compose.yml  (Compose V2 已不需要 version 字段)
+services:
+  vector_db:
+    image: ankane/pgvector:latest   # 或固定版本：ankane/pgvector:0.7.0
+    container_name: vector_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: agent
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d agent"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+    networks:
+      - my-network
+
+volumes:
+  pg_data:
+
+networks:
+  my-network:
+    driver: bridge
