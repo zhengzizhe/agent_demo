@@ -9,7 +9,6 @@ import org.jooq.SQLDialect;
 import javax.sql.DataSource;
 import java.sql.Connection;
 
-
 @Singleton
 public class DSLContextFactory {
     @Inject

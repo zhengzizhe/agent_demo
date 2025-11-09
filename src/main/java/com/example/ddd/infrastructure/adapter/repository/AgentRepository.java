@@ -4,6 +4,7 @@ import com.example.ddd.domain.agent.adapter.repository.IAgentRepository;
 import com.example.ddd.domain.agent.model.entity.AgentEntity;
 import com.example.ddd.infrastructure.dao.IAgentDao;
 import com.example.ddd.infrastructure.dao.po.AgentPO;
+
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.jooq.DSLContext;

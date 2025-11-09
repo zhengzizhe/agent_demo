@@ -1,7 +1,7 @@
 package com.example.ddd.common.utils;
 
 import com.example.ddd.configuration.config.ChatApi;
-import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import io.micronaut.context.ApplicationContext;
@@ -55,16 +55,16 @@ public class BeanUtil {
      * @param chatModel ChatModel实例
      * @return 是否为新注册（true=新注册，false=复用已存在的）
      */
-    public boolean registerChatModel(Long modelId, ChatModel chatModel) {
+    public boolean registerChatModel(Long modelId, StreamingChatModel chatModel) {
         String qualifier = "ChatModel" + COLON + modelId;
         try {
-            ChatModel existing = getBean(ChatModel.class, qualifier);
+            StreamingChatModel existing = getBean(StreamingChatModel.class, qualifier);
             if (existing != null) {
                 return false;
             }
         } catch (Exception e) {
         }
-        registerBean(ChatModel.class, chatModel, qualifier);
+        registerBean(StreamingChatModel.class, chatModel, qualifier);
         return true;
     }
 
@@ -141,8 +141,8 @@ public class BeanUtil {
      * @param modelId 模型ID
      * @return ChatModel实例
      */
-    public ChatModel getChatModel(Long modelId) {
-        return getBean(ChatModel.class, "ChatModel" + COLON + modelId);
+    public StreamingChatModel getChatModel(Long modelId) {
+        return getBean(StreamingChatModel.class, "ChatModel" + COLON + modelId);
     }
 
     /**

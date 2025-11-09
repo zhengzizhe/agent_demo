@@ -6,7 +6,9 @@ import com.example.ddd.common.utils.JSON;
 import com.example.ddd.domain.agent.model.entity.ArmoryCommandEntity;
 import com.example.ddd.domain.agent.model.entity.ChatModelEntity;
 import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.openai.OpenAiChatModel;
+import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
@@ -41,18 +43,18 @@ public class ChatModelNode extends AbstractArmorySupport {
                 .flatMap(List::stream)
                 .forEach(chatModelEntity -> {
                     log.info("Ai agent构建中 构建model:{} agentId:{}", chatModelEntity.getName(), agentId);
-                    ChatModel chatModel = getChatModel(chatModelEntity);
+                    StreamingChatModel chatModel = getChatModel(chatModelEntity);
                     beanUtil.registerChatModel(chatModelEntity.getId(), chatModel);
                 });
 
         return router(armoryCommandEntity, dynamicContext);
     }
 
-    public ChatModel getChatModel(ChatModelEntity chatModelEntity) {
-        ChatModel chatModel = null;
+    public StreamingChatModel getChatModel(ChatModelEntity chatModelEntity) {
+        StreamingChatModel chatModel = null;
         switch (chatModelEntity.getProvider()) {
             case "OPENAI":
-                chatModel = OpenAiChatModel.builder()
+                chatModel = OpenAiStreamingChatModel.builder()
                         .baseUrl(chatModelEntity.getApiEndpoint())
                         .apiKey(chatModelEntity.getApiKey())
                         .modelName(chatModelEntity.getModelType())

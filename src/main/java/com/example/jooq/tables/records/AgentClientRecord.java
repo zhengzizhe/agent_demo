@@ -46,6 +46,20 @@ public class AgentClientRecord extends UpdatableRecordImpl<AgentClientRecord> {
         return (Long) get(1);
     }
 
+    /**
+     * Setter for <code>public.agent_client.seq</code>.
+     */
+    public void setSeq(Integer value) {
+        set(2, value);
+    }
+
+    /**
+     * Getter for <code>public.agent_client.seq</code>.
+     */
+    public Integer getSeq() {
+        return (Integer) get(2);
+    }
+
     // -------------------------------------------------------------------------
     // Primary key information
     // -------------------------------------------------------------------------
@@ -69,11 +83,12 @@ public class AgentClientRecord extends UpdatableRecordImpl<AgentClientRecord> {
     /**
      * Create a detached, initialised AgentClientRecord
      */
-    public AgentClientRecord(Long agentId, Long clientId) {
+    public AgentClientRecord(Long agentId, Long clientId, Integer seq) {
         super(AgentClient.AGENT_CLIENT);
 
         setAgentId(agentId);
         setClientId(clientId);
+        setSeq(seq);
         resetChangedOnNotNull();
     }
 }

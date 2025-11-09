@@ -1,4 +1,33 @@
-
+micronaut:
+  server:
+    cors:
+      enabled: true
+      configurations:
+        web:
+          # ⚠️ 改成你的前端域名（可多项）
+          allowed-origins:
+            - https://frontend.example.com
+            - http://localhost:3000
+          allowed-methods:
+            - GET
+            - POST
+            - PUT
+            - PATCH
+            - DELETE
+            - OPTIONS
+          allowed-headers:
+            # 回显预检时请求的 headers 已足够，但这里也可白名单
+            - Content-Type
+            - Authorization
+            - X-Requested-With
+            - Last-Event-ID        # SSE
+            - Accept
+          exposed-headers:
+            - Content-Type
+            - Cache-Control
+            - Last-Event-ID        # SSE
+          allow-credentials: true  # 若前端携带 cookie/凭证需要开启
+          max-age: 3600
 
 datasources:
   default:

@@ -1,6 +1,7 @@
 package com.example.ddd.infrastructure.dao;
 
 import com.example.ddd.infrastructure.dao.po.RagPO;
+
 import jakarta.inject.Singleton;
 import org.jooq.DSLContext;
 

@@ -10,11 +10,13 @@ import com.example.ddd.domain.agent.model.entity.ClientEntity;
 import com.example.ddd.domain.agent.model.entity.RagEntity;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.rag.content.retriever.ContentRetriever;
 import dev.langchain4j.rag.content.retriever.EmbeddingStoreContentRetriever;
 import dev.langchain4j.service.AiServices;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
@@ -23,6 +25,7 @@ import java.util.Map;
 import static com.example.ddd.common.constant.IAgentConstant.*;
 
 @Slf4j
+@Singleton
 public class AiServiceNode extends AbstractArmorySupport {
     @Inject
     BeanUtil beanUtil;
@@ -62,7 +65,7 @@ public class AiServiceNode extends AbstractArmorySupport {
                 log.info("Ai agent构建中 构建ChatApi: clientId={}, modelId={}, modelName={}",
                         clientId, modelId, chatModelEntity.getName());
                 try {
-                    ChatModel chatModel = beanUtil.getChatModel(modelId);
+                    StreamingChatModel chatModel = beanUtil.getChatModel(modelId);
                     if (chatModel == null) {
                         log.warn("ChatModel {} 未找到，跳过ChatApi构建", modelId);
                         continue;
@@ -85,9 +88,9 @@ public class AiServiceNode extends AbstractArmorySupport {
      * 创建 ChatApi 实例
      * 如果配置了 RAG，则使用 RAG 增强的 ChatApi
      */
-    private ChatApi createChatApi(ClientEntity client, ChatModel chatModel, List<RagEntity> rags) {
+    private ChatApi createChatApi(ClientEntity client, StreamingChatModel chatModel, List<RagEntity> rags) {
         AiServices<ChatApi> chatApiAiServices = AiServices.builder(ChatApi.class)
-                .chatModel(chatModel)
+                .streamingChatModel(chatModel)
                 .systemMessageProvider((t) -> client.getSystemPrompt());
         for (RagEntity rag : rags) {
             EmbeddingStore<TextSegment> embeddingStore =

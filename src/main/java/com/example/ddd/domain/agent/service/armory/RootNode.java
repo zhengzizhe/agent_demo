@@ -1,9 +1,9 @@
 package com.example.ddd.domain.agent.service.armory;
 
 import com.example.ddd.common.utils.ILogicHandler;
+import com.example.ddd.domain.agent.adapter.repository.IAgentRepository;
+import com.example.ddd.domain.agent.adapter.repository.IClientRepository;
 import com.example.ddd.domain.agent.model.entity.*;
-import com.example.ddd.infrastructure.adapter.repository.AgentRepository;
-import com.example.ddd.infrastructure.adapter.repository.ClientRepository;
 import com.example.ddd.infrastructure.config.DSLContextFactory;
 import dev.langchain4j.internal.Json;
 import jakarta.inject.Inject;
@@ -13,19 +13,20 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletableFuture;
 
 import static com.example.ddd.common.constant.IAgentConstant.*;
 
-@Slf4j
+
 @Singleton
+@Slf4j
 public class RootNode extends AbstractArmorySupport {
+
     @Inject
-    private AgentRepository agentRepository;
-    @Inject
-    private ClientRepository clientRepository;
+    private IClientRepository clientRepository;
     @Inject
     private DSLContextFactory dslContextFactory;
+    @Inject
+    private IAgentRepository agentRepository;
     @Inject
     RagNode ragNode;
 
@@ -65,7 +66,7 @@ public class RootNode extends AbstractArmorySupport {
 
         return router(armoryCommandEntity, dynamicContext);
     }
- 
+
 
     @Override
     public ILogicHandler<ArmoryCommandEntity, DynamicContext, String> getNextHandler() {

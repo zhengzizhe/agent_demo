@@ -1,20 +1,22 @@
 package com.example.ddd.infrastructure.dao;
 
+
 import jakarta.inject.Singleton;
-import org.jooq.DSLContext;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.jooq.impl.DSL.table;
 import static org.jooq.impl.DSL.field;
+import static org.jooq.impl.DSL.table;
+
+import org.jooq.DSLContext;
 
 /**
  * Client相关DAO
  */
 @Singleton
 public class IClientDao {
-    
+
     /**
      * 根据Client ID查询关联的Model ID列表
      */
@@ -27,7 +29,7 @@ public class IClientDao {
                 .map(record -> (Long) record.get("model_id"))
                 .collect(Collectors.toList());
     }
-    
+
     /**
      * 根据Client ID查询关联的RAG ID列表
      */
@@ -40,7 +42,7 @@ public class IClientDao {
                 .map(record -> (Long) record.get("rag_id"))
                 .collect(Collectors.toList());
     }
-    
+
     /**
      * 根据Client ID查询关联的MCP ID列表
      */

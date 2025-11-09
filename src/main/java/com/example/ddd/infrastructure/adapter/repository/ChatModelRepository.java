@@ -5,6 +5,7 @@ import com.example.ddd.domain.agent.model.entity.ChatModelEntity;
 import com.example.ddd.infrastructure.dao.IModelDao;
 import com.example.ddd.infrastructure.dao.po.ModelPO;
 import jakarta.inject.Inject;
+
 import jakarta.inject.Singleton;
 import org.jooq.DSLContext;
 

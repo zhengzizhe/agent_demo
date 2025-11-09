@@ -1,5 +1,6 @@
 package com.example.ddd.infrastructure.adapter.repository;
 
+
 import com.example.ddd.domain.agent.adapter.repository.IChatModelRepository;
 import com.example.ddd.domain.agent.adapter.repository.IClientRepository;
 import com.example.ddd.domain.agent.adapter.repository.IRagRepository;
@@ -7,6 +8,9 @@ import com.example.ddd.domain.agent.model.entity.ChatModelEntity;
 import com.example.ddd.domain.agent.model.entity.ClientEntity;
 import com.example.ddd.domain.agent.model.entity.RagEntity;
 import com.example.ddd.infrastructure.dao.IClientDao;
+import com.example.jooq.Tables;
+import com.example.jooq.tables.records.AgentClientRecord;
+import com.example.jooq.tables.records.ClientRecord;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.jooq.DSLContext;
@@ -16,9 +20,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-import static org.jooq.impl.DSL.field;
-import static org.jooq.impl.DSL.table;
 
 /**
  * Client仓储实现
@@ -37,58 +38,73 @@ public class ClientRepository implements IClientRepository {
 
     @Override
     public List<ClientEntity> queryByAgentId(DSLContext dslContext, Long agentId) {
-        // 先查询agent关联的client IDs
-        List<Long> clientIds = dslContext.select(field("client_id"))
-                .from(table("agent_client"))
-                .where(field("agent_id").eq(agentId))
-                .fetch()
-                .stream()
-                .map(record -> (Long) record.get("client_id"))
-                .collect(Collectors.toList());
+        // 1. 先查询 agent_client 关联表，获取 client_id 和 seq（顺序）
+        List<AgentClientRecord> agentClientRecords = dslContext
+                .selectFrom(Tables.AGENT_CLIENT)
+                .where(Tables.AGENT_CLIENT.AGENT_ID.eq(agentId))
+                .orderBy(Tables.AGENT_CLIENT.SEQ.asc().nullsLast(), Tables.AGENT_CLIENT.CLIENT_ID.asc())
+                .fetch();
 
-        if (clientIds.isEmpty()) {
+        if (agentClientRecords.isEmpty()) {
             return new ArrayList<>();
         }
 
-        // 根据client IDs查询client列表
-        return dslContext.select()
-                .from(table("client"))
-                .where(field("client.id").in(clientIds))
+        // 2. 提取 client_id 列表
+        List<Long> clientIds = agentClientRecords.stream()
+                .map(AgentClientRecord::getClientId)
+                .collect(Collectors.toList());
+
+        // 3. 通过 client_ids 查询 client 表
+        Map<Long, ClientRecord> clientRecordMap = dslContext
+                .selectFrom(Tables.CLIENT)
+                .where(Tables.CLIENT.ID.in(clientIds))
                 .fetch()
                 .stream()
-                .map(record -> {
+                .collect(Collectors.toMap(ClientRecord::getId, record -> record));
+
+        // 4. 按照 agent_client 中的顺序构建 ClientEntity 列表
+        return agentClientRecords.stream()
+                .map(agentClientRecord -> {
+                    Long clientId = agentClientRecord.getClientId();
+                    ClientRecord clientRecord = clientRecordMap.get(clientId);
+                    if (clientRecord == null) {
+                        return null;
+                    }
+                    // 将 ClientRecord 转换为 ClientEntity
                     ClientEntity entity = new ClientEntity();
-                    entity.setId((Long) record.get("id"));
-                    entity.setName((String) record.get("name"));
-                    entity.setDescription((String) record.get("description"));
-                    entity.setStatus((String) record.get("status"));
-                    entity.setCreatedAt((Long) record.get("created_at"));
-                    entity.setUpdatedAt((Long) record.get("updated_at"));
-                    entity.setSystemPrompt((String) record.get("system_prompt"));
+                    entity.setId(clientRecord.getId());
+                    entity.setName(clientRecord.getName());
+                    entity.setDescription(clientRecord.getDescription());
+                    entity.setStatus(clientRecord.getStatus());
+                    entity.setCreatedAt(clientRecord.getCreatedAt());
+                    entity.setUpdatedAt(clientRecord.getUpdatedAt());
+                    entity.setSystemPrompt(clientRecord.getSystemPrompt());
                     return entity;
                 })
+                .filter(entity -> entity != null)
                 .collect(Collectors.toList());
     }
 
     @Override
     public ClientEntity queryById(DSLContext dslContext, Long id) {
-        var record = dslContext.select()
-                .from(table("client"))
-                .where(field("client.id").eq(id))
+        ClientRecord record = dslContext
+                .selectFrom(Tables.CLIENT)
+                .where(Tables.CLIENT.ID.eq(id))
                 .fetchOne();
 
         if (record == null) {
             return null;
         }
 
+        // 将 ClientRecord 转换为 ClientEntity
         ClientEntity entity = new ClientEntity();
-        entity.setId((Long) record.get("id"));
-        entity.setName((String) record.get("name"));
-        entity.setDescription((String) record.get("description"));
-        entity.setStatus((String) record.get("status"));
-        entity.setCreatedAt((Long) record.get("created_at"));
-        entity.setUpdatedAt((Long) record.get("updated_at"));
-        entity.setSystemPrompt((String) record.get("system_prompt"));
+        entity.setId(record.getId());
+        entity.setName(record.getName());
+        entity.setDescription(record.getDescription());
+        entity.setStatus(record.getStatus());
+        entity.setCreatedAt(record.getCreatedAt());
+        entity.setUpdatedAt(record.getUpdatedAt());
+        entity.setSystemPrompt(record.getSystemPrompt());
         return entity;
     }
 

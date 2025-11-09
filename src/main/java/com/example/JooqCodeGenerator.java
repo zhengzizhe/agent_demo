@@ -1,4 +1,4 @@
-package com.example.ddd;
+package com.example;
 
 
 import org.jooq.codegen.GenerationTool;

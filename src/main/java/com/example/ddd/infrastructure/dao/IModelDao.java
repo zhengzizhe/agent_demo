@@ -1,6 +1,7 @@
 package com.example.ddd.infrastructure.dao;
 
 import com.example.ddd.infrastructure.dao.po.ModelPO;
+
 import jakarta.inject.Singleton;
 import org.jooq.DSLContext;
 
