@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SSE 测试页面</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 800px;
+            padding: 30px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 28px;
+        }
+
+        .info {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            color: #1976d2;
+        }
+
+        .controls {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: #e0e0e0;
+        }
+
+        .status {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .status.connected {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .status.disconnected {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .status.connecting {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .output-section {
+            margin-top: 20px;
+        }
+
+        .output-box {
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            min-height: 200px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-size: 18px;
+            line-height: 2;
+            color: #333;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .output-box:empty::before {
+            content: '等待连接...';
+            color: #999;
+        }
+
+        .message-item {
+            padding: 8px 0;
+            border-bottom: 1px solid #e0e0e0;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .message-item:last-child {
+            border-bottom: none;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .timestamp {
+            font-size: 12px;
+            color: #999;
+            margin-right: 10px;
+        }
+
+        .error {
+            color: #c62828;
+            background: #ffebee;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="container">
+            <h1>🔔 SSE 流式测试</h1>
+            
+            <div class="info">
+                <strong>说明：</strong>后端接口每2秒发送一次"你好"，用于测试SSE流式效果。
+                接口地址：<code>/test/sse</code>
+            </div>
+
+            <div class="controls">
+                <button 
+                    class="btn-primary" 
+                    @click="connect"
+                    :disabled="isConnected || isConnecting"
+                >
+                    {{ isConnecting ? '连接中...' : '开始连接' }}
+                </button>
+                <button 
+                    class="btn-secondary" 
+                    @click="disconnect"
+                    :disabled="!isConnected"
+                >
+                    断开连接
+                </button>
+                <button 
+                    class="btn-secondary" 
+                    @click="clearOutput"
+                >
+                    清空
+                </button>
+            </div>
+
+            <div :class="['status', statusClass]">
+                {{ statusText }}
+            </div>
+
+            <div class="output-section">
+                <h2>接收到的消息：</h2>
+                <div class="output-box" ref="outputBox">
+                    <div v-for="(msg, index) in messages" :key="index" class="message-item">
+                        <span class="timestamp">{{ msg.time }}</span>
+                        <span>{{ msg.content }}</span>
+                    </div>
+                    <div v-if="messages.length === 0" style="color: #999;">
+                        等待连接...
+                    </div>
+                </div>
+                <div v-if="error" class="error">
+                    <strong>错误:</strong> {{ error }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { createApp } from 'vue'
+
+        createApp({
+            data() {
+                return {
+                    eventSource: null,
+                    isConnected: false,
+                    isConnecting: false,
+                    messages: [],
+                    error: null,
+                    backendUrl: 'http://localhost:8080'
+                }
+            },
+            computed: {
+                statusClass() {
+                    if (this.isConnecting) return 'connecting'
+                    return this.isConnected ? 'connected' : 'disconnected'
+                },
+                statusText() {
+                    if (this.isConnecting) return '正在连接...'
+                    return this.isConnected ? '已连接 - 等待接收消息' : '未连接'
+                }
+            },
+            methods: {
+                connect() {
+                    if (this.isConnected || this.isConnecting) {
+                        return
+                    }
+
+                    this.isConnecting = true
+                    this.error = null
+
+                    try {
+                        const url = `${this.backendUrl}/test/sse`
+                        console.log('连接SSE:', url)
+
+                        // 使用 EventSource API
+                        this.eventSource = new EventSource(url)
+
+                        this.eventSource.onopen = () => {
+                            console.log('SSE连接已打开')
+                            this.isConnecting = false
+                            this.isConnected = true
+                            this.addMessage('系统', 'SSE连接已建立')
+                        }
+
+                        this.eventSource.onmessage = (event) => {
+                            console.log('收到消息:', event.data)
+                            const timestamp = new Date().toLocaleTimeString()
+                            this.addMessage(timestamp, event.data)
+                            this.scrollToBottom()
+                        }
+
+                        this.eventSource.onerror = (error) => {
+                            console.error('SSE错误:', error)
+                            this.isConnecting = false
+                            this.isConnected = false
+                            
+                            if (this.eventSource.readyState === EventSource.CLOSED) {
+                                this.error = '连接已关闭'
+                                this.addMessage('系统', '连接已关闭')
+                            } else {
+                                this.error = '连接错误，请检查后端服务是否运行'
+                            }
+                        }
+                    } catch (err) {
+                        console.error('连接失败:', err)
+                        this.isConnecting = false
+                        this.error = err.message || '连接失败'
+                    }
+                },
+                disconnect() {
+                    if (this.eventSource) {
+                        this.eventSource.close()
+                        this.eventSource = null
+                    }
+                    this.isConnected = false
+                    this.isConnecting = false
+                    this.addMessage('系统', '已断开连接')
+                },
+                clearOutput() {
+                    this.messages = []
+                    this.error = null
+                },
+                addMessage(time, content) {
+                    this.messages.push({
+                        time: time,
+                        content: content
+                    })
+                    // 限制消息数量，最多保留50条
+                    if (this.messages.length > 50) {
+                        this.messages.shift()
+                    }
+                },
+                scrollToBottom() {
+                    this.$nextTick(() => {
+                        const box = this.$refs.outputBox
+                        if (box) {
+                            box.scrollTop = box.scrollHeight
+                        }
+                    })
+                }
+            },
+            beforeUnmount() {
+                this.disconnect()
+            }
+        }).mount('#app')
+    </script>
+</body>
+</html>
+
+
+
