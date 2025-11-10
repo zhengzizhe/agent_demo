@@ -20,7 +20,7 @@ public class ExecuteContext {
     /**
      * 当前处理的结果
      */
-    private AgentMessage result;
+    private String result;
 
     /**
      * 存储额外的上下文数据

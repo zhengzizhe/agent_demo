@@ -902,6 +902,266 @@
             border-color: rgba(239, 68, 68, 0.3);
             background: rgba(239, 68, 68, 0.15);
         }
+
+        /* RAG管理按钮 */
+        .rag-manage-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1.5px solid var(--border-color);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .rag-manage-btn:hover {
+            background: rgba(16, 163, 127, 0.1);
+            border-color: var(--accent-primary);
+            transform: translateY(-1px);
+        }
+
+        .rag-manage-btn.active {
+            background: rgba(16, 163, 127, 0.15);
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 4px rgba(16, 163, 127, 0.15);
+        }
+
+        .rag-manage-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* RAG管理面板 */
+        .rag-panel {
+            position: fixed;
+            right: -400px;
+            top: 0;
+            width: 400px;
+            height: 100vh;
+            background: rgba(26, 26, 46, 0.95);
+            backdrop-filter: blur(20px) saturate(180%);
+            border-left: 1px solid var(--border-color);
+            z-index: 200;
+            transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow-y: auto;
+            box-shadow: -4px 0 24px rgba(0, 0, 0, 0.5);
+        }
+
+        .rag-panel.show {
+            right: 0;
+        }
+
+        .rag-panel-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .rag-panel-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .rag-panel-close {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .rag-panel-close:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+        }
+
+        .rag-panel-content {
+            padding: 24px;
+        }
+
+        .rag-section {
+            margin-bottom: 32px;
+        }
+
+        .rag-section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .rag-upload-area {
+            border: 2px dashed var(--border-color);
+            border-radius: 12px;
+            padding: 32px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.02);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            margin-bottom: 16px;
+        }
+
+        .rag-upload-area:hover {
+            border-color: var(--accent-primary);
+            background: rgba(16, 163, 127, 0.05);
+        }
+
+        .rag-upload-area.dragover {
+            border-color: var(--accent-primary);
+            background: rgba(16, 163, 127, 0.1);
+        }
+
+        .rag-upload-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+
+        .rag-upload-text {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .rag-upload-hint {
+            font-size: 12px;
+            color: var(--text-secondary);
+            opacity: 0.7;
+        }
+
+        .rag-file-input {
+            display: none;
+        }
+
+        .rag-file-info {
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        .rag-file-info.show {
+            display: block;
+        }
+
+        .rag-file-name {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .rag-file-size {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .rag-form-group {
+            margin-bottom: 16px;
+        }
+
+        .rag-label {
+            display: block;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .rag-input {
+            width: 100%;
+            padding: 10px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1.5px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 13px;
+            transition: all 0.3s ease;
+        }
+
+        .rag-input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            background: rgba(16, 163, 127, 0.1);
+        }
+
+        .rag-btn {
+            width: 100%;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 12px;
+        }
+
+        .rag-btn-primary {
+            background: linear-gradient(135deg, #10a37f 0%, #059669 100%);
+            color: white;
+        }
+
+        .rag-btn-primary:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(16, 163, 127, 0.4);
+        }
+
+        .rag-btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .rag-message {
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            margin-bottom: 12px;
+            display: none;
+        }
+
+        .rag-message.show {
+            display: block;
+        }
+
+        .rag-message.success {
+            background: rgba(16, 163, 127, 0.15);
+            color: #10a37f;
+            border: 1px solid rgba(16, 163, 127, 0.3);
+        }
+
+        .rag-message.error {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .rag-loading {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid currentColor;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 6px;
+        }
     </style>
 </head>
 <body>
@@ -916,6 +1176,20 @@
                 </div>
             </div>
             <div class="header-config">
+                <button 
+                    class="rag-manage-btn"
+                    @click="showRagPanel = !showRagPanel"
+                    :class="{ active: showRagPanel }"
+                >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                    RAG管理
+                </button>
                 <span class="config-label">Agent ID</span>
                 <input 
                     v-model.number="agentId" 
@@ -1023,6 +1297,93 @@
                 <div v-else class="hint-text">按 Enter 发送，Shift + Enter 换行</div>
             </div>
         </div>
+
+        <!-- RAG管理面板 -->
+        <div class="rag-panel" :class="{ show: showRagPanel }">
+            <div class="rag-panel-header">
+                <div class="rag-panel-title">📚 RAG知识库管理</div>
+                <button class="rag-panel-close" @click="showRagPanel = false">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="rag-panel-content">
+                <!-- 文件上传 -->
+                <div class="rag-section">
+                    <div class="rag-section-title">文件上传</div>
+                    <div 
+                        class="rag-upload-area" 
+                        :class="{ dragover: isRagDragging }"
+                        @click="triggerRagFileInput"
+                        @dragover.prevent="isRagDragging = true"
+                        @dragleave.prevent="isRagDragging = false"
+                        @drop.prevent="handleRagDrop"
+                    >
+                        <div class="rag-upload-icon">📄</div>
+                        <div class="rag-upload-text">点击或拖拽文件到此处</div>
+                        <div class="rag-upload-hint">支持 .txt, .md, .json 等文本文件</div>
+                        <input 
+                            type="file" 
+                            ref="ragFileInput" 
+                            @change="handleRagFileSelect"
+                            accept=".txt,.md,.json,.csv"
+                            class="rag-file-input"
+                        >
+                    </div>
+                    <div class="rag-file-info" :class="{ show: selectedRagFile }">
+                        <div class="rag-file-name">{{ selectedRagFile?.name }}</div>
+                        <div class="rag-file-size">{{ formatRagFileSize(selectedRagFile?.size) }}</div>
+                    </div>
+                    <div class="rag-form-group">
+                        <label class="rag-label">RAG ID (可选，默认1)</label>
+                        <input type="number" v-model.number="ragId" class="rag-input" placeholder="1" min="1">
+                    </div>
+                    <button 
+                        class="rag-btn rag-btn-primary" 
+                        @click="uploadRagFile"
+                        :disabled="!selectedRagFile || uploadingRagFile"
+                    >
+                        <span v-if="uploadingRagFile" class="rag-loading"></span>
+                        {{ uploadingRagFile ? '上传中...' : '上传文件' }}
+                    </button>
+                    <div class="rag-message" :class="{ show: ragUploadMessage, success: ragUploadSuccess, error: !ragUploadSuccess }">
+                        {{ ragUploadMessage }}
+                    </div>
+                </div>
+
+                <!-- 文本添加 -->
+                <div class="rag-section">
+                    <div class="rag-section-title">添加文本</div>
+                    <div class="rag-form-group">
+                        <label class="rag-label">RAG ID</label>
+                        <input type="number" v-model.number="textRagId" class="rag-input" placeholder="1" min="1">
+                    </div>
+                    <div class="rag-form-group">
+                        <label class="rag-label">文档内容</label>
+                        <textarea 
+                            v-model="ragDocumentText" 
+                            class="rag-input" 
+                            placeholder="输入要添加的文档内容..."
+                            rows="4"
+                            style="resize: vertical;"
+                        ></textarea>
+                    </div>
+                    <button 
+                        class="rag-btn rag-btn-primary" 
+                        @click="addRagText"
+                        :disabled="!ragDocumentText || addingRagText"
+                    >
+                        <span v-if="addingRagText" class="rag-loading"></span>
+                        {{ addingRagText ? '添加中...' : '添加文档' }}
+                    </button>
+                    <div class="rag-message" :class="{ show: ragTextMessage, success: ragTextSuccess, error: !ragTextSuccess }">
+                        {{ ragTextMessage }}
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script type="module">
@@ -1031,14 +1392,27 @@
         createApp({
             data() {
                 return {
-                    agentId: 1,
+                    agentId: 1, // 默认Agent ID，对应"多Agent编排Agent"
                     message: '',
                     messages: [],
                     currentMessage: '',
                     currentTime: '',
                     isStreaming: false,
                     reader: null,
-                    error: null
+                    error: null,
+                    // RAG管理相关
+                    showRagPanel: false,
+                    selectedRagFile: null,
+                    isRagDragging: false,
+                    ragId: 1,
+                    uploadingRagFile: false,
+                    ragUploadMessage: '',
+                    ragUploadSuccess: false,
+                    textRagId: 1,
+                    ragDocumentText: '',
+                    addingRagText: false,
+                    ragTextMessage: '',
+                    ragTextSuccess: false
                 }
             },
             mounted() {
@@ -1112,26 +1486,58 @@
                             buffer = lines.pop() || ''
 
                             for (const line of lines) {
+                                // 跳过空行
                                 if (line.trim() === '') continue
                                 
+                                let data = ''
+                                // 处理SSE格式: data: xxx
                                 if (line.startsWith('data: ')) {
-                                    const data = line.substring(6).trim()
-                                    if (data === '[DONE]' || data === '\n\n[DONE]') {
-                                        if (this.currentMessage) {
-                                            this.messages.push({
-                                                type: 'assistant',
-                                                content: this.currentMessage,
-                                                time: this.currentTime
-                                            })
-                                            this.currentMessage = ''
-                                        }
-                                        this.isStreaming = false
-                                        if (this.reader) {
-                                            this.reader.cancel()
-                                            this.reader = null
-                                        }
-                                        return
+                                    data = line.substring(6)
+                                } else if (line.startsWith('data:')) {
+                                    // 处理没有空格的情况: data:xxx
+                                    data = line.substring(5)
+                                } else {
+                                    // 如果没有data:前缀，直接使用整行（兼容非标准格式）
+                                    data = line
+                                }
+                                
+                                // 去除首尾空白，但保留中间的空格和换行
+                                data = data.trim()
+                                
+                                // 调试日志
+                                if (data && data.length > 0) {
+                                    console.log('收到SSE数据:', data.substring(0, Math.min(50, data.length)) + (data.length > 50 ? '...' : ''))
+                                }
+                                
+                                // 检查是否是结束标记
+                                if (data === '[DONE]' || data.includes('[DONE]')) {
+                                    // 提取[DONE]之前的内容
+                                    const doneIndex = data.indexOf('[DONE]')
+                                    if (doneIndex > 0) {
+                                        this.currentMessage += data.substring(0, doneIndex)
                                     }
+                                    // 确保最终消息被添加到消息列表
+                                    if (this.currentMessage.trim()) {
+                                        this.messages.push({
+                                            type: 'assistant',
+                                            content: this.currentMessage.trim(),
+                                            time: this.currentTime
+                                        })
+                                        this.currentMessage = ''
+                                    }
+                                    this.isStreaming = false
+                                    if (this.reader) {
+                                        this.reader.cancel()
+                                        this.reader = null
+                                    }
+                                    console.log('SSE流结束')
+                                    this.$forceUpdate()
+                                    this.scrollToBottom()
+                                    return
+                                }
+                                
+                                // 追加数据到当前消息
+                                if (data) {
                                     this.currentMessage += data
                                     this.$forceUpdate()
                                     requestAnimationFrame(() => {
@@ -1202,6 +1608,140 @@
                             document.body.removeChild(toast)
                         }, 300)
                     }, 2000)
+                },
+                // RAG管理方法
+                triggerRagFileInput() {
+                    this.$refs.ragFileInput.click()
+                },
+                handleRagFileSelect(event) {
+                    const file = event.target.files[0]
+                    if (file) {
+                        this.selectedRagFile = file
+                    }
+                },
+                handleRagDrop(event) {
+                    this.isRagDragging = false
+                    const file = event.dataTransfer.files[0]
+                    if (file) {
+                        this.selectedRagFile = file
+                    }
+                },
+                formatRagFileSize(bytes) {
+                    if (!bytes) return '0 B'
+                    const k = 1024
+                    const sizes = ['B', 'KB', 'MB', 'GB']
+                    const i = Math.floor(Math.log(bytes) / Math.log(k))
+                    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i]
+                },
+                async uploadRagFile() {
+                    if (!this.selectedRagFile) {
+                        this.showRagMessage('upload', '请选择文件', false)
+                        return
+                    }
+
+                    this.uploadingRagFile = true
+                    this.ragUploadMessage = ''
+
+                    try {
+                        const formData = new FormData()
+                        formData.append('file', this.selectedRagFile)
+                        if (this.ragId) {
+                            formData.append('ragId', this.ragId)
+                        }
+
+                        const response = await fetch('/rag/documents/upload', {
+                            method: 'POST',
+                            body: formData
+                        })
+
+                        // 检查响应状态
+                        if (!response.ok) {
+                            const errorText = await response.text()
+                            throw new Error(`HTTP ${response.status}: ${errorText || '上传失败'}`)
+                        }
+
+                        // 读取响应文本
+                        const responseText = await response.text()
+                        let result
+                        
+                        if (!responseText || responseText.trim() === '') {
+                            throw new Error('服务器返回了空响应')
+                        }
+                        
+                        try {
+                            result = JSON.parse(responseText)
+                        } catch (e) {
+                            console.error('JSON解析失败:', responseText)
+                            throw new Error(`服务器返回了非JSON格式的响应: ${responseText.substring(0, 100)}`)
+                        }
+                        
+                        if (result.success) {
+                            this.showRagMessage('upload', `文件上传成功！生成了 ${result.segmentCount} 个文档块`, true)
+                            this.selectedRagFile = null
+                            this.$refs.ragFileInput.value = ''
+                        } else {
+                            this.showRagMessage('upload', result.message || '文件上传失败', false)
+                        }
+                    } catch (error) {
+                        console.error('上传错误:', error)
+                        this.showRagMessage('upload', '上传失败: ' + error.message, false)
+                    } finally {
+                        this.uploadingRagFile = false
+                    }
+                },
+                async addRagText() {
+                    if (!this.ragDocumentText.trim()) {
+                        this.showRagMessage('text', '请输入文档内容', false)
+                        return
+                    }
+
+                    this.addingRagText = true
+                    this.ragTextMessage = ''
+
+                    try {
+                        const response = await fetch('/rag/documents', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                ragId: this.textRagId || 1,
+                                text: this.ragDocumentText,
+                                metadata: {
+                                    source: 'manual_input',
+                                    timestamp: new Date().toISOString()
+                                }
+                            })
+                        })
+
+                        const result = await response.json()
+                        
+                        if (result.success) {
+                            this.showRagMessage('text', `文档添加成功！生成了 ${result.segmentCount} 个文档块`, true)
+                            this.ragDocumentText = ''
+                        } else {
+                            this.showRagMessage('text', result.message || '文档添加失败', false)
+                        }
+                    } catch (error) {
+                        this.showRagMessage('text', '添加失败: ' + error.message, false)
+                    } finally {
+                        this.addingRagText = false
+                    }
+                },
+                showRagMessage(type, message, success) {
+                    const typeMap = {
+                        upload: { message: 'ragUploadMessage', success: 'ragUploadSuccess' },
+                        text: { message: 'ragTextMessage', success: 'ragTextSuccess' }
+                    }
+
+                    const config = typeMap[type]
+                    if (config) {
+                        this[config.message] = message
+                        this[config.success] = success
+                        setTimeout(() => {
+                            this[config.message] = ''
+                        }, 5000)
+                    }
                 }
             },
             watch: {

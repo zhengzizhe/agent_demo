@@ -164,4 +164,25 @@ public class BeanUtil {
     public EmbeddingModel getEmbeddingModel(Long ragId) {
         return getBean(EmbeddingModel.class, "EmbeddingModel" + COLON + ragId);
     }
+
+    /**
+     * 注册AgentOrchestrator
+     *
+     * @param agentId Agent ID
+     * @param orchestrator AgentOrchestrator实例
+     */
+    public void registerOrchestrator(Long agentId, com.example.ddd.domain.agent.service.execute.AgentOrchestrator orchestrator) {
+        String qualifier = "AgentOrchestrator" + COLON + agentId;
+        registerBean(com.example.ddd.domain.agent.service.execute.AgentOrchestrator.class, orchestrator, qualifier);
+    }
+
+    /**
+     * 获取AgentOrchestrator
+     *
+     * @param agentId Agent ID
+     * @return AgentOrchestrator实例
+     */
+    public com.example.ddd.domain.agent.service.execute.AgentOrchestrator getOrchestrator(Long agentId) {
+        return getBean(com.example.ddd.domain.agent.service.execute.AgentOrchestrator.class, "AgentOrchestrator" + COLON + agentId);
+    }
 }

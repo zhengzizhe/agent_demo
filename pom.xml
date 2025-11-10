@@ -20,7 +20,6 @@
         <micronaut.aot.enabled>false</micronaut.aot.enabled>
         <micronaut.aot.packageName>org.agent.aot.generated</micronaut.aot.packageName>
         <micronaut.runtime>netty</micronaut.runtime>
-        <exec.mainClass>org.agent.Application</exec.mainClass>
     </properties>
 
     <repositories>
@@ -31,8 +30,17 @@
     </repositories>
 
     <dependencies>
+        <dependency>
+            <groupId>io.github.koinsaari</groupId>
+            <artifactId>j-toon-core</artifactId>
+            <version>0.1.0</version>
+        </dependency>
 
-
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.12.0</version>
+        </dependency>
         <dependency>
             <groupId>io.micronaut</groupId>
             <artifactId>micronaut-http-server-netty</artifactId>
@@ -140,10 +148,10 @@
             <version>3.19.13</version>
             <scope>compile</scope>
         </dependency>
-           <dependency>
+        <dependency>
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j-pgvector</artifactId>
-            <version>0.34.0</version>
+            <version>1.5.0-beta11</version>
         </dependency>
         <dependency>
             <groupId>io.projectreactor</groupId>
