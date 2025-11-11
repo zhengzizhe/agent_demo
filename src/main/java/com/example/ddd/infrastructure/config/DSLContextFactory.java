@@ -24,7 +24,7 @@ public class DSLContextFactory {
             Connection connection = dataSource.getConnection();
             return new AgentDSL(connection, sqlDialect);
         } catch (Exception e) {
-            throw new RuntimeException("Failed to create DSLContext", e);
+            throw new RuntimeException("创建DSLContext失败", e);
         }
     }
 

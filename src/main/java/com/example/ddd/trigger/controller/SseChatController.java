@@ -6,7 +6,6 @@ import io.micronaut.http.MediaType;
 import io.micronaut.http.annotation.Body;
 import io.micronaut.http.annotation.Controller;
 import io.micronaut.http.annotation.Post;
-import io.micronaut.http.sse.Event;
 import jakarta.inject.Inject;
 import reactor.core.publisher.Flux;
 import reactor.core.scheduler.Schedulers;

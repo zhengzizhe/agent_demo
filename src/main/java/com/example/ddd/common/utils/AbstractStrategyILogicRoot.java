@@ -12,12 +12,4 @@ public abstract class AbstractStrategyILogicRoot<T, D, R> implements ILogicHandl
     }
 
 
-    protected void router1(T t, D d) {
-        ILogicHandler<T, D, R> nextHandler = this.getNextHandler();
-        if (nextHandler == null) {
-            return;
-        }
-        nextHandler.handle(t, d);
-    }
-
 }

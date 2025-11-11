@@ -4,9 +4,7 @@ micronaut:
       enabled: true
       configurations:
         web:
-          # ⚠️ 改成你的前端域名（可多项）
           allowed-origins:
-            - https://frontend.example.com
             - http://localhost:3000
           allowed-methods:
             - GET
@@ -16,17 +14,16 @@ micronaut:
             - DELETE
             - OPTIONS
           allowed-headers:
-            # 回显预检时请求的 headers 已足够，但这里也可白名单
             - Content-Type
             - Authorization
             - X-Requested-With
-            - Last-Event-ID        # SSE
+            - Last-Event-ID
             - Accept
           exposed-headers:
             - Content-Type
             - Cache-Control
-            - Last-Event-ID        # SSE
-          allow-credentials: true  # 若前端携带 cookie/凭证需要开启
+            - Last-Event-ID
+          allow-credentials: true
           max-age: 3600
 
 datasources:
@@ -58,5 +55,5 @@ jooq:
 openai:
   api:
     url: https://apis.itedus.cn/v1/
-    key: sk-uw6scttcKPDJZt8DDfD0135c85A04570Ae780c5f350dDf72
+    key: sk-ReRvqCmAoA71cgoiC416F0809fEb46A28f7a07AcDd3e339e
     model: gpt-4o

@@ -4,5 +4,9 @@ import dev.langchain4j.service.TokenStream;
 import dev.langchain4j.service.UserMessage;
 
 public interface ResearcherService {
-    TokenStream research(@UserMessage String spec); // spec 可是 JSON/TOON
+    /**
+     * 研究任务
+     * @param spec 规格说明，可以是 JSON/TOON 格式
+     */
+    TokenStream research(@UserMessage String spec);
 }

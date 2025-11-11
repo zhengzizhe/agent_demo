@@ -4,15 +4,12 @@ import com.example.ddd.common.utils.BeanUtil;
 import com.example.ddd.common.utils.ILogicHandler;
 import com.example.ddd.common.utils.JSON;
 import com.example.ddd.domain.agent.model.entity.*;
-import com.example.ddd.domain.agent.service.execute.AgentOrchestrator;
-import com.example.ddd.domain.agent.service.execute.AiServiceFactory;
 import com.example.ddd.domain.agent.service.execute.CriticService.CriticService;
 import com.example.ddd.domain.agent.service.execute.ExecutorService.ExecutorService;
 import com.example.ddd.domain.agent.service.execute.ResearcherService.ResearcherService;
 import com.example.ddd.domain.agent.service.execute.RoleResolver;
 import com.example.ddd.domain.agent.service.execute.SupervisorService.SupervisorService;
 import com.example.ddd.domain.agent.service.execute.blackBoard.InMemoryBlackboard;
-import com.example.ddd.domain.agent.service.execute.task.DbSequencePlanner;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
@@ -67,10 +64,6 @@ public class AiServiceNode extends AbstractArmorySupport {
         return router(armoryCommandEntity, dynamicContext);
     }
 
-    /**
-     * 构建AgentOrchestrator
-     * 为每个Client构建一个Orchestrator实例
-     */
     private void buildOrchestrator(Long agentId, AgentEntity agent,
                                    List<ClientEntity> clients,
                                    Map<Long, List<ChatModelEntity>> modelMap,
@@ -120,7 +113,7 @@ public class AiServiceNode extends AbstractArmorySupport {
             log.warn("主管Client不存在: clientId={}", assignment.getSupervisorClientId());
             return;
         }
-        
+
         // 查找Researcher Client
         ClientEntity researcherClient = null;
         if (!assignment.getResearchers().isEmpty()) {
@@ -134,7 +127,7 @@ public class AiServiceNode extends AbstractArmorySupport {
             log.warn("Researcher Client不存在，使用Supervisor Client");
             researcherClient = supervisorClient;
         }
-        
+
         // 查找Executor Client
         ClientEntity executorClient = null;
         if (!assignment.getExecutors().isEmpty()) {
@@ -148,24 +141,20 @@ public class AiServiceNode extends AbstractArmorySupport {
             log.warn("Executor Client不存在，使用Supervisor Client");
             executorClient = supervisorClient;
         }
-        
-        // 查找Critic Client（通常是第4个，seq=4）
         ClientEntity criticClient = null;
         if (clients.size() >= 4) {
-            criticClient = clients.get(3); // 第4个（索引3）
+            criticClient = clients.get(3);
         }
         if (criticClient == null) {
             log.warn("Critic Client不存在，使用Supervisor Client");
             criticClient = supervisorClient;
         }
-        
         AiServiceFactory factory = new AiServiceFactory(beanUtil);
         SupervisorService supervisor =
                 factory.buildSupervisor(supervisorModel, supervisorClient);
         List<Long> allRagIds = new ArrayList<>();
         assignment.getResearchers().forEach(w -> allRagIds.addAll(w.getRagIds()));
         if (allRagIds.isEmpty() && ragMap != null) {
-            // 如果没有明确的RAG，使用所有Client的RAG
             ragMap.values().forEach(rags ->
                     rags.forEach(rag -> allRagIds.add(rag.getId()))
             );
@@ -178,13 +167,11 @@ public class AiServiceNode extends AbstractArmorySupport {
                 factory.buildCritic(supervisorModel, criticClient);
         com.example.ddd.domain.agent.service.execute.blackBoard.InMemoryBlackboard board =
                 new InMemoryBlackboard();
-        DbSequencePlanner planner = new DbSequencePlanner(agentId, clients);
         AgentOrchestrator orchestrator = new AgentOrchestrator(
                 supervisor,
                 researcher,
                 executor,
-                critic,
-                planner
+                critic
         );
         beanUtil.registerOrchestrator(agentId, orchestrator);
         log.info("Orchestrator构建完成: agentId={}", agentId);

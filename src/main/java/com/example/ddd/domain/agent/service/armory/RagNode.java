@@ -58,14 +58,10 @@ public class RagNode extends AbstractArmorySupport {
      * 创建EmbeddingModel
      */
     private EmbeddingModel createEmbeddingModel(RagEntity ragEntity) {
-        // 默认使用OpenAI的text-embedding-ada-002模型
-        String embeddingModelName = ragEntity.getEmbeddingModel() != null
-                ? ragEntity.getEmbeddingModel()
-                : "text-embedding-ada-002";
         return OpenAiEmbeddingModel.builder()
                 .apiKey(openAIProperties.getKey())
                 .baseUrl(openAIProperties.getUrl())
-                .modelName(embeddingModelName)
+                .modelName(ragEntity.getEmbeddingModel())
                 .build();
     }
 

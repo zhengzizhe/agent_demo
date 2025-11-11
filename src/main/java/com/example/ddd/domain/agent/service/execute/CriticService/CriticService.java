@@ -4,5 +4,9 @@ import dev.langchain4j.service.TokenStream;
 import dev.langchain4j.service.UserMessage;
 
 public interface CriticService {
-    TokenStream review(@UserMessage String prompt); // prompt包含draft和requirements
+    /**
+     * 评审任务
+     * @param prompt 提示词，包含草稿和需求
+     */
+    TokenStream review(@UserMessage String prompt);
 }

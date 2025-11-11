@@ -1,6 +1,6 @@
 package com.example.ddd.common.utils;
 
-import com.example.ddd.configuration.config.ChatApi;
+import com.example.ddd.domain.agent.service.armory.AgentOrchestrator;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.store.embedding.EmbeddingStore;
@@ -27,9 +27,6 @@ public class BeanUtil {
      *
      * @param bean Bean实例
      */
-    public void registerBean(Object bean) {
-        applicationContext.registerSingleton(bean);
-    }
 
     /**
      * 注册Bean（带类型和qualifier）
@@ -112,16 +109,6 @@ public class BeanUtil {
         return !existed;
     }
 
-    /**
-     * 注册ChatApi
-     *
-     * @param clientId apiId
-     * @param chatApi  ChatApi实例
-     */
-    public void registerChatApi(Long clientId, ChatApi chatApi) {
-        String qualifier = "ChatApi" + COLON + clientId;
-        registerBean(ChatApi.class, chatApi, qualifier);
-    }
 
     /**
      * 根据qualifier名称获取Bean
@@ -171,9 +158,9 @@ public class BeanUtil {
      * @param agentId Agent ID
      * @param orchestrator AgentOrchestrator实例
      */
-    public void registerOrchestrator(Long agentId, com.example.ddd.domain.agent.service.execute.AgentOrchestrator orchestrator) {
+    public void registerOrchestrator(Long agentId, AgentOrchestrator orchestrator) {
         String qualifier = "AgentOrchestrator" + COLON + agentId;
-        registerBean(com.example.ddd.domain.agent.service.execute.AgentOrchestrator.class, orchestrator, qualifier);
+        registerBean(AgentOrchestrator.class, orchestrator, qualifier);
     }
 
     /**
@@ -182,7 +169,7 @@ public class BeanUtil {
      * @param agentId Agent ID
      * @return AgentOrchestrator实例
      */
-    public com.example.ddd.domain.agent.service.execute.AgentOrchestrator getOrchestrator(Long agentId) {
-        return getBean(com.example.ddd.domain.agent.service.execute.AgentOrchestrator.class, "AgentOrchestrator" + COLON + agentId);
+    public AgentOrchestrator getOrchestrator(Long agentId) {
+        return getBean(AgentOrchestrator.class, "AgentOrchestrator" + COLON + agentId);
     }
 }

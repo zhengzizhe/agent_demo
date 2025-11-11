@@ -1,6 +1,5 @@
 package com.example.ddd.domain.agent.service.execute;
 
-import com.example.ddd.common.utils.AbstractStrategyILogicRoot;
 import com.example.ddd.common.utils.BeanUtil;
 import com.example.ddd.configuration.config.ChatApi;
 import com.example.ddd.domain.agent.model.entity.ClientEntity;
@@ -16,30 +15,18 @@ import static com.example.ddd.common.constant.IAgentConstant.COLON;
  * 负责调用ChatApi处理消息
  */
 @Slf4j
-public class ClientExecuteHandler extends AbstractStrategyILogicRoot<ExecuteCommandEntity, ExecuteContext, String> {
+public class ClientExecuteHandler extends AbstractExecuteSupport {
 
     private final BeanUtil beanUtil;
     private final Long clientId;
     private final Long modelId; // 存储第一个modelId，用于获取ChatModel
     private final ClientExecuteHandler nextHandler;
 
-    public ClientExecuteHandler(BeanUtil beanUtil, Long clientId, ClientExecuteHandler nextHandler) {
-        this.beanUtil = beanUtil;
-        this.clientId = clientId;
-        this.modelId = null;
-        this.nextHandler = nextHandler;
-    }
-
     public ClientExecuteHandler(BeanUtil beanUtil, ClientEntity clientEntity, Long modelId, ClientExecuteHandler nextHandler) {
         this.beanUtil = beanUtil;
         this.clientId = clientEntity.getId();
         this.modelId = modelId;
         this.nextHandler = nextHandler;
-    }
-
-    @Override
-    public String handle(ExecuteCommandEntity command, ExecuteContext context) {
-        return null;
     }
 
     public void handle(ExecuteCommandEntity command, ExecuteContext context, FluxSink<String> emitter) {
@@ -70,6 +57,16 @@ public class ClientExecuteHandler extends AbstractStrategyILogicRoot<ExecuteComm
             });
             tokenStream.onCompleteResponse(e -> {
                 try {
+                    // 记录token消耗
+                    if (e.tokenUsage() != null) {
+                        log.info("Client执行Token消耗 [clientId={}] - inputTokens={}, outputTokens={}, totalTokens={}",
+                                clientId,
+                                e.tokenUsage().inputTokenCount(),
+                                e.tokenUsage().outputTokenCount(),
+                                e.tokenUsage().totalTokenCount());
+                    } else {
+                        log.warn("Client执行Token消耗信息不可用 [clientId={}]", clientId);
+                    }
                     log.info("组装最终消息: clientId={}, step={}, text={}",
                             clientId,
                             1,

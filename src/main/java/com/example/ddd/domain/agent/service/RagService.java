@@ -1,6 +1,5 @@
 package com.example.ddd.domain.agent.service;
 
-import com.example.ddd.configuration.config.OpenAIProperties;
 import com.example.ddd.domain.agent.adapter.repository.IRagRepository;
 import com.example.ddd.domain.agent.adapter.repository.IVectorDocumentRepository;
 import com.example.ddd.domain.agent.model.entity.RagEntity;
@@ -40,8 +39,6 @@ public class RagService {
     @Inject
     private DSLContextFactory dslContextFactory;
 
-    @Inject
-    private OpenAIProperties openAIProperties;
 
     /**
      * 添加文档到RAG知识库
@@ -61,12 +58,12 @@ public class RagService {
         List<String> embeddingStoreIds = store.addAll(embeddings, segments);
         log.info("文档已添加到RAG: ragId={}, segments={}, embeddingStoreIds={}", ragId, segments.size(), embeddingStoreIds.size());
         return segments.size();
-    }
+            }
     public List<VectorDocumentEntity> search(Long ragId, String queryText, int limit, double similarityThreshold) {
         return dslContextFactory.callable(dslContext -> {
             RagEntity rag = ragRepository.queryById(dslContext, ragId);
             if (rag == null) {
-                throw new IllegalArgumentException("RAG not found: " + ragId);
+                throw new IllegalArgumentException("未找到RAG: " + ragId);
             }
             EmbeddingModel embeddingModel = createEmbeddingModel();
             TextSegment querySegment = TextSegment.from(queryText);
@@ -93,9 +90,9 @@ public class RagService {
      */
     private EmbeddingModel createEmbeddingModel() {
         return OpenAiEmbeddingModel.builder()
-                .apiKey(openAIProperties.getKey())
-                .baseUrl(openAIProperties.getUrl())
-                .modelName("text-embedding-ada-002")
+                .apiKey("sk-ReRvqCmAoA71cgoiC416F0809fEb46A28f7a07AcDd3e339e")
+                .baseUrl("https://apis.itedus.cn/v1/")
+                .modelName("text-embedding-3-small")
                 .build();
     }
 

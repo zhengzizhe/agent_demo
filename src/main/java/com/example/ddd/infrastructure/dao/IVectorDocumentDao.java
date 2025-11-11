@@ -53,7 +53,7 @@ public class IVectorDocumentDao {
                 return mapResultSetToPO(rs);
             }
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to insert vector document", e);
+            throw new RuntimeException("插入向量文档失败", e);
         }
         return null;
     }
@@ -91,7 +91,7 @@ public class IVectorDocumentDao {
             
             return ps.executeBatch().length;
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to batch insert vector documents", e);
+            throw new RuntimeException("批量插入向量文档失败", e);
         }
     }
 
@@ -109,7 +109,7 @@ public class IVectorDocumentDao {
                 return mapResultSetToPO(rs);
             }
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to query vector document by id", e);
+            throw new RuntimeException("根据ID查询向量文档失败", e);
         }
         return null;
     }
@@ -129,7 +129,7 @@ public class IVectorDocumentDao {
                 result.add(mapResultSetToPO(rs));
             }
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to query vector documents by rag_id", e);
+            throw new RuntimeException("根据RAG ID查询向量文档失败", e);
         }
         return result;
     }
@@ -170,7 +170,7 @@ public class IVectorDocumentDao {
                 result.add(po);
             }
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to perform similarity search", e);
+            throw new RuntimeException("执行相似度搜索失败", e);
         }
         return result;
     }
@@ -186,7 +186,7 @@ public class IVectorDocumentDao {
             ps.setLong(1, ragId);
             return ps.executeUpdate();
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to delete vector documents by rag_id", e);
+            throw new RuntimeException("根据RAG ID删除向量文档失败", e);
         }
     }
 
@@ -201,7 +201,7 @@ public class IVectorDocumentDao {
             ps.setLong(1, id);
             return ps.executeUpdate();
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to delete vector document by id", e);
+            throw new RuntimeException("根据ID删除向量文档失败", e);
         }
     }
 
