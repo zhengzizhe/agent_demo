@@ -1,6 +1,7 @@
 package com.example.ddd.domain.agent.service.armory;
 
 import com.example.ddd.common.utils.JSON;
+import com.example.ddd.common.utils.ToonUtil;
 import com.example.ddd.domain.agent.service.execute.CriticService.CriticService;
 import com.example.ddd.domain.agent.service.execute.ExecutorService.ExecutorService;
 import com.example.ddd.domain.agent.service.execute.ResearcherService.ResearcherService;
@@ -30,7 +31,6 @@ public class AgentOrchestrator {
     private final ExecutorService executor;
     private final CriticService critic;
     private final PlanParser planParser;
-
     public AgentOrchestrator(SupervisorService supervisor,
                              ResearcherService researcher,
                              ExecutorService executor,
@@ -42,11 +42,9 @@ public class AgentOrchestrator {
         this.critic = critic;
         this.planParser = new PlanParser();
     }
-
     public void runStream(Long agentId, String goal, int maxRounds,
                           Blackboard board, FluxSink<String> emitter) {
         log.info("开始执行: agentId={}, goal={}", agentId, goal);
-
         try {
             String planPrompt = buildPlanPrompt(goal, board);
             log.info("Supervisor规划开始: agentId={}, promptLength={}", agentId, planPrompt.length());
@@ -55,7 +53,8 @@ public class AgentOrchestrator {
             log.info("Supervisor规划完成: agentId={}", agentId);
             SupervisorPlan plan = JSON.parseObject(planJson, SupervisorPlan.class);
             if (plan.getGreeting() != null && !plan.getGreeting().isBlank()) {
-                emitter.next(plan.getGreeting() + "\n\n");
+                String greeting = ToonUtil.formatAgentThought(plan.getGreeting());
+                emitter.next(greeting + "\n\n");
             }
 
             if (!Boolean.TRUE.equals(plan.getShouldProceed())) {
@@ -81,7 +80,6 @@ public class AgentOrchestrator {
             }
         }
     }
-
     /**
      * 判断是否为简单任务计划
      * 简单任务：只有一个任务，或者都是research类型的简单查询
@@ -90,7 +88,6 @@ public class AgentOrchestrator {
         if (tasks.size() != 1) {
             return false; // 多个任务一定是复杂任务
         }
-
         Task task = tasks.get(0);
         // 如果只有一个research任务，且payload不复杂，则认为是简单任务
         return "Researcher".equals(task.getAssignee()) &&
@@ -98,9 +95,6 @@ public class AgentOrchestrator {
                 task.getPayload().length() < 200; // payload长度限制
     }
 
-    /**
-     * 执行简单任务（单Agent模式）
-     */
     private void executeSimpleTask(Task task, Blackboard board, FluxSink<String> emitter) {
         try {
             TokenStream stream;
@@ -114,12 +108,12 @@ public class AgentOrchestrator {
 
             stream.onPartialResponse(partialResponse -> {
                 if (!emitter.isCancelled()) {
-                    emitter.next(partialResponse);
+                    String formattedResponse = ToonUtil.formatAgentResponse(partialResponse);
+                    emitter.next(formattedResponse);
                 }
             });
 
             stream.onCompleteResponse(completeResponse -> {
-                // 记录token消耗
                 if (completeResponse.tokenUsage() != null) {
                     log.info("简单任务Token消耗 [{}] - inputTokens={}, outputTokens={}, totalTokens={}",
                             task.getAssignee(),
@@ -130,7 +124,8 @@ public class AgentOrchestrator {
                     log.warn("简单任务Token消耗信息不可用 [{}]", task.getAssignee());
                 }
                 if (!emitter.isCancelled()) {
-                    emitter.next("\n\n[DONE]");
+                    String doneMessage = ToonUtil.formatAgentResult("[DONE]");
+                    emitter.next("\n\n" + doneMessage);
                     emitter.complete();
                 }
             });
@@ -152,9 +147,6 @@ public class AgentOrchestrator {
         }
     }
 
-    /**
-     * 执行复杂任务（多Agent编排模式）
-     */
     private void executeComplexTasks(String goal, List<Task> tasks, Blackboard board, FluxSink<String> emitter) {
         try {
             ExecutionMode executionMode = determineExecutionMode(tasks);
@@ -208,7 +200,7 @@ public class AgentOrchestrator {
         }
 
         return String.format(
-                "目标: %s%s\n\n工具: %s\n\n返回JSON: {\"shouldProceed\":boolean,\"executionMode\":\"PARALLEL|SERIAL\",\"greeting\":\"\",\"tasks\":[{\"id\":\"t1\",\"type\":\"research|execute\",\"assignee\":\"Researcher|Executor\",\"payload\":\"\"}]}",
+                "目标: %s%s\n\n工具: %s\n\n严格返回JSON不许其他内容: {\"shouldProceed\":boolean,\"executionMode\":\"PARALLEL|SERIAL\",\"greeting\":\"\",\"tasks\":[{\"id\":\"t1\",\"type\":\"research|execute\",\"assignee\":\"Researcher|Executor\",\"payload\":\"\"}]}",
                 goal, boardInfo, toolCatalog
         );
     }
@@ -309,7 +301,8 @@ public class AgentOrchestrator {
         TokenStream tokenStream = supervisor.planAndRoute(prompt);
         tokenStream.onPartialResponse(partialResponse -> {
             if (!emitter.isCancelled()) {
-                emitter.next(partialResponse);
+                String formattedResponse = ToonUtil.formatAgentResponse(partialResponse);
+                emitter.next(formattedResponse);
             }
         });
         tokenStream.onCompleteResponse(completeResponse -> {
@@ -323,7 +316,8 @@ public class AgentOrchestrator {
                 log.warn("汇总结果Token消耗信息不可用");
             }
             if (!emitter.isCancelled()) {
-                emitter.next("\n\n[DONE]");
+                String doneMessage = ToonUtil.formatAgentResult("[DONE]");
+                emitter.next("\n\n" + doneMessage);
                 emitter.complete();
             }
         });

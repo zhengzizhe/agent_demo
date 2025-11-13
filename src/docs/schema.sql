@@ -611,6 +611,55 @@ VALUES
     (4, 1)   -- Critic使用GPT-4o
 ON CONFLICT (client_id, model_id) DO NOTHING;
 
+-- RAG 数据
+INSERT INTO public.rag (id, name, vector_store_type, embedding_model, chunk_size, chunk_overlap, database_type, database_host, database_port, database_name, database_user, database_password, table_name, dimension, use_index, index_list_size, config, status, created_at, updated_at)
+VALUES (
+    1,
+    'Default RAG',
+    'PGVECTOR',
+    'text-embedding-3-small',
+    1000,
+    200,
+    'POSTGRESQL',
+    'localhost',
+    5432,
+    'agent',
+    'postgres',
+    'postgres',
+    'vector_document',
+    1536,
+    true,
+    1000,
+    '{"description": "默认 RAG 配置，使用 PostgreSQL + PgVector"}'::jsonb,
+    'ACTIVE',
+    EXTRACT(EPOCH FROM CURRENT_TIMESTAMP)::BIGINT,
+    EXTRACT(EPOCH FROM CURRENT_TIMESTAMP)::BIGINT
+)
+ON CONFLICT (id) DO UPDATE SET
+    name = EXCLUDED.name,
+    vector_store_type = EXCLUDED.vector_store_type,
+    embedding_model = EXCLUDED.embedding_model,
+    chunk_size = EXCLUDED.chunk_size,
+    chunk_overlap = EXCLUDED.chunk_overlap,
+    database_type = EXCLUDED.database_type,
+    database_host = EXCLUDED.database_host,
+    database_port = EXCLUDED.database_port,
+    database_name = EXCLUDED.database_name,
+    database_user = EXCLUDED.database_user,
+    database_password = EXCLUDED.database_password,
+    table_name = EXCLUDED.table_name,
+    dimension = EXCLUDED.dimension,
+    use_index = EXCLUDED.use_index,
+    index_list_size = EXCLUDED.index_list_size,
+    config = EXCLUDED.config,
+    status = EXCLUDED.status,
+    updated_at = EXCLUDED.updated_at;
+
+-- Client-RAG 关联（Researcher Client 使用默认 RAG）
+INSERT INTO public.client_rag (client_id, rag_id)
+VALUES (2, 1)
+ON CONFLICT (client_id, rag_id) DO NOTHING;
+
 COMMIT;
 
 -- ========================================
