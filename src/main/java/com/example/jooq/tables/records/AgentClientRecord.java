@@ -60,6 +60,20 @@ public class AgentClientRecord extends UpdatableRecordImpl<AgentClientRecord> {
         return (Integer) get(2);
     }
 
+    /**
+     * Setter for <code>public.agent_client.role</code>. Client角色代码：1=supervisor, 2=worker
+     */
+    public void setRole(Long value) {
+        set(3, value);
+    }
+
+    /**
+     * Getter for <code>public.agent_client.role</code>. Client角色代码：1=supervisor, 2=worker
+     */
+    public Long getRole() {
+        return (Long) get(3);
+    }
+
     // -------------------------------------------------------------------------
     // Primary key information
     // -------------------------------------------------------------------------
@@ -89,6 +103,19 @@ public class AgentClientRecord extends UpdatableRecordImpl<AgentClientRecord> {
         setAgentId(agentId);
         setClientId(clientId);
         setSeq(seq);
+        resetChangedOnNotNull();
+    }
+
+    /**
+     * Create a detached, initialised AgentClientRecord
+     */
+    public AgentClientRecord(Long agentId, Long clientId, Integer seq, Long role) {
+        super(AgentClient.AGENT_CLIENT);
+
+        setAgentId(agentId);
+        setClientId(clientId);
+        setSeq(seq);
+        setRole(role);
         resetChangedOnNotNull();
     }
 }

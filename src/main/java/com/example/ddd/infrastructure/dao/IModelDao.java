@@ -113,10 +113,10 @@ public class IModelDao {
         if (clientIds == null || clientIds.isEmpty()) {
             return new ArrayList<>();
         }
-        // 先通过 client_model 关联表查询 model IDs
+        // 先通过 agent_model 关联表查询 model IDs
         List<Long> modelIds = dslContext.select(field("model_id"))
-                .from(table("client_model"))
-                .where(field("client_id").in(clientIds))
+                .from(table("agent_model"))
+                .where(field("agent_id").in(clientIds))
                 .fetch()
                 .stream()
                 .map(record -> (Long) record.get("model_id"))
@@ -137,10 +137,10 @@ public class IModelDao {
      * 根据Client ID查询Model列表（通过关联表）
      */
     public List<ModelPO> queryByClientId(DSLContext dslContext, Long clientId) {
-        // 先通过 client_model 关联表查询 model IDs
+        // 先通过 agent_model 关联表查询 model IDs
         List<Long> modelIds = dslContext.select(field("model_id"))
-                .from(table("client_model"))
-                .where(field("client_id").eq(clientId))
+                .from(table("agent_model"))
+                .where(field("agent_id").eq(clientId))
                 .fetch()
                 .stream()
                 .map(record -> (Long) record.get("model_id"))

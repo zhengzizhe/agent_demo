@@ -36,13 +36,13 @@ public interface IChatModelRepository {
     int deleteById(DSLContext dslContext, Long id);
 
     /**
-     * 根据Agent ID查询关联的ChatModel列表
+     * 根据Orchestrator ID查询关联的ChatModel列表
      */
-    List<ChatModelEntity> queryByAgentId(DSLContext dslContext, Long agentId);
+    List<ChatModelEntity> queryByOrchestratorId(DSLContext dslContext, Long orchestratorId);
 
     /**
-     * 根据Client ID查询Model列表
+     * 根据Agent ID查询Model列表
      */
-    List<ChatModelEntity> queryByClientId(DSLContext dslContext, Long clientId);
+    List<ChatModelEntity> queryByAgentId(DSLContext dslContext, Long agentId);
 
 }

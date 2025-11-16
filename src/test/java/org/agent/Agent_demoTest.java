@@ -15,7 +15,9 @@ class Agent_demoTest {
     @Test
     void testItWorks() {
 
-        String handle = rootNode.handle(new ArmoryCommandEntity(1L), new DynamicContext());
+        ArmoryCommandEntity command = new ArmoryCommandEntity();
+        command.setOrchestratorId(1L);
+        String handle = rootNode.handle(command, new DynamicContext());
         System.out.println(handle);
     }
 

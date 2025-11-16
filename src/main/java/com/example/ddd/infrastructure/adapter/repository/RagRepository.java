@@ -47,67 +47,66 @@ public class RagRepository implements IRagRepository {
     }
 
     /**
-     * 根据Client ID查询RAG列表
+     * 根据Agent ID查询RAG列表（兼容方法，实际调用queryByAgentId）
      */
     public List<RagEntity> queryByClientId(DSLContext dslContext, Long clientId) {
-        return ragDao.queryByClientId(dslContext, clientId).stream()
+        return queryByAgentId(dslContext, clientId);
+    }
+
+    @Override
+    public List<RagEntity> queryByAgentId(DSLContext dslContext, Long agentId) {
+        // 直接通过agentId查询agent_rag关联表
+        List<Long> ragIds = dslContext.select(field("rag_id"))
+                .from(table("agent_rag"))
+                .where(field("agent_id").eq(agentId))
+                .fetch()
+                .stream()
+                .map(record -> (Long) record.get("rag_id"))
+                .collect(Collectors.toList());
+        
+        if (ragIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+        
+        // 查询这些 rag IDs 对应的 RAG
+        return ragDao.queryByClientId(dslContext, agentId).stream()
                 .map(po -> {
                     RagEntity entity = convertToEntity(po);
-                    // 设置 clientId
+                    // 设置 agentId
                     if (entity != null) {
-                        entity.setClientId(clientId);
+                        entity.setClientId(agentId);
                     }
                     return entity;
                 })
                 .collect(Collectors.toList());
     }
 
+    /**
+     * 根据Orchestrator ID查询关联的RAG列表
+     * 先查询orchestrator关联的agent IDs，然后查询这些agents的RAG
+     */
     @Override
-    public List<RagEntity> queryByAgentId(DSLContext dslContext, Long agentId) {
-        // 先查询agent关联的client IDs
-        List<Long> clientIds = dslContext.select(field("client_id"))
-                .from(table("agent_client"))
-                .where(field("agent_id").eq(agentId))
+    public List<RagEntity> queryByOrchestratorId(DSLContext dslContext, Long orchestratorId) {
+        // 先查询orchestrator关联的agent IDs
+        List<Long> agentIds = dslContext.select(field("agent_id"))
+                .from(table("orchestrator_agent"))
+                .where(field("orchestrator_id").eq(orchestratorId))
                 .fetch()
                 .stream()
-                .map(record -> (Long) record.get("client_id"))
+                .map(record -> (Long) record.get("agent_id"))
                 .collect(Collectors.toList());
         
-        if (clientIds.isEmpty()) {
+        if (agentIds.isEmpty()) {
             return new ArrayList<>();
         }
         
-        // 通过clientId查询RAG，并建立 ragId -> clientId 的映射
-        Map<Long, Long> ragToClientMap = new java.util.HashMap<>();
-        for (Long clientId : clientIds) {
-            List<Long> ragIds = dslContext.select(field("rag_id"))
-                    .from(table("client_rag"))
-                    .where(field("client_id").eq(clientId))
-                    .fetch()
-                    .stream()
-                    .map(record -> (Long) record.get("rag_id"))
-                    .collect(Collectors.toList());
-            for (Long ragId : ragIds) {
-                ragToClientMap.putIfAbsent(ragId, clientId);
-            }
+        // 查询这些agents的RAG
+        List<RagEntity> allRags = new ArrayList<>();
+        for (Long agentId : agentIds) {
+            allRags.addAll(queryByAgentId(dslContext, agentId));
         }
         
-        // 查询这些 rag IDs 对应的 RAG
-        List<Long> allRagIds = new ArrayList<>(ragToClientMap.keySet());
-        if (allRagIds.isEmpty()) {
-            return new ArrayList<>();
-        }
-        
-        return ragDao.queryByClientIds(dslContext, clientIds).stream()
-                .map(po -> {
-                    RagEntity entity = convertToEntity(po);
-                    // 设置 clientId
-                    if (entity != null && ragToClientMap.containsKey(entity.getId())) {
-                        entity.setClientId(ragToClientMap.get(entity.getId()));
-                    }
-                    return entity;
-                })
-                .collect(Collectors.toList());
+        return allRags;
     }
 
     @Override

@@ -26,14 +26,14 @@ public interface IRagRepository {
     List<RagEntity> queryAll(DSLContext dslContext);
 
     /**
-     * 根据Agent ID查询关联的RAG列表
+     * 根据Orchestrator ID查询关联的RAG列表
      */
-    List<RagEntity> queryByAgentId(DSLContext dslContext, Long agentId);
+    List<RagEntity> queryByOrchestratorId(DSLContext dslContext, Long orchestratorId);
 
     /**
-     * 根据Client ID查询RAG列表
+     * 根据Agent ID查询RAG列表
      */
-    List<RagEntity> queryByClientId(DSLContext dslContext, Long clientId);
+    List<RagEntity> queryByAgentId(DSLContext dslContext, Long agentId);
 
     /**
      * 更新Rag

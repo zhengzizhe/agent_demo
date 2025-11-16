@@ -1,6 +1,8 @@
 package com.example.ddd.common.utils;
 
-import com.example.ddd.domain.agent.service.armory.AgentOrchestrator;
+import com.example.ddd.domain.agent.service.armory.AiService;
+import com.example.ddd.domain.agent.service.armory.ServiceNode;
+import com.example.ddd.domain.agent.service.execute.Orchestrator;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.store.embedding.EmbeddingStore;
@@ -9,6 +11,11 @@ import io.micronaut.inject.qualifiers.Qualifiers;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static com.example.ddd.common.constant.IAgentConstant.COLON;
 
@@ -22,6 +29,9 @@ public class BeanUtil {
     @Inject
     private ApplicationContext applicationContext;
 
+    private final Map<Long, List<ServiceNode>> agentServiceNodes = new ConcurrentHashMap<>();
+
+    private final Map<Long, Orchestrator> agentOrchestrators = new ConcurrentHashMap<>();
     /**
      * 注册Bean（不带qualifier）
      *
@@ -50,16 +60,17 @@ public class BeanUtil {
      *
      * @param modelId   模型ID
      * @param chatModel ChatModel实例
-     * @return 是否为新注册（true=新注册，false=复用已存在的）
+     * @return 是否注册成功（如果已存在则返回true不处理，不存在则注册后返回true）
      */
     public boolean registerChatModel(Long modelId, StreamingChatModel chatModel) {
         String qualifier = "ChatModel" + COLON + modelId;
         try {
             StreamingChatModel existing = getBean(StreamingChatModel.class, qualifier);
             if (existing != null) {
-                return false;
+                return true;
             }
         } catch (Exception e) {
+            // Bean不存在是正常情况，忽略异常
         }
         registerBean(StreamingChatModel.class, chatModel, qualifier);
         return true;
@@ -70,21 +81,17 @@ public class BeanUtil {
      *
      * @param ragId          RAG ID
      * @param embeddingStore EmbeddingStore实例
-     * @return 是否为新注册（true=新注册，false=更新已存在的）
+     * @return 是否注册成功（如果已存在则返回true不处理，不存在则注册后返回true）
      */
     public boolean registerEmbeddingStore(Long ragId, EmbeddingStore<?> embeddingStore) {
         String qualifier = "EmbeddingStore" + COLON + ragId;
-        boolean existed = false;
-        try {
-            EmbeddingStore<?> existing = getBean(EmbeddingStore.class, qualifier);
-            if (existing != null) {
-                existed = true;
-                log.warn("更新已存在的EmbeddingStore: ragId={}", ragId);
-            }
-        } catch (Exception e) {
+
+        EmbeddingStore<?> existing = getBean(EmbeddingStore.class, qualifier);
+        if (existing != null) {
+            return true;
         }
         registerBean(EmbeddingStore.class, embeddingStore, qualifier);
-        return !existed;
+        return true;
     }
 
     /**
@@ -92,21 +99,18 @@ public class BeanUtil {
      *
      * @param ragId          RAG ID
      * @param embeddingModel EmbeddingModel实例
-     * @return 是否为新注册（true=新注册，false=更新已存在的）
+     * @return 是否注册成功（如果已存在则返回true不处理，不存在则注册后返回true）
      */
     public boolean registerEmbeddingModel(Long ragId, EmbeddingModel embeddingModel) {
         String qualifier = "EmbeddingModel" + COLON + ragId;
-        boolean existed = false;
-        try {
-            EmbeddingModel existing = getBean(EmbeddingModel.class, qualifier);
-            if (existing != null) {
-                existed = true;
-                log.warn("更新已存在的EmbeddingModel: ragId={}", ragId);
-            }
-        } catch (Exception e) {
+
+        EmbeddingModel existing = getBean(EmbeddingModel.class, qualifier);
+        if (existing != null) {
+            return true;
         }
+
         registerBean(EmbeddingModel.class, embeddingModel, qualifier);
-        return !existed;
+        return true;
     }
 
 
@@ -119,7 +123,13 @@ public class BeanUtil {
      * @return Bean实例
      */
     public <T> T getBean(Class<T> beanType, String qualifierName) {
-        return applicationContext.getBean(beanType, Qualifiers.byName(qualifierName));
+        try {
+            return applicationContext.getBean(beanType, Qualifiers.byName(qualifierName));
+
+        } catch (Exception e) {
+            return null;
+        }
+
     }
 
     /**
@@ -153,23 +163,89 @@ public class BeanUtil {
     }
 
     /**
-     * 注册AgentOrchestrator
+     * 注册AiService
      *
-     * @param agentId Agent ID
-     * @param orchestrator AgentOrchestrator实例
+     * @param clientId  Client ID
+     * @param aiService AiService实例
+     * @return 是否注册成功（如果已存在则返回true不处理，不存在则注册后返回true）
      */
-    public void registerOrchestrator(Long agentId, AgentOrchestrator orchestrator) {
-        String qualifier = "AgentOrchestrator" + COLON + agentId;
-        registerBean(AgentOrchestrator.class, orchestrator, qualifier);
+    public boolean registerAiService(Long clientId, AiService aiService) {
+        String qualifier = "AiService" + COLON + clientId;
+
+        AiService existing = getBean(AiService.class, qualifier);
+        if (existing != null) {
+            return true;
+        }
+
+        registerBean(AiService.class, aiService, qualifier);
+        return true;
     }
 
     /**
-     * 获取AgentOrchestrator
+     * 获取AiService
+     *
+     * @param clientId Client ID
+     * @return AiService实例
+     */
+    public AiService getAiService(Long clientId) {
+        return getBean(AiService.class, "AiService" + COLON + clientId);
+    }
+
+    /**
+     * 注册ServiceNode到Agent
+     *
+     * @param agentId     Agent ID
+     * @param serviceNode ServiceNode实例
+     * @return 是否注册成功（如果已存在则返回true不处理，不存在则注册后返回true）
+     */
+    public boolean registerServiceNode(Long agentId, ServiceNode serviceNode) {
+        List<ServiceNode> nodes = agentServiceNodes.computeIfAbsent(agentId, k -> new ArrayList<>());
+        // 检查是否已存在相同 clientId 的 ServiceNode
+        boolean exists = nodes.stream()
+                .anyMatch(node -> node.getClientId().equals(serviceNode.getClientId()));
+        if (exists) {
+            return true;
+        }
+        nodes.add(serviceNode);
+        log.debug("注册ServiceNode: agentId={}, role={}, clientId={}",
+                agentId, serviceNode.getRole(), serviceNode.getClientId());
+        return true;
+    }
+
+    /**
+     * 获取Agent的所有ServiceNode
      *
      * @param agentId Agent ID
-     * @return AgentOrchestrator实例
+     * @return ServiceNode列表
      */
-    public AgentOrchestrator getOrchestrator(Long agentId) {
-        return getBean(AgentOrchestrator.class, "AgentOrchestrator" + COLON + agentId);
+    public List<ServiceNode> getServiceNodes(Long agentId) {
+        return new ArrayList<>(agentServiceNodes.getOrDefault(agentId, new ArrayList<>()));
+    }
+
+
+    /**
+     * 注册Orchestrator到Agent
+     *
+     * @param agentId      Agent ID
+     * @param orchestrator Orchestrator实例
+     * @return 是否注册成功（如果已存在则返回true不处理，不存在则注册后返回true）
+     */
+    public boolean registerOrchestrator(Long agentId, Orchestrator orchestrator) {
+        if (agentOrchestrators.containsKey(agentId)) {
+            return true;
+        }
+        agentOrchestrators.put(agentId, orchestrator);
+        log.debug("注册Orchestrator: agentId={}", agentId);
+        return true;
+    }
+
+    /**
+     * 获取Agent的Orchestrator
+     *
+     * @param agentId Agent ID
+     * @return Orchestrator实例
+     */
+    public Orchestrator getOrchestrator(Long agentId) {
+        return agentOrchestrators.get(agentId);
     }
 }

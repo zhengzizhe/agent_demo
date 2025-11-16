@@ -1,8 +1,8 @@
 package com.example.ddd.domain.agent.service.armory;
 
 import com.example.ddd.common.utils.ILogicHandler;
+import com.example.ddd.domain.agent.adapter.repository.IOrchestratorRepository;
 import com.example.ddd.domain.agent.adapter.repository.IAgentRepository;
-import com.example.ddd.domain.agent.adapter.repository.IClientRepository;
 import com.example.ddd.domain.agent.model.entity.*;
 import com.example.ddd.infrastructure.config.DSLContextFactory;
 import dev.langchain4j.internal.Json;
@@ -22,44 +22,43 @@ import static com.example.ddd.common.constant.IAgentConstant.*;
 public class RootNode extends AbstractArmorySupport {
 
     @Inject
-    private IClientRepository clientRepository;
+    private IAgentRepository agentRepository;
     @Inject
     private DSLContextFactory dslContextFactory;
     @Inject
-    private IAgentRepository agentRepository;
+    private IOrchestratorRepository orchestratorRepository;
     @Inject
     RagNode ragNode;
 
 
     @Override
     public String handle(ArmoryCommandEntity armoryCommandEntity, DynamicContext dynamicContext) {
-        log.info("Ai agent开始构建流程:{}", "默认配置");
-        Long agentId = armoryCommandEntity.getAgentId();
+        Long orchestratorId = armoryCommandEntity.getOrchestratorId();
+        log.info("多agent构建中: orchestratorId={}", orchestratorId);
 
         CompletableFuture<Void> agentFuture = CompletableFuture.runAsync(() -> dslContextFactory.execute(dslContext -> {
-            AgentEntity agent = agentRepository.queryById(dslContext, agentId);
-            dynamicContext.put(AGENT_KEY, Json.toJson(agent));
-            log.info("AI agent构建中 查找到agent:{}，数量为:{}", Json.toJson(agent), agent == null ? 0 : 1);
+            OrchestratorEntity orchestrator = orchestratorRepository.queryById(dslContext, orchestratorId);
+            dynamicContext.put(AGENT_KEY, Json.toJson(orchestrator));
+            log.info("多agent构建中 查询orchestrator信息: orchestratorId={}, 已找到={}", orchestratorId, orchestrator != null);
         }));
 
         CompletableFuture<Void> clientFuture = CompletableFuture.runAsync(() -> dslContextFactory.execute(dslContext -> {
-            List<ClientEntity> clients = clientRepository.queryByAgentId(dslContext, agentId);
-            dynamicContext.put(CLIENT_KEY, Json.toJson(clients));
-            log.info("AI agent构建中 获取client信息: {},数量为:{}", Json.toJson(clients), clients.size());
+            List<AgentEntity> agents = agentRepository.queryByOrchestratorId(dslContext, orchestratorId);
+            dynamicContext.put(CLIENT_KEY, Json.toJson(agents));
+            log.info("多agent构建中 查询agent列表: orchestratorId={}, agent数量={}", orchestratorId, agents.size());
         }));
 
         CompletableFuture<Void> modelMapFuture = CompletableFuture.runAsync(() -> dslContextFactory.execute(dslContext -> {
-            Map<Long, List<ChatModelEntity>> modelMap = clientRepository.queryModelMapByAgentId(dslContext, agentId);
+            Map<Long, List<ChatModelEntity>> modelMap = agentRepository.queryModelMapByOrchestratorId(dslContext, orchestratorId);
 
             dynamicContext.put(MODEL_KEY, Json.toJson(modelMap));
-            log.info("AI agent构建中 获取model信息: {},数量为:{}", Json.toJson(modelMap), modelMap.size());
+            log.info("多agent构建中 查询model配置: orchestratorId={}, agent数量={}", orchestratorId, modelMap.size());
         }));
 
         CompletableFuture<Void> ragMapFuture = CompletableFuture.runAsync(() -> dslContextFactory.execute(dslContext -> {
-            Map<Long, List<RagEntity>> ragMap = clientRepository.queryRagMapByAgentId(dslContext, agentId);
-
+            Map<Long, List<RagEntity>> ragMap = agentRepository.queryRagMapByOrchestratorId(dslContext, orchestratorId);
             dynamicContext.put(RAG_KEY, Json.toJson(ragMap));
-            log.info("AI agent构建中 获取Rag信息: {},数量为:{}", Json.toJson(ragMap), ragMap.size());
+            log.info("多agent构建中 查询RAG配置: orchestratorId={}, agent数量={}", orchestratorId, ragMap.size());
         }));
 
         CompletableFuture.allOf(agentFuture, clientFuture, modelMapFuture, ragMapFuture).join();

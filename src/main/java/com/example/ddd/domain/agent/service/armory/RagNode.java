@@ -32,19 +32,19 @@ public class RagNode extends AbstractArmorySupport {
 
     @Override
     public String handle(ArmoryCommandEntity armoryCommandEntity, DynamicContext dynamicContext) {
-        Long agentId = armoryCommandEntity.getAgentId();
+        Long agentId = armoryCommandEntity.getOrchestratorId();
         String ragJson = dynamicContext.get(RAG_KEY);
         Map<Long, List<RagEntity>> ragMap = JSON.parseObject(ragJson,
                 new com.fasterxml.jackson.core.type.TypeReference<>() {
                 });
         if (ragMap == null || ragMap.isEmpty()) {
-            log.warn("Agent {} 没有配置RAG，跳过RAG构建", agentId);
+            log.warn("多agent构建中 orchestratorId={} 没有配置RAG，跳过RAG构建", agentId);
             return router(armoryCommandEntity, dynamicContext);
         }
         ragMap.values().stream()
                 .flatMap(List::stream)
                 .forEach(ragEntity -> {
-                    log.info("Ai agent构建中 构建rag:{} agentId:{}", ragEntity.getName(), agentId);
+                    log.info("多agent构建中 构建RAG: ragName={}, orchestratorId={}", ragEntity.getName(), agentId);
                     PgVectorEmbeddingStore embeddingStore = getEmbeddingStore(ragEntity);
                     beanUtil.registerEmbeddingStore(ragEntity.getId(), embeddingStore);
                     EmbeddingModel embeddingModel = createEmbeddingModel(ragEntity);

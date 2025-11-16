@@ -59,50 +59,30 @@ public class ChatModelRepository implements IChatModelRepository {
 
     /**
      * 根据Agent ID查询关联的ChatModel列表
-     * 先查询agent关联的client IDs，然后通过clientId查询Model
+     * 直接通过agent_id查询agent_model关联表
      */
     @Override
     public List<ChatModelEntity> queryByAgentId(DSLContext dslContext, Long agentId) {
-        // 先查询agent关联的client IDs
-        List<Long> clientIds = dslContext.select(field("client_id"))
-                .from(table("agent_client"))
+        // 直接通过agentId查询agent_model关联表
+        List<Long> modelIds = dslContext.select(field("model_id"))
+                .from(table("agent_model"))
                 .where(field("agent_id").eq(agentId))
                 .fetch()
                 .stream()
-                .map(record -> (Long) record.get("client_id"))
+                .map(record -> (Long) record.get("model_id"))
                 .collect(Collectors.toList());
         
-        if (clientIds.isEmpty()) {
+        if (modelIds.isEmpty()) {
             return new ArrayList<>();
-        }
-        
-        // 通过clientId查询Model，并建立 modelId -> clientId 的映射
-        Map<Long, Long> modelToClientMap = new java.util.HashMap<>();
-        for (Long clientId : clientIds) {
-            List<Long> modelIds = dslContext.select(field("model_id"))
-                    .from(table("client_model"))
-                    .where(field("client_id").eq(clientId))
-                    .fetch()
-                    .stream()
-                    .map(record -> (Long) record.get("model_id"))
-                    .collect(Collectors.toList());
-            for (Long modelId : modelIds) {
-                modelToClientMap.putIfAbsent(modelId, clientId);
-            }
         }
         
         // 查询这些 model IDs 对应的 Model
-        List<Long> allModelIds = new ArrayList<>(modelToClientMap.keySet());
-        if (allModelIds.isEmpty()) {
-            return new ArrayList<>();
-        }
-        
-        return modelDao.queryByClientIds(dslContext, clientIds).stream()
+        return modelDao.queryByClientId(dslContext, agentId).stream()
                 .map(po -> {
                     ChatModelEntity entity = convertToEntity(po);
-                    // 设置 clientId
-                    if (entity != null && modelToClientMap.containsKey(entity.getId())) {
-                        entity.setClientId(modelToClientMap.get(entity.getId()));
+                    // 设置 agentId
+                    if (entity != null) {
+                        entity.setClientId(agentId);
                     }
                     return entity;
                 })
@@ -110,19 +90,38 @@ public class ChatModelRepository implements IChatModelRepository {
     }
 
     /**
-     * 根据Client ID查询Model列表
+     * 根据Agent ID查询Model列表（兼容方法，实际调用queryByAgentId）
      */
     public List<ChatModelEntity> queryByClientId(DSLContext dslContext, Long clientId) {
-        return modelDao.queryByClientId(dslContext, clientId).stream()
-                .map(po -> {
-                    ChatModelEntity entity = convertToEntity(po);
-                    // 设置 clientId
-                    if (entity != null) {
-                        entity.setClientId(clientId);
-                    }
-                    return entity;
-                })
+        return queryByAgentId(dslContext, clientId);
+    }
+
+    /**
+     * 根据Orchestrator ID查询关联的ChatModel列表
+     * 先查询orchestrator关联的agent IDs，然后查询这些agents的Model
+     */
+    @Override
+    public List<ChatModelEntity> queryByOrchestratorId(DSLContext dslContext, Long orchestratorId) {
+        // 先查询orchestrator关联的agent IDs
+        List<Long> agentIds = dslContext.select(field("agent_id"))
+                .from(table("orchestrator_agent"))
+                .where(field("orchestrator_id").eq(orchestratorId))
+                .fetch()
+                .stream()
+                .map(record -> (Long) record.get("agent_id"))
                 .collect(Collectors.toList());
+        
+        if (agentIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+        
+        // 查询这些agents的Model
+        List<ChatModelEntity> allModels = new ArrayList<>();
+        for (Long agentId : agentIds) {
+            allModels.addAll(queryByAgentId(dslContext, agentId));
+        }
+        
+        return allModels;
     }
 
     // 转换方法

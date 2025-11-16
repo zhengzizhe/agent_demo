@@ -5,9 +5,7 @@ import com.example.ddd.common.utils.ILogicHandler;
 import com.example.ddd.common.utils.JSON;
 import com.example.ddd.domain.agent.model.entity.ArmoryCommandEntity;
 import com.example.ddd.domain.agent.model.entity.ChatModelEntity;
-import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
-import dev.langchain4j.model.openai.OpenAiChatModel;
 import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
@@ -24,25 +22,25 @@ public class ChatModelNode extends AbstractArmorySupport {
     @Inject
     BeanUtil beanUtil;
     @Inject
-    AiServiceNode aiServiceNode;
+    AgentNode agentNode;
 
     @Override
     public String handle(ArmoryCommandEntity armoryCommandEntity, DynamicContext dynamicContext) {
-        Long agentId = armoryCommandEntity.getAgentId();
-        log.info("Ai agent构建中 开始构建model:{} agentId:{}", "默认配置", agentId);
+        Long agentId = armoryCommandEntity.getOrchestratorId();
+        log.info("多agent构建中 开始构建ChatModel: orchestratorId={}", agentId);
         String chatModelJson = dynamicContext.get(MODEL_KEY);
         Map<Long, List<ChatModelEntity>> modelMap = JSON.parseObject(chatModelJson,
                 new com.fasterxml.jackson.core.type.TypeReference<Map<Long, List<ChatModelEntity>>>() {
                 });
         if (modelMap == null || modelMap.isEmpty()) {
-            log.warn("Agent {} 没有配置Model，跳过Model构建", agentId);
+            log.warn("多agent构建中 orchestratorId={} 没有配置Model，跳过ChatModel构建", agentId);
             return router(armoryCommandEntity, dynamicContext);
         }
 
         modelMap.values().stream()
                 .flatMap(List::stream)
                 .forEach(chatModelEntity -> {
-                    log.info("Ai agent构建中 构建model:{} agentId:{}", chatModelEntity.getName(), agentId);
+                    log.info("多agent构建中 构建ChatModel: modelName={}, orchestratorId={}", chatModelEntity.getName(), agentId);
                     StreamingChatModel chatModel = getChatModel(chatModelEntity);
                     beanUtil.registerChatModel(chatModelEntity.getId(), chatModel);
                 });
@@ -69,6 +67,6 @@ public class ChatModelNode extends AbstractArmorySupport {
 
     @Override
     public ILogicHandler<ArmoryCommandEntity, DynamicContext, String> getNextHandler() {
-        return aiServiceNode; // AiServiceNode will be injected if needed
+        return agentNode; // AiServiceNode will be injected if needed
     }
 }

@@ -111,10 +111,10 @@ public class IRagDao {
         if (clientIds == null || clientIds.isEmpty()) {
             return new ArrayList<>();
         }
-        // 先通过 client_rag 关联表查询 rag IDs
+        // 先通过 agent_rag 关联表查询 rag IDs
         List<Long> ragIds = dslContext.select(field("rag_id"))
-                .from(table("client_rag"))
-                .where(field("client_id").in(clientIds))
+                .from(table("agent_rag"))
+                .where(field("agent_id").in(clientIds))
                 .fetch()
                 .stream()
                 .map(record -> (Long) record.get("rag_id"))
@@ -135,10 +135,10 @@ public class IRagDao {
      * 根据Client ID查询RAG列表（通过关联表）
      */
     public List<RagPO> queryByClientId(DSLContext dslContext, Long clientId) {
-        // 先通过 client_rag 关联表查询 rag IDs
+        // 先通过 agent_rag 关联表查询 rag IDs
         List<Long> ragIds = dslContext.select(field("rag_id"))
-                .from(table("client_rag"))
-                .where(field("client_id").eq(clientId))
+                .from(table("agent_rag"))
+                .where(field("agent_id").eq(clientId))
                 .fetch()
                 .stream()
                 .map(record -> (Long) record.get("rag_id"))

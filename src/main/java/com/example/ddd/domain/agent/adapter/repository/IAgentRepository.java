@@ -1,38 +1,46 @@
 package com.example.ddd.domain.agent.adapter.repository;
 
 import com.example.ddd.domain.agent.model.entity.AgentEntity;
+import com.example.ddd.domain.agent.model.entity.ChatModelEntity;
+import com.example.ddd.domain.agent.model.entity.RagEntity;
 import org.jooq.DSLContext;
 
 import java.util.List;
+import java.util.Map;
 
 /**
- * Agent仓储接口
+ * Agent仓储接口（原Client仓储）
  */
 public interface IAgentRepository {
 
     /**
-     * 插入Agent
+     * 根据Orchestrator ID查询关联的Agent列表
      */
-    AgentEntity insert(DSLContext dslContext, AgentEntity agentEntity);
+    List<AgentEntity> queryByOrchestratorId(DSLContext dslContext, Long orchestratorId);
 
     /**
-     * 根据ID查询Agent
+     * 根据Orchestrator ID查询Model映射（agentId -> List<ChatModelEntity>）
      */
-    AgentEntity queryById(DSLContext dslContext, Long id);
+    Map<Long, List<ChatModelEntity>> queryModelMapByOrchestratorId(DSLContext dslContext, Long orchestratorId);
 
     /**
-     * 查询所有Agent
+     * 根据Orchestrator ID查询RAG映射（agentId -> List<RagEntity>）
      */
-    List<AgentEntity> queryAll(DSLContext dslContext);
+    Map<Long, List<RagEntity>> queryRagMapByOrchestratorId(DSLContext dslContext, Long orchestratorId);
 
     /**
-     * 更新Agent
+     * 根据Agent ID查询Model列表
      */
-    int update(DSLContext dslContext, AgentEntity agentEntity);
+    List<ChatModelEntity> queryModelsByAgentId(DSLContext dslContext, Long agentId);
 
     /**
-     * 根据ID删除Agent
+     * 根据Agent ID查询RAG列表
      */
-    int deleteById(DSLContext dslContext, Long id);
+    List<RagEntity> queryRagsByAgentId(DSLContext dslContext, Long agentId);
 
+    /**
+     * 根据Agent ID查询MCP ID列表
+     */
+    List<Long> queryMcpIdsByAgentId(DSLContext dslContext, Long agentId);
 }
+

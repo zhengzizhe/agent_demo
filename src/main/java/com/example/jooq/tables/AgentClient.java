@@ -72,6 +72,11 @@ public class AgentClient extends TableImpl<AgentClientRecord> {
      */
     public final TableField<AgentClientRecord, Integer> SEQ = createField(DSL.name("seq"), SQLDataType.INTEGER, this, "");
 
+    /**
+     * The column <code>public.agent_client.role</code>. Client角色代码：1=supervisor, 2=worker
+     */
+    public final TableField<AgentClientRecord, Long> ROLE = createField(DSL.name("role"), SQLDataType.BIGINT, this, "Client角色代码：1=supervisor, 2=worker");
+
     private AgentClient(Name alias, Table<AgentClientRecord> aliased) {
         this(alias, aliased, (Field<?>[]) null, null);
     }

@@ -153,6 +153,11 @@
             <artifactId>langchain4j-pgvector</artifactId>
             <version>1.5.0-beta11</version>
         </dependency>
+<dependency>
+    <groupId>org.bsc.langgraph4j</groupId>
+    <artifactId>langgraph4j-langchain4j</artifactId>
+    <version>1.7.3</version>
+</dependency>
 
         <dependency>
             <groupId>io.projectreactor</groupId>
