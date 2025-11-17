@@ -80,8 +80,7 @@ public class Orchestrator {
         TokenStream chat = supAi.chat(planningPrompt);
         CountDownLatch latch = new CountDownLatch(1);
         StringBuilder builder = new StringBuilder();
-        chat.onPartialResponse(e -> {
-        });
+
         chat.onCompleteResponse(e -> {
             AiMessage aiMessage = e.aiMessage();
             builder.append(aiMessage.text());
@@ -174,7 +173,6 @@ public class Orchestrator {
             log.info("开始执行任务流程: {}", userRequest);
             TaskPlan taskPlan = plan(userRequest, userContext);
             log.info("任务计划生成完成: {}", taskPlan.getSummary());
-            // 构建图时传递UserContext，执行器会存储引用
             CompiledGraph<WorkspaceState> graph = buildGraph(taskPlan, userContext);
             log.info("执行图构建完成");
             Map<String, Object> init = new HashMap<>();

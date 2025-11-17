@@ -39,14 +39,13 @@ public class UserContext {
             try {
                 while (running.get() || !eventQueue.isEmpty()) {
                     try {
-                        // 从队列中取出事件，最多等待1秒
                         TaskStatusEvent event = eventQueue.poll(1, TimeUnit.SECONDS);
                         if (event != null) {
                             if (emitter != null && !emitter.isCancelled()) {
                                 emitter.next(event);
-                                log.debug("事件分发器发送事件: type={}, taskId={}", event.getType(), event.getTaskId());
+                                log.info("事件分发器发送事件到前端: type={}, taskId={}, message={}", event.getType(), event.getTaskId(), event.getMessage());
                             } else {
-                                log.warn("Emitter已取消或为空，停止事件分发");
+                                log.warn("Emitter已取消或为空，停止事件分发: type={}, taskId={}", event.getType(), event.getTaskId());
                                 break;
                             }
                         }
@@ -58,7 +57,6 @@ public class UserContext {
                         log.error("事件分发器发送事件失败: {}", e.getMessage(), e);
                     }
                 }
-                // 队列为空且不再运行时，发送完成事件
                 if (emitter != null && !emitter.isCancelled()) {
                     emitter.complete();
                     log.debug("事件分发器完成");
@@ -70,12 +68,10 @@ public class UserContext {
                 }
             }
         }, "UserContext-EventDispatcher");
-
         this.dispatcherThread.setDaemon(true);
         this.dispatcherThread.start();
         log.debug("事件分发器守护线程已启动");
     }
-
     /**
      * 停止事件分发器
      */
@@ -87,7 +83,6 @@ public class UserContext {
             }
         }
     }
-
     /**
      * 发送事件到队列（线程安全）
      *
@@ -101,7 +96,7 @@ public class UserContext {
             }
             boolean offered = eventQueue.offer(event);
             if (offered) {
-                log.debug("事件已加入队列: type={}, taskId={}", event.getType(), event.getTaskId());
+                log.info("事件已加入队列: type={}, taskId={}, message={}", event.getType(), event.getTaskId(), event.getMessage());
             } else {
                 log.warn("事件队列已满，无法添加事件: type={}, taskId={}", event.getType(), event.getTaskId());
             }
@@ -114,8 +109,17 @@ public class UserContext {
      * 发送完成事件（标记停止，等待队列处理完）
      */
     public void complete() {
-        log.info("标记事件分发器完成，等待队列处理完");
+        log.info("标记事件分发器完成，当前队列大小: {}, 等待队列处理完", eventQueue.size());
         stopEventDispatcher();
+        if (dispatcherThread != null && dispatcherThread.isAlive()) {
+            try {
+                dispatcherThread.join(5000);
+                log.info("事件分发器线程已结束，最终队列大小: {}", eventQueue.size());
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                log.warn("等待事件分发器线程被中断");
+            }
+        }
     }
 
     /**
