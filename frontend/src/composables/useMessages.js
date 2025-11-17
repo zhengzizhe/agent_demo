@@ -1,0 +1,213 @@
+/**
+ * 消息管理 Composable
+ */
+import { ref } from 'vue'
+import { getTaskStatusClass, findTaskInArray } from '../utils/task.js'
+
+export function useMessages() {
+  const messages = ref([])
+  const error = ref('')
+
+  /**
+   * 添加用户消息
+   */
+  const addUserMessage = (content) => {
+    messages.value.push({
+      role: 'user',
+      content: String(content || ''),
+      timestamp: new Date()
+    })
+  }
+
+  /**
+   * 添加助手消息
+   */
+  const addAssistantMessage = (content = '', streaming = false) => {
+    const newMessage = {
+      role: 'assistant',
+      content: String(content || ''),
+      streaming: streaming,
+      tasks: [],
+      timestamp: new Date()
+    }
+    messages.value.push(newMessage)
+    console.log('添加 assistant 消息:', newMessage)
+    return newMessage
+  }
+
+  /**
+   * 更新最后一条助手消息
+   */
+  const updateLastAssistantMessage = (content, streaming = false) => {
+    const lastMessage = messages.value[messages.value.length - 1]
+    if (lastMessage && lastMessage.role === 'assistant') {
+      // 创建新消息对象以确保响应式更新，同时保留 tasks
+      const newMessages = messages.value.map((msg, idx) => {
+        if (idx === messages.value.length - 1 && msg.role === 'assistant') {
+          return {
+            ...msg,
+            content: String(content || ''),
+            streaming: streaming,
+            tasks: msg.tasks ? [...msg.tasks] : [] // 保留并复制 tasks 数组
+          }
+        }
+        return msg
+      })
+      messages.value = newMessages
+    } else {
+      addAssistantMessage(content, streaming)
+    }
+  }
+
+  /**
+   * 追加到最后一条助手消息
+   */
+  const appendToLastAssistantMessage = (content) => {
+    const lastMessage = messages.value[messages.value.length - 1]
+    if (lastMessage && lastMessage.role === 'assistant') {
+      // 创建新消息对象以确保响应式更新，同时保留 tasks
+      const newMessages = messages.value.map((msg, idx) => {
+        if (idx === messages.value.length - 1 && msg.role === 'assistant') {
+          return {
+            ...msg,
+            content: (msg.content || '') + String(content || ''),
+            tasks: msg.tasks ? [...msg.tasks] : [] // 保留并复制 tasks 数组
+          }
+        }
+        return msg
+      })
+      messages.value = newMessages
+    } else {
+      addAssistantMessage(content)
+    }
+  }
+
+  /**
+   * 将任务列表附加到最后一条AI消息
+   */
+  const attachTasksToLastMessage = (taskList) => {
+    const lastMessage = messages.value[messages.value.length - 1]
+    console.log('attachTasksToLastMessage 调用:', {
+      hasLastMessage: !!lastMessage,
+      lastMessageRole: lastMessage?.role,
+      taskListLength: taskList?.length,
+      taskList: taskList,
+      currentTasksCount: lastMessage?.tasks?.length || 0
+    })
+    
+    if (lastMessage && lastMessage.role === 'assistant') {
+      const tasksWithStatus = (taskList || []).map(task => ({
+        ...task,
+        status: task.status || 'PENDING'
+      }))
+      
+      // 使用 Object.assign 确保响应式更新
+      lastMessage.tasks = tasksWithStatus
+      
+      // 强制触发响应式更新 - 创建新数组引用
+      const newMessages = messages.value.map((msg, idx) => {
+        if (idx === messages.value.length - 1 && msg.role === 'assistant') {
+          return {
+            ...msg,
+            tasks: [...tasksWithStatus] // 创建新数组
+          }
+        }
+        return msg
+      })
+      messages.value = newMessages
+      
+      console.log('任务列表已附加:', {
+        messageIndex: messages.value.length - 1,
+        tasksCount: messages.value[messages.value.length - 1].tasks.length,
+        tasks: messages.value[messages.value.length - 1].tasks
+      })
+    } else {
+      console.warn('没有找到 assistant 消息来附加任务列表', {
+        lastMessage: lastMessage,
+        messagesLength: messages.value.length
+      })
+    }
+  }
+
+  /**
+   * 更新最后一条AI消息中的任务状态
+   */
+  const updateTaskInLastMessage = (taskId, status, content = null, errorMsg = null) => {
+    const lastMessage = messages.value[messages.value.length - 1]
+    if (!lastMessage || lastMessage.role !== 'assistant' || !lastMessage.tasks) {
+      return
+    }
+
+    // 创建新数组以确保响应式更新
+    const updateTaskInArray = (taskList) => {
+      if (!taskList) return taskList
+      return taskList.map(t => {
+        if (t.id === taskId) {
+          const updated = { ...t, status }
+          if (content) {
+            updated.result = (t.result || '') + content
+          }
+          if (errorMsg) {
+            updated.error = errorMsg
+          }
+          return updated
+        }
+        if (t.children) {
+          return { ...t, children: updateTaskInArray(t.children) }
+        }
+        return t
+      })
+    }
+    
+    const updatedTasks = updateTaskInArray(lastMessage.tasks)
+    
+    // 创建新消息对象以确保响应式更新
+    const newMessages = messages.value.map((msg, idx) => {
+      if (idx === messages.value.length - 1 && msg.role === 'assistant') {
+        return {
+          ...msg,
+          tasks: updatedTasks
+        }
+      }
+      return msg
+    })
+    messages.value = newMessages
+  }
+
+  /**
+   * 设置错误消息
+   */
+  const setError = (errorMessage) => {
+    error.value = errorMessage
+  }
+
+  /**
+   * 清除错误消息
+   */
+  const clearError = () => {
+    error.value = ''
+  }
+
+  /**
+   * 清除所有消息
+   */
+  const clearMessages = () => {
+    messages.value = []
+    error.value = ''
+  }
+
+  return {
+    messages,
+    error,
+    addUserMessage,
+    addAssistantMessage,
+    updateLastAssistantMessage,
+    appendToLastAssistantMessage,
+    attachTasksToLastMessage,
+    updateTaskInLastMessage,
+    setError,
+    clearError,
+    clearMessages
+  }
+}
+
