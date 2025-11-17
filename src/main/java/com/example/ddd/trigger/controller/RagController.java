@@ -15,7 +15,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 /**
  * RAG知识库管理Controller
@@ -30,20 +29,21 @@ public class RagController {
     /**
      * 添加文档到RAG知识库
      *
+     * @param ragId RAG ID（路径参数）
      * @param request 添加文档请求
      * @return 添加的文档块数量
      */
-    @Post("/documents")
+    @Post("/{ragId}/documents")
     @Status(HttpStatus.CREATED)
-    public Map<String, Object> addDocument(@Body RagAddDocumentRequest request) {
+    public Map<String, Object> addDocument(@PathVariable Long ragId, @Body RagAddDocumentRequest request) {
         int segmentCount = ragService.addDocument(
-            request.getRagId(),
+            ragId,
             request.getText(),
             request.getMetadata()
         );
         return Map.of(
             "success", true,
-            "ragId", request.getRagId() != null ? request.getRagId() : 1L,
+            "ragId", ragId,
             "segmentCount", segmentCount,
             "message", "文档添加成功"
         );
@@ -52,15 +52,15 @@ public class RagController {
     /**
      * 上传文件并导入到RAG知识库
      *
+     * @param ragId RAG ID（路径参数）
      * @param file 上传的文件
-     * @param ragId RAG ID（可选，默认1）
      * @return 导入结果
      */
-    @Post(value = "/documents/upload", consumes = "multipart/form-data", produces = "application/json")
+    @Post(value = "/{ragId}/documents/upload", consumes = "multipart/form-data", produces = "application/json")
     @Status(HttpStatus.CREATED)
     public Map<String, Object> uploadFile(
-            @Part("file") CompletedFileUpload file,
-            @Part(value = "ragId") Optional<Long> ragId) {
+            @PathVariable Long ragId,
+            @Part("file") CompletedFileUpload file) {
         try {
             // 验证文件
             if (file == null || file.getSize() == 0) {
@@ -73,7 +73,7 @@ public class RagController {
             // 检查文件类型
             String contentType = file.getContentType().map(ct -> ct.toString()).orElse("application/octet-stream");
             String fileName = file.getFilename();
-            log.info("上传文件: fileName={}, contentType={}, size={}", fileName, contentType, file.getSize());
+            log.info("上传文件: ragId={}, fileName={}, contentType={}, size={}", ragId, fileName, contentType, file.getSize());
 
             // 读取文件内容
             byte[] fileBytes = file.getBytes();
@@ -87,16 +87,15 @@ public class RagController {
             metadata.put("source", "file_upload");
 
             // 添加到RAG
-            Long finalRagId = ragId.orElse(1L);
             int segmentCount = ragService.addDocument(
-                finalRagId,
+                ragId,
                 fileContent,
                 metadata
             );
 
             return Map.of(
                 "success", true,
-                "ragId", finalRagId,
+                "ragId", ragId,
                 "fileName", fileName,
                 "segmentCount", segmentCount,
                 "message", "文件导入成功"
@@ -153,6 +152,41 @@ public class RagController {
         return Map.of(
             "success", true,
             "ragId", ragId,
+            "deletedCount", deletedCount,
+            "message", "文档删除成功"
+        );
+    }
+
+    /**
+     * 查询RAG知识库中的所有文档
+     *
+     * @param ragId RAG ID
+     * @return 文档列表
+     */
+    @Get("/documents/{ragId}")
+    public Map<String, Object> queryDocuments(@PathVariable Long ragId) {
+        List<VectorDocumentEntity> documents = ragService.queryDocuments(ragId);
+        return Map.of(
+            "success", true,
+            "ragId", ragId,
+            "documents", documents,
+            "count", documents.size()
+        );
+    }
+
+    /**
+     * 根据ID删除文档
+     *
+     * @param docId 文档ID
+     * @return 删除结果
+     */
+    @Delete("/documents/doc/{docId}")
+    @Status(HttpStatus.OK)
+    public Map<String, Object> deleteDocument(@PathVariable Long docId) {
+        int deletedCount = ragService.deleteDocument(docId);
+        return Map.of(
+            "success", true,
+            "docId", docId,
             "deletedCount", deletedCount,
             "message", "文档删除成功"
         );

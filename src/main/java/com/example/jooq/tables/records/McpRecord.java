@@ -20,115 +20,133 @@ public class McpRecord extends UpdatableRecordImpl<McpRecord> {
     private static final long serialVersionUID = 1L;
 
     /**
-     * Setter for <code>public.mcp.id</code>. 主键ID
+     * Setter for <code>public.mcp.id</code>.
      */
     public void setId(Long value) {
         set(0, value);
     }
 
     /**
-     * Getter for <code>public.mcp.id</code>. 主键ID
+     * Getter for <code>public.mcp.id</code>.
      */
     public Long getId() {
         return (Long) get(0);
     }
 
     /**
-     * Setter for <code>public.mcp.name</code>. MCP名称
+     * Setter for <code>public.mcp.name</code>.
      */
     public void setName(String value) {
         set(1, value);
     }
 
     /**
-     * Getter for <code>public.mcp.name</code>. MCP名称
+     * Getter for <code>public.mcp.name</code>.
      */
     public String getName() {
         return (String) get(1);
     }
 
     /**
-     * Setter for <code>public.mcp.type</code>. MCP类型
+     * Setter for <code>public.mcp.type</code>.
      */
     public void setType(String value) {
         set(2, value);
     }
 
     /**
-     * Getter for <code>public.mcp.type</code>. MCP类型
+     * Getter for <code>public.mcp.type</code>.
      */
     public String getType() {
         return (String) get(2);
     }
 
     /**
-     * Setter for <code>public.mcp.endpoint</code>. MCP端点
+     * Setter for <code>public.mcp.description</code>. MCP服务器描述
      */
-    public void setEndpoint(String value) {
+    public void setDescription(String value) {
         set(3, value);
     }
 
     /**
-     * Getter for <code>public.mcp.endpoint</code>. MCP端点
+     * Getter for <code>public.mcp.description</code>. MCP服务器描述
      */
-    public String getEndpoint() {
+    public String getDescription() {
         return (String) get(3);
     }
 
     /**
-     * Setter for <code>public.mcp.config</code>. MCP配置信息（JSON格式）
+     * Setter for <code>public.mcp.base_url</code>.
+     * MCP服务器baseUrl（如：https://dashscope.aliyuncs.com/api/v1/mcps/ChatPPT/sse）
      */
-    public void setConfig(JSONB value) {
+    public void setBaseUrl(String value) {
         set(4, value);
     }
 
     /**
-     * Getter for <code>public.mcp.config</code>. MCP配置信息（JSON格式）
+     * Getter for <code>public.mcp.base_url</code>.
+     * MCP服务器baseUrl（如：https://dashscope.aliyuncs.com/api/v1/mcps/ChatPPT/sse）
      */
-    public JSONB getConfig() {
-        return (JSONB) get(4);
+    public String getBaseUrl() {
+        return (String) get(4);
     }
 
     /**
-     * Setter for <code>public.mcp.status</code>. 状态：ACTIVE, INACTIVE
+     * Setter for <code>public.mcp.headers</code>.
+     * MCP请求头（JSON格式，如：{"Authorization": "Bearer ..."}）
      */
-    public void setStatus(String value) {
+    public void setHeaders(JSONB value) {
         set(5, value);
     }
 
     /**
-     * Getter for <code>public.mcp.status</code>. 状态：ACTIVE, INACTIVE
+     * Getter for <code>public.mcp.headers</code>.
+     * MCP请求头（JSON格式，如：{"Authorization": "Bearer ..."}）
      */
-    public String getStatus() {
-        return (String) get(5);
+    public JSONB getHeaders() {
+        return (JSONB) get(5);
     }
 
     /**
-     * Setter for <code>public.mcp.created_at</code>. 创建时间（时间戳，秒）
+     * Setter for <code>public.mcp.status</code>.
      */
-    public void setCreatedAt(Long value) {
+    public void setStatus(String value) {
         set(6, value);
     }
 
     /**
-     * Getter for <code>public.mcp.created_at</code>. 创建时间（时间戳，秒）
+     * Getter for <code>public.mcp.status</code>.
      */
-    public Long getCreatedAt() {
-        return (Long) get(6);
+    public String getStatus() {
+        return (String) get(6);
     }
 
     /**
-     * Setter for <code>public.mcp.updated_at</code>. 更新时间（时间戳，秒）
+     * Setter for <code>public.mcp.created_at</code>.
      */
-    public void setUpdatedAt(Long value) {
+    public void setCreatedAt(Long value) {
         set(7, value);
     }
 
     /**
-     * Getter for <code>public.mcp.updated_at</code>. 更新时间（时间戳，秒）
+     * Getter for <code>public.mcp.created_at</code>.
+     */
+    public Long getCreatedAt() {
+        return (Long) get(7);
+    }
+
+    /**
+     * Setter for <code>public.mcp.updated_at</code>.
+     */
+    public void setUpdatedAt(Long value) {
+        set(8, value);
+    }
+
+    /**
+     * Getter for <code>public.mcp.updated_at</code>.
      */
     public Long getUpdatedAt() {
-        return (Long) get(7);
+        return (Long) get(8);
     }
 
     // -------------------------------------------------------------------------
@@ -154,14 +172,15 @@ public class McpRecord extends UpdatableRecordImpl<McpRecord> {
     /**
      * Create a detached, initialised McpRecord
      */
-    public McpRecord(Long id, String name, String type, String endpoint, JSONB config, String status, Long createdAt, Long updatedAt) {
+    public McpRecord(Long id, String name, String type, String description, String baseUrl, JSONB headers, String status, Long createdAt, Long updatedAt) {
         super(Mcp.MCP);
 
         setId(id);
         setName(name);
         setType(type);
-        setEndpoint(endpoint);
-        setConfig(config);
+        setDescription(description);
+        setBaseUrl(baseUrl);
+        setHeaders(headers);
         setStatus(status);
         setCreatedAt(createdAt);
         setUpdatedAt(updatedAt);

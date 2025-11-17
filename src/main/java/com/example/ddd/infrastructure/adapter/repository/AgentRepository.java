@@ -2,9 +2,11 @@ package com.example.ddd.infrastructure.adapter.repository;
 
 import com.example.ddd.domain.agent.adapter.repository.IAgentRepository;
 import com.example.ddd.domain.agent.adapter.repository.IChatModelRepository;
+import com.example.ddd.domain.agent.adapter.repository.IMcpRepository;
 import com.example.ddd.domain.agent.adapter.repository.IRagRepository;
 import com.example.ddd.domain.agent.model.entity.AgentEntity;
 import com.example.ddd.domain.agent.model.entity.ChatModelEntity;
+import com.example.ddd.domain.agent.model.entity.McpEntity;
 import com.example.ddd.domain.agent.model.entity.RagEntity;
 import com.example.ddd.domain.agent.service.execute.role.AgentRole;
 import com.example.ddd.infrastructure.dao.IClientDao;
@@ -35,6 +37,8 @@ public class AgentRepository implements IAgentRepository {
     private IChatModelRepository chatModelRepository;
     @Inject
     private IRagRepository ragRepository;
+    @Inject
+    private IMcpRepository mcpRepository;
 
     @Override
     public List<AgentEntity> queryByOrchestratorId(DSLContext dslContext, Long orchestratorId) {
@@ -155,19 +159,34 @@ public class AgentRepository implements IAgentRepository {
     }
 
     @Override
-    public List<ChatModelEntity> queryModelsByAgentId(DSLContext dslContext, Long agentId) {
-        return chatModelRepository.queryByAgentId(dslContext, agentId);
+    public Map<Long, List<McpEntity>> queryMcpMapByOrchestratorId(DSLContext dslContext, Long orchestratorId) {
+        // 先查询orchestrator关联的agent IDs
+        List<Long> agentIds = dslContext.select(field("agent_id"))
+                .from(table("orchestrator_agent"))
+                .where(field("orchestrator_id").eq(orchestratorId))
+                .fetch()
+                .stream()
+                .map(record -> (Long) record.get("agent_id"))
+                .collect(Collectors.toList());
+
+        if (agentIds.isEmpty()) {
+            return new HashMap<>();
+        }
+
+        // 为每个agent查询其mcps
+        Map<Long, List<McpEntity>> mcpMap = new HashMap<>();
+        for (Long agentId : agentIds) {
+            List<McpEntity> mcps = mcpRepository.queryByAgentId(dslContext, agentId);
+            if (!mcps.isEmpty()) {
+                mcpMap.put(agentId, mcps);
+            }
+        }
+
+        return mcpMap;
     }
 
-    @Override
-    public List<RagEntity> queryRagsByAgentId(DSLContext dslContext, Long agentId) {
-        return ragRepository.queryByAgentId(dslContext, agentId);
-    }
 
-    @Override
-    public List<Long> queryMcpIdsByAgentId(DSLContext dslContext, Long agentId) {
-        return clientDao.queryMcpIdsByClientId(dslContext, agentId);
-    }
+
 
     // 转换方法
     private AgentEntity convertToEntity(AgentPO po) {

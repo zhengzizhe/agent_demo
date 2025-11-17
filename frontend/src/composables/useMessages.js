@@ -7,6 +7,7 @@ import { getTaskStatusClass, findTaskInArray } from '../utils/task.js'
 export function useMessages() {
   const messages = ref([])
   const error = ref('')
+  const executionError = ref('')  // execution_failed 类型的错误
 
   /**
    * 添加用户消息
@@ -86,6 +87,11 @@ export function useMessages() {
    * 将任务列表附加到最后一条AI消息
    */
   const attachTasksToLastMessage = (taskList) => {
+    if (!taskList || !Array.isArray(taskList) || taskList.length === 0) {
+      console.warn('attachTasksToLastMessage: 任务列表为空或无效', taskList)
+      return
+    }
+    
     const lastMessage = messages.value[messages.value.length - 1]
     console.log('attachTasksToLastMessage 调用:', {
       hasLastMessage: !!lastMessage,
@@ -96,20 +102,19 @@ export function useMessages() {
     })
     
     if (lastMessage && lastMessage.role === 'assistant') {
-      const tasksWithStatus = (taskList || []).map(task => ({
+      const tasksWithStatus = taskList.map(task => ({
         ...task,
-        status: task.status || 'PENDING'
+        status: task.status || 'PENDING',
+        id: task.id || `task-${Date.now()}-${Math.random()}`
       }))
-      
-      // 使用 Object.assign 确保响应式更新
-      lastMessage.tasks = tasksWithStatus
       
       // 强制触发响应式更新 - 创建新数组引用
       const newMessages = messages.value.map((msg, idx) => {
         if (idx === messages.value.length - 1 && msg.role === 'assistant') {
           return {
             ...msg,
-            tasks: [...tasksWithStatus] // 创建新数组
+            tasks: [...tasksWithStatus], // 创建新数组
+            timestamp: msg.timestamp || new Date() // 确保有timestamp
           }
         }
         return msg
@@ -118,7 +123,7 @@ export function useMessages() {
       
       console.log('任务列表已附加:', {
         messageIndex: messages.value.length - 1,
-        tasksCount: messages.value[messages.value.length - 1].tasks.length,
+        tasksCount: messages.value[messages.value.length - 1].tasks?.length || 0,
         tasks: messages.value[messages.value.length - 1].tasks
       })
     } else {
@@ -126,6 +131,19 @@ export function useMessages() {
         lastMessage: lastMessage,
         messagesLength: messages.value.length
       })
+      // 如果没有assistant消息，创建一个
+      if (messages.value.length === 0 || messages.value[messages.value.length - 1].role !== 'assistant') {
+        const newMessage = addAssistantMessage('', false)
+        newMessage.tasks = taskList.map(task => ({
+          ...task,
+          status: task.status || 'PENDING',
+          id: task.id || `task-${Date.now()}-${Math.random()}`
+        }))
+        console.log('创建新的 assistant 消息并附加任务列表:', {
+          tasksCount: newMessage.tasks.length,
+          tasks: newMessage.tasks
+        })
+      }
     }
   }
 
@@ -189,16 +207,32 @@ export function useMessages() {
   }
 
   /**
+   * 设置执行错误（execution_failed）
+   */
+  const setExecutionError = (errorMessage) => {
+    executionError.value = errorMessage
+  }
+
+  /**
+   * 清除执行错误
+   */
+  const clearExecutionError = () => {
+    executionError.value = ''
+  }
+
+  /**
    * 清除所有消息
    */
   const clearMessages = () => {
     messages.value = []
     error.value = ''
+    executionError.value = ''
   }
 
   return {
     messages,
     error,
+    executionError,
     addUserMessage,
     addAssistantMessage,
     updateLastAssistantMessage,
@@ -207,6 +241,8 @@ export function useMessages() {
     updateTaskInLastMessage,
     setError,
     clearError,
+    setExecutionError,
+    clearExecutionError,
     clearMessages
   }
 }

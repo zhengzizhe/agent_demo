@@ -134,7 +134,7 @@ onMounted(() => {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   color: #333;
   line-height: 1.5;
-  animation: chipPopIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation: chipPopIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
   will-change: transform, opacity;
   box-shadow: 
     0 2px 6px rgba(0, 0, 0, 0.04),
@@ -228,13 +228,16 @@ onMounted(() => {
 }
 
 @keyframes taskBoxSlideIn {
-  from {
+  0% {
     opacity: 0;
-    transform: translateY(-15px) scale(0.96);
+    transform: translateY(-20px) scale(0.9) rotate(-1deg);
   }
-  to {
+  50% {
+    transform: translateY(-3px) scale(1.02) rotate(0.5deg);
+  }
+  100% {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translateY(0) scale(1) rotate(0deg);
   }
 }
 
@@ -251,14 +254,18 @@ onMounted(() => {
 }
 
 @keyframes chipPopIn {
-  from {
+  0% {
     opacity: 0;
-    transform: scale(0.7) translateY(-8px) rotate(-5deg);
+    transform: scale(0.5) translateY(-15px) rotate(-10deg);
   }
-  50% {
-    transform: scale(1.05) translateY(-2px) rotate(2deg);
+  40% {
+    opacity: 0.8;
+    transform: scale(1.1) translateY(-3px) rotate(3deg);
   }
-  to {
+  70% {
+    transform: scale(0.95) translateY(2px) rotate(-1deg);
+  }
+  100% {
     opacity: 1;
     transform: scale(1) translateY(0) rotate(0deg);
   }

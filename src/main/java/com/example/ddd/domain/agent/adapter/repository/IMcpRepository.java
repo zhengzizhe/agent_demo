@@ -26,6 +26,11 @@ public interface IMcpRepository {
     List<McpEntity> queryAll(DSLContext dslContext);
 
     /**
+     * 根据Agent ID查询MCP列表
+     */
+    List<McpEntity> queryByAgentId(DSLContext dslContext, Long agentId);
+
+    /**
      * 更新Mcp
      */
     int update(DSLContext dslContext, McpEntity mcpEntity);

@@ -2,6 +2,7 @@ package com.example.ddd.domain.agent.adapter.repository;
 
 import com.example.ddd.domain.agent.model.entity.AgentEntity;
 import com.example.ddd.domain.agent.model.entity.ChatModelEntity;
+import com.example.ddd.domain.agent.model.entity.McpEntity;
 import com.example.ddd.domain.agent.model.entity.RagEntity;
 import org.jooq.DSLContext;
 
@@ -29,18 +30,9 @@ public interface IAgentRepository {
     Map<Long, List<RagEntity>> queryRagMapByOrchestratorId(DSLContext dslContext, Long orchestratorId);
 
     /**
-     * 根据Agent ID查询Model列表
+     * 根据Orchestrator ID查询MCP映射（agentId -> List<McpEntity>）
      */
-    List<ChatModelEntity> queryModelsByAgentId(DSLContext dslContext, Long agentId);
+    Map<Long, List<McpEntity>> queryMcpMapByOrchestratorId(DSLContext dslContext, Long orchestratorId);
 
-    /**
-     * 根据Agent ID查询RAG列表
-     */
-    List<RagEntity> queryRagsByAgentId(DSLContext dslContext, Long agentId);
-
-    /**
-     * 根据Agent ID查询MCP ID列表
-     */
-    List<Long> queryMcpIdsByAgentId(DSLContext dslContext, Long agentId);
 }
 

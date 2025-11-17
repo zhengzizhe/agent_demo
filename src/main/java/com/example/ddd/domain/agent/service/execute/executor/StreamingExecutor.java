@@ -2,7 +2,6 @@ package com.example.ddd.domain.agent.service.execute.executor;
 
 import com.example.ddd.domain.agent.service.armory.AiService;
 import com.example.ddd.domain.agent.service.armory.ServiceNode;
-
 import com.example.ddd.domain.agent.service.execute.context.UserContext;
 import com.example.ddd.domain.agent.service.execute.graph.WorkspaceState;
 import com.example.ddd.domain.agent.service.execute.task.Task;
@@ -24,9 +23,8 @@ import java.util.concurrent.CountDownLatch;
  */
 @Slf4j
 public class StreamingExecutor extends BaseTaskExecutor {
-
-    public StreamingExecutor(Task task, ServiceNode serviceNode) {
-        super(task, serviceNode);
+    public StreamingExecutor(Task task, ServiceNode serviceNode, UserContext userContext) {
+        super(task, serviceNode, userContext);
     }
 
     @Override
@@ -40,7 +38,7 @@ public class StreamingExecutor extends BaseTaskExecutor {
                     .message("任务开始执行")
                     .build());
         }
-        String input = getTaskInput(state);
+        String input = getTaskInputString(state);
         AiService aiService = serviceNode.getAiService();
         if (aiService == null) {
             log.error("ServiceNode的AiService为空: taskId={}", task.getId());
@@ -55,17 +53,14 @@ public class StreamingExecutor extends BaseTaskExecutor {
             }
             throw new IllegalStateException("ServiceNode的AiService为空: taskId=" + task.getId());
         }
-        
+
         try {
             TokenStream tokenStream = aiService.chat(input);
             StringBuilder resultBuilder = new StringBuilder();
             List<ChatMessage> messages = new ArrayList<>();
             CountDownLatch latch = new CountDownLatch(1);
-
-            // onPartialResponse: 流式执行器发送内容
             tokenStream.onPartialResponse(token -> {
                 resultBuilder.append(token);
-                // 通过UserContext实时发送token给用户
                 if (userContext != null) {
                     userContext.emit(UserContext.TaskStatusEvent.builder()
                             .type("streaming")
@@ -89,11 +84,8 @@ public class StreamingExecutor extends BaseTaskExecutor {
                 }
                 latch.countDown();
             });
-
             tokenStream.onError(error -> {
                 log.error("流式输出执行器执行失败: taskId={}, error={}", task.getId(), error.getMessage());
-
-                // 发送任务失败事件给前端
                 if (userContext != null) {
                     userContext.emit(UserContext.TaskStatusEvent.builder()
                             .type("task_failed")
@@ -102,11 +94,9 @@ public class StreamingExecutor extends BaseTaskExecutor {
                             .error(error.getMessage())
                             .build());
                 }
-
                 latch.countDown();
             });
             tokenStream.start();
-            // 等待完成
             try {
                 latch.await();
             } catch (InterruptedException e) {
@@ -127,8 +117,7 @@ public class StreamingExecutor extends BaseTaskExecutor {
             Map<String, Object> stateUpdate = saveTaskResult(state, result);
             log.info("流式输出执行器完成: taskId={}, resultLength={}", task.getId(), result.length());
             return stateUpdate;
-        } catch (RuntimeException e) {
-            // RuntimeException 直接抛出
+        } catch (Exception e) {
             log.error("流式输出执行器运行时异常: taskId={}, error={}", task.getId(), e.getMessage(), e);
             if (userContext != null) {
                 userContext.emit(UserContext.TaskStatusEvent.builder()
@@ -139,18 +128,6 @@ public class StreamingExecutor extends BaseTaskExecutor {
                         .build());
             }
             throw e;
-        } catch (Exception e) {
-            // 其他异常包装后抛出
-            log.error("流式输出执行器异常: taskId={}, error={}", task.getId(), e.getMessage(), e);
-            if (userContext != null) {
-                userContext.emit(UserContext.TaskStatusEvent.builder()
-                        .type("task_failed")
-                        .taskId(task.getId())
-                        .message("任务执行异常")
-                        .error(e.getMessage())
-                        .build());
-            }
-            throw new RuntimeException("流式输出执行器执行失败: taskId=" + task.getId(), e);
         }
     }
 }

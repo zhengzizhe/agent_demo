@@ -19,28 +19,28 @@ public class ModelRecord extends UpdatableRecordImpl<ModelRecord> {
     private static final long serialVersionUID = 1L;
 
     /**
-     * Setter for <code>public.model.id</code>. 主键ID
+     * Setter for <code>public.model.id</code>.
      */
     public void setId(Long value) {
         set(0, value);
     }
 
     /**
-     * Getter for <code>public.model.id</code>. 主键ID
+     * Getter for <code>public.model.id</code>.
      */
     public Long getId() {
         return (Long) get(0);
     }
 
     /**
-     * Setter for <code>public.model.name</code>. Model名称
+     * Setter for <code>public.model.name</code>.
      */
     public void setName(String value) {
         set(1, value);
     }
 
     /**
-     * Getter for <code>public.model.name</code>. Model名称
+     * Getter for <code>public.model.name</code>.
      */
     public String getName() {
         return (String) get(1);
@@ -63,28 +63,28 @@ public class ModelRecord extends UpdatableRecordImpl<ModelRecord> {
     }
 
     /**
-     * Setter for <code>public.model.model_type</code>. 模型类型
+     * Setter for <code>public.model.model_type</code>.
      */
     public void setModelType(String value) {
         set(3, value);
     }
 
     /**
-     * Getter for <code>public.model.model_type</code>. 模型类型
+     * Getter for <code>public.model.model_type</code>.
      */
     public String getModelType() {
         return (String) get(3);
     }
 
     /**
-     * Setter for <code>public.model.api_endpoint</code>. API端点
+     * Setter for <code>public.model.api_endpoint</code>.
      */
     public void setApiEndpoint(String value) {
         set(4, value);
     }
 
     /**
-     * Getter for <code>public.model.api_endpoint</code>. API端点
+     * Getter for <code>public.model.api_endpoint</code>.
      */
     public String getApiEndpoint() {
         return (String) get(4);
@@ -133,42 +133,42 @@ public class ModelRecord extends UpdatableRecordImpl<ModelRecord> {
     }
 
     /**
-     * Setter for <code>public.model.status</code>. 状态：ACTIVE, INACTIVE
+     * Setter for <code>public.model.status</code>.
      */
     public void setStatus(String value) {
         set(8, value);
     }
 
     /**
-     * Getter for <code>public.model.status</code>. 状态：ACTIVE, INACTIVE
+     * Getter for <code>public.model.status</code>.
      */
     public String getStatus() {
         return (String) get(8);
     }
 
     /**
-     * Setter for <code>public.model.created_at</code>. 创建时间（时间戳，秒）
+     * Setter for <code>public.model.created_at</code>.
      */
     public void setCreatedAt(Long value) {
         set(9, value);
     }
 
     /**
-     * Getter for <code>public.model.created_at</code>. 创建时间（时间戳，秒）
+     * Getter for <code>public.model.created_at</code>.
      */
     public Long getCreatedAt() {
         return (Long) get(9);
     }
 
     /**
-     * Setter for <code>public.model.updated_at</code>. 更新时间（时间戳，秒）
+     * Setter for <code>public.model.updated_at</code>.
      */
     public void setUpdatedAt(Long value) {
         set(10, value);
     }
 
     /**
-     * Getter for <code>public.model.updated_at</code>. 更新时间（时间戳，秒）
+     * Getter for <code>public.model.updated_at</code>.
      */
     public Long getUpdatedAt() {
         return (Long) get(10);

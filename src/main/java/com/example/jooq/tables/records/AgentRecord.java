@@ -11,7 +11,7 @@ import org.jooq.impl.UpdatableRecordImpl;
 
 
 /**
- * Agent表
+ * Agent表（智能体）
  */
 @SuppressWarnings({ "all", "unchecked", "rawtypes", "this-escape" })
 public class AgentRecord extends UpdatableRecordImpl<AgentRecord> {
@@ -19,87 +19,101 @@ public class AgentRecord extends UpdatableRecordImpl<AgentRecord> {
     private static final long serialVersionUID = 1L;
 
     /**
-     * Setter for <code>public.agent.id</code>. 主键ID
+     * Setter for <code>public.agent.id</code>.
      */
     public void setId(Long value) {
         set(0, value);
     }
 
     /**
-     * Getter for <code>public.agent.id</code>. 主键ID
+     * Getter for <code>public.agent.id</code>.
      */
     public Long getId() {
         return (Long) get(0);
     }
 
     /**
-     * Setter for <code>public.agent.name</code>. Agent名称
+     * Setter for <code>public.agent.name</code>.
      */
     public void setName(String value) {
         set(1, value);
     }
 
     /**
-     * Getter for <code>public.agent.name</code>. Agent名称
+     * Getter for <code>public.agent.name</code>.
      */
     public String getName() {
         return (String) get(1);
     }
 
     /**
-     * Setter for <code>public.agent.description</code>. Agent描述
+     * Setter for <code>public.agent.description</code>.
      */
     public void setDescription(String value) {
         set(2, value);
     }
 
     /**
-     * Getter for <code>public.agent.description</code>. Agent描述
+     * Getter for <code>public.agent.description</code>.
      */
     public String getDescription() {
         return (String) get(2);
     }
 
     /**
-     * Setter for <code>public.agent.status</code>. 状态：ACTIVE, INACTIVE
+     * Setter for <code>public.agent.status</code>.
      */
     public void setStatus(String value) {
         set(3, value);
     }
 
     /**
-     * Getter for <code>public.agent.status</code>. 状态：ACTIVE, INACTIVE
+     * Getter for <code>public.agent.status</code>.
      */
     public String getStatus() {
         return (String) get(3);
     }
 
     /**
-     * Setter for <code>public.agent.created_at</code>. 创建时间（时间戳，秒）
+     * Setter for <code>public.agent.created_at</code>.
      */
     public void setCreatedAt(Long value) {
         set(4, value);
     }
 
     /**
-     * Getter for <code>public.agent.created_at</code>. 创建时间（时间戳，秒）
+     * Getter for <code>public.agent.created_at</code>.
      */
     public Long getCreatedAt() {
         return (Long) get(4);
     }
 
     /**
-     * Setter for <code>public.agent.updated_at</code>. 更新时间（时间戳，秒）
+     * Setter for <code>public.agent.updated_at</code>.
      */
     public void setUpdatedAt(Long value) {
         set(5, value);
     }
 
     /**
-     * Getter for <code>public.agent.updated_at</code>. 更新时间（时间戳，秒）
+     * Getter for <code>public.agent.updated_at</code>.
      */
     public Long getUpdatedAt() {
         return (Long) get(5);
+    }
+
+    /**
+     * Setter for <code>public.agent.system_prompt</code>. 系统提示词（System Prompt）
+     */
+    public void setSystemPrompt(String value) {
+        set(6, value);
+    }
+
+    /**
+     * Getter for <code>public.agent.system_prompt</code>. 系统提示词（System Prompt）
+     */
+    public String getSystemPrompt() {
+        return (String) get(6);
     }
 
     // -------------------------------------------------------------------------
@@ -125,7 +139,7 @@ public class AgentRecord extends UpdatableRecordImpl<AgentRecord> {
     /**
      * Create a detached, initialised AgentRecord
      */
-    public AgentRecord(Long id, String name, String description, String status, Long createdAt, Long updatedAt) {
+    public AgentRecord(Long id, String name, String description, String status, Long createdAt, Long updatedAt, String systemPrompt) {
         super(Agent.AGENT);
 
         setId(id);
@@ -134,6 +148,7 @@ public class AgentRecord extends UpdatableRecordImpl<AgentRecord> {
         setStatus(status);
         setCreatedAt(createdAt);
         setUpdatedAt(updatedAt);
+        setSystemPrompt(systemPrompt);
         resetChangedOnNotNull();
     }
 }

@@ -12,7 +12,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
 public class UserContext {
-    private static final ThreadLocal<UserContext> CONTEXT_HOLDER = new ThreadLocal<>();
     private final BlockingQueue<TaskStatusEvent> eventQueue;
     private final AtomicBoolean running = new AtomicBoolean(false);
     private Thread dispatcherThread;
@@ -35,7 +34,6 @@ public class UserContext {
         }
         this.emitter = emitter;
         this.running.set(true);
-
         this.dispatcherThread = new Thread(() -> {
             log.debug("事件分发器守护线程启动");
             try {
@@ -91,27 +89,6 @@ public class UserContext {
     }
 
     /**
-     * 设置当前线程的 UserContext
-     */
-    public static void set(UserContext context) {
-        CONTEXT_HOLDER.set(context);
-    }
-
-    /**
-     * 获取当前线程的 UserContext
-     */
-    public static UserContext get() {
-        return CONTEXT_HOLDER.get();
-    }
-
-    /**
-     * 清除当前线程的 UserContext
-     */
-    public static void clear() {
-        CONTEXT_HOLDER.remove();
-    }
-
-    /**
      * 发送事件到队列（线程安全）
      *
      * @param event 事件数据
@@ -152,7 +129,6 @@ public class UserContext {
                 .error(error)
                 .build();
         emit(event);
-        log.error("用户上下文发送错误: {}", error);
     }
 
     /**

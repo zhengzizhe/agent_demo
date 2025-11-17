@@ -4,18 +4,22 @@
 package com.example.jooq.tables;
 
 
+import com.example.jooq.Indexes;
 import com.example.jooq.Keys;
 import com.example.jooq.Public;
-import com.example.jooq.tables.Client.ClientPath;
-import com.example.jooq.tables.ClientModel.ClientModelPath;
+import com.example.jooq.tables.Agent.AgentPath;
+import com.example.jooq.tables.AgentModel.AgentModelPath;
 import com.example.jooq.tables.records.ModelRecord;
 
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 
 import org.jooq.Condition;
 import org.jooq.Field;
 import org.jooq.ForeignKey;
 import org.jooq.Identity;
+import org.jooq.Index;
 import org.jooq.InverseForeignKey;
 import org.jooq.Name;
 import org.jooq.Path;
@@ -57,14 +61,14 @@ public class Model extends TableImpl<ModelRecord> {
     }
 
     /**
-     * The column <code>public.model.id</code>. 主键ID
+     * The column <code>public.model.id</code>.
      */
-    public final TableField<ModelRecord, Long> ID = createField(DSL.name("id"), SQLDataType.BIGINT.nullable(false).identity(true), this, "主键ID");
+    public final TableField<ModelRecord, Long> ID = createField(DSL.name("id"), SQLDataType.BIGINT.nullable(false).identity(true), this, "");
 
     /**
-     * The column <code>public.model.name</code>. Model名称
+     * The column <code>public.model.name</code>.
      */
-    public final TableField<ModelRecord, String> NAME = createField(DSL.name("name"), SQLDataType.VARCHAR(255).nullable(false), this, "Model名称");
+    public final TableField<ModelRecord, String> NAME = createField(DSL.name("name"), SQLDataType.VARCHAR(255).nullable(false), this, "");
 
     /**
      * The column <code>public.model.provider</code>. 提供商：OPENAI, ANTHROPIC,
@@ -73,14 +77,14 @@ public class Model extends TableImpl<ModelRecord> {
     public final TableField<ModelRecord, String> PROVIDER = createField(DSL.name("provider"), SQLDataType.VARCHAR(100).nullable(false), this, "提供商：OPENAI, ANTHROPIC, OLLAMA等");
 
     /**
-     * The column <code>public.model.model_type</code>. 模型类型
+     * The column <code>public.model.model_type</code>.
      */
-    public final TableField<ModelRecord, String> MODEL_TYPE = createField(DSL.name("model_type"), SQLDataType.VARCHAR(100), this, "模型类型");
+    public final TableField<ModelRecord, String> MODEL_TYPE = createField(DSL.name("model_type"), SQLDataType.VARCHAR(100), this, "");
 
     /**
-     * The column <code>public.model.api_endpoint</code>. API端点
+     * The column <code>public.model.api_endpoint</code>.
      */
-    public final TableField<ModelRecord, String> API_ENDPOINT = createField(DSL.name("api_endpoint"), SQLDataType.VARCHAR(500), this, "API端点");
+    public final TableField<ModelRecord, String> API_ENDPOINT = createField(DSL.name("api_endpoint"), SQLDataType.VARCHAR(500), this, "");
 
     /**
      * The column <code>public.model.api_key</code>. API密钥（加密存储）
@@ -98,19 +102,19 @@ public class Model extends TableImpl<ModelRecord> {
     public final TableField<ModelRecord, Double> TEMPERATURE = createField(DSL.name("temperature"), SQLDataType.DOUBLE.defaultValue(DSL.field(DSL.raw("0.7"), SQLDataType.DOUBLE)), this, "温度参数");
 
     /**
-     * The column <code>public.model.status</code>. 状态：ACTIVE, INACTIVE
+     * The column <code>public.model.status</code>.
      */
-    public final TableField<ModelRecord, String> STATUS = createField(DSL.name("status"), SQLDataType.VARCHAR(50).defaultValue(DSL.field(DSL.raw("'ACTIVE'::character varying"), SQLDataType.VARCHAR)), this, "状态：ACTIVE, INACTIVE");
+    public final TableField<ModelRecord, String> STATUS = createField(DSL.name("status"), SQLDataType.VARCHAR(50).defaultValue(DSL.field(DSL.raw("'ACTIVE'::character varying"), SQLDataType.VARCHAR)), this, "");
 
     /**
-     * The column <code>public.model.created_at</code>. 创建时间（时间戳，秒）
+     * The column <code>public.model.created_at</code>.
      */
-    public final TableField<ModelRecord, Long> CREATED_AT = createField(DSL.name("created_at"), SQLDataType.BIGINT.defaultValue(DSL.field(DSL.raw("(EXTRACT(epoch FROM CURRENT_TIMESTAMP))::bigint"), SQLDataType.BIGINT)), this, "创建时间（时间戳，秒）");
+    public final TableField<ModelRecord, Long> CREATED_AT = createField(DSL.name("created_at"), SQLDataType.BIGINT.defaultValue(DSL.field(DSL.raw("(EXTRACT(epoch FROM CURRENT_TIMESTAMP))::bigint"), SQLDataType.BIGINT)), this, "");
 
     /**
-     * The column <code>public.model.updated_at</code>. 更新时间（时间戳，秒）
+     * The column <code>public.model.updated_at</code>.
      */
-    public final TableField<ModelRecord, Long> UPDATED_AT = createField(DSL.name("updated_at"), SQLDataType.BIGINT.defaultValue(DSL.field(DSL.raw("(EXTRACT(epoch FROM CURRENT_TIMESTAMP))::bigint"), SQLDataType.BIGINT)), this, "更新时间（时间戳，秒）");
+    public final TableField<ModelRecord, Long> UPDATED_AT = createField(DSL.name("updated_at"), SQLDataType.BIGINT.defaultValue(DSL.field(DSL.raw("(EXTRACT(epoch FROM CURRENT_TIMESTAMP))::bigint"), SQLDataType.BIGINT)), this, "");
 
     private Model(Name alias, Table<ModelRecord> aliased) {
         this(alias, aliased, (Field<?>[]) null, null);
@@ -180,6 +184,11 @@ public class Model extends TableImpl<ModelRecord> {
     }
 
     @Override
+    public List<Index> getIndexes() {
+        return Arrays.asList(Indexes.IDX_MODEL_PROVIDER, Indexes.IDX_MODEL_STATUS);
+    }
+
+    @Override
     public Identity<ModelRecord, Long> getIdentity() {
         return (Identity<ModelRecord, Long>) super.getIdentity();
     }
@@ -189,25 +198,25 @@ public class Model extends TableImpl<ModelRecord> {
         return Keys.MODEL_PKEY;
     }
 
-    private transient ClientModelPath _clientModel;
+    private transient AgentModelPath _agentModel;
 
     /**
-     * Get the implicit to-many join path to the
-     * <code>public.client_model</code> table
+     * Get the implicit to-many join path to the <code>public.agent_model</code>
+     * table
      */
-    public ClientModelPath clientModel() {
-        if (_clientModel == null)
-            _clientModel = new ClientModelPath(this, null, Keys.CLIENT_MODEL__FK_CLIENT_MODEL_MODEL.getInverseKey());
+    public AgentModelPath agentModel() {
+        if (_agentModel == null)
+            _agentModel = new AgentModelPath(this, null, Keys.AGENT_MODEL__FK_AGENT_MODEL_MODEL.getInverseKey());
 
-        return _clientModel;
+        return _agentModel;
     }
 
     /**
-     * Get the implicit many-to-many join path to the <code>public.client</code>
+     * Get the implicit many-to-many join path to the <code>public.agent</code>
      * table
      */
-    public ClientPath client() {
-        return clientModel().client();
+    public AgentPath agent() {
+        return agentModel().agent();
     }
 
     @Override

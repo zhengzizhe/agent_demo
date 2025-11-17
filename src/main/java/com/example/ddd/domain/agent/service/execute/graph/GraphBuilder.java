@@ -3,6 +3,7 @@ package com.example.ddd.domain.agent.service.execute.graph;
 import com.example.ddd.domain.agent.service.armory.ServiceNode;
 
 import com.example.ddd.domain.agent.service.execute.Orchestrator;
+import com.example.ddd.domain.agent.service.execute.context.UserContext;
 import com.example.ddd.domain.agent.service.execute.executor.ExecutorFactory;
 import com.example.ddd.domain.agent.service.execute.executor.TaskExecutor;
 import com.example.ddd.domain.agent.service.execute.task.Task;
@@ -32,6 +33,18 @@ public class GraphBuilder {
      * @return 编译后的图
      */
     public static CompiledGraph<WorkspaceState> build(TaskPlan taskPlan, Orchestrator orchestrator) throws GraphStateException {
+        return build(taskPlan, orchestrator, null);
+    }
+
+    /**
+     * 根据 TaskPlan 和 Orchestrator 构建执行图（带UserContext）
+     *
+     * @param taskPlan     任务计划
+     * @param orchestrator 编排器（包含 supervisor 和 worker 节点）
+     * @param userContext   用户上下文
+     * @return 编译后的图
+     */
+    public static CompiledGraph<WorkspaceState> build(TaskPlan taskPlan, Orchestrator orchestrator, UserContext userContext) throws GraphStateException {
         if (taskPlan == null || taskPlan.getTasks() == null || taskPlan.getTasks().isEmpty()) {
             throw new IllegalArgumentException("TaskPlan 不能为空");
         }
@@ -39,7 +52,7 @@ public class GraphBuilder {
             throw new IllegalArgumentException("Orchestrator 不能为空");
         }
         Map<Long, ServiceNode> workersByID = orchestrator.getWorkersByID();
-        return build(taskPlan, workersByID);
+        return build(taskPlan, workersByID, userContext);
     }
 
     /**
@@ -51,6 +64,21 @@ public class GraphBuilder {
     public static CompiledGraph<WorkspaceState> build(TaskPlan taskPlan,
                                                       Map<Long, ServiceNode> workersByID)
             throws GraphStateException {
+        return build(taskPlan, workersByID, null);
+    }
+
+    /**
+     * 根据 TaskPlan 和 ServiceNode 列表构建执行图（带UserContext）
+     *
+     * @param taskPlan    任务计划
+     * @param workersByID ServiceNode映射
+     * @param userContext 用户上下文
+     * @return 编译后的图
+     */
+    public static CompiledGraph<WorkspaceState> build(TaskPlan taskPlan,
+                                                      Map<Long, ServiceNode> workersByID,
+                                                      UserContext userContext)
+            throws GraphStateException {
 
         if (taskPlan == null || taskPlan.getTasks() == null || taskPlan.getTasks().isEmpty()) {
             throw new IllegalArgumentException("TaskPlan 不能为空");
@@ -58,9 +86,9 @@ public class GraphBuilder {
 
         StateGraph<WorkspaceState> graph = new StateGraph<>(WorkspaceState::new);
 
-        // 1. 添加所有节点
+        // 1. 添加所有节点，传递UserContext给执行器
         for (Task task : taskPlan.getTasks()) {
-            TaskExecutor executor = ExecutorFactory.create(task, workersByID.get(task.getAgentId()));
+            TaskExecutor executor = ExecutorFactory.create(task, workersByID.get(task.getAgentId()), userContext);
             graph.addNode(task.getId(), node_async(executor));
         }
         Map<String, Task.TaskInputs> inputMap =

@@ -4,18 +4,27 @@
 package com.example.jooq.tables;
 
 
+import com.example.jooq.Indexes;
 import com.example.jooq.Keys;
 import com.example.jooq.Public;
-import com.example.jooq.tables.AgentClient.AgentClientPath;
-import com.example.jooq.tables.Client.ClientPath;
+import com.example.jooq.tables.AgentMemory.AgentMemoryPath;
+import com.example.jooq.tables.AgentModel.AgentModelPath;
+import com.example.jooq.tables.AgentRag.AgentRagPath;
+import com.example.jooq.tables.Model.ModelPath;
+import com.example.jooq.tables.Orchestrator.OrchestratorPath;
+import com.example.jooq.tables.OrchestratorAgent.OrchestratorAgentPath;
+import com.example.jooq.tables.Rag.RagPath;
 import com.example.jooq.tables.records.AgentRecord;
 
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 
 import org.jooq.Condition;
 import org.jooq.Field;
 import org.jooq.ForeignKey;
 import org.jooq.Identity;
+import org.jooq.Index;
 import org.jooq.InverseForeignKey;
 import org.jooq.Name;
 import org.jooq.Path;
@@ -36,7 +45,7 @@ import org.jooq.impl.TableImpl;
 
 
 /**
- * Agent表
+ * Agent表（智能体）
  */
 @SuppressWarnings({ "all", "unchecked", "rawtypes", "this-escape" })
 public class Agent extends TableImpl<AgentRecord> {
@@ -57,41 +66,46 @@ public class Agent extends TableImpl<AgentRecord> {
     }
 
     /**
-     * The column <code>public.agent.id</code>. 主键ID
+     * The column <code>public.agent.id</code>.
      */
-    public final TableField<AgentRecord, Long> ID = createField(DSL.name("id"), SQLDataType.BIGINT.nullable(false).identity(true), this, "主键ID");
+    public final TableField<AgentRecord, Long> ID = createField(DSL.name("id"), SQLDataType.BIGINT.nullable(false).identity(true), this, "");
 
     /**
-     * The column <code>public.agent.name</code>. Agent名称
+     * The column <code>public.agent.name</code>.
      */
-    public final TableField<AgentRecord, String> NAME = createField(DSL.name("name"), SQLDataType.VARCHAR(255).nullable(false), this, "Agent名称");
+    public final TableField<AgentRecord, String> NAME = createField(DSL.name("name"), SQLDataType.VARCHAR(255).nullable(false), this, "");
 
     /**
-     * The column <code>public.agent.description</code>. Agent描述
+     * The column <code>public.agent.description</code>.
      */
-    public final TableField<AgentRecord, String> DESCRIPTION = createField(DSL.name("description"), SQLDataType.CLOB, this, "Agent描述");
+    public final TableField<AgentRecord, String> DESCRIPTION = createField(DSL.name("description"), SQLDataType.CLOB, this, "");
 
     /**
-     * The column <code>public.agent.status</code>. 状态：ACTIVE, INACTIVE
+     * The column <code>public.agent.status</code>.
      */
-    public final TableField<AgentRecord, String> STATUS = createField(DSL.name("status"), SQLDataType.VARCHAR(50).defaultValue(DSL.field(DSL.raw("'ACTIVE'::character varying"), SQLDataType.VARCHAR)), this, "状态：ACTIVE, INACTIVE");
+    public final TableField<AgentRecord, String> STATUS = createField(DSL.name("status"), SQLDataType.VARCHAR(50).defaultValue(DSL.field(DSL.raw("'ACTIVE'::character varying"), SQLDataType.VARCHAR)), this, "");
 
     /**
-     * The column <code>public.agent.created_at</code>. 创建时间（时间戳，秒）
+     * The column <code>public.agent.created_at</code>.
      */
-    public final TableField<AgentRecord, Long> CREATED_AT = createField(DSL.name("created_at"), SQLDataType.BIGINT.defaultValue(DSL.field(DSL.raw("(EXTRACT(epoch FROM CURRENT_TIMESTAMP))::bigint"), SQLDataType.BIGINT)), this, "创建时间（时间戳，秒）");
+    public final TableField<AgentRecord, Long> CREATED_AT = createField(DSL.name("created_at"), SQLDataType.BIGINT.defaultValue(DSL.field(DSL.raw("(EXTRACT(epoch FROM CURRENT_TIMESTAMP))::bigint"), SQLDataType.BIGINT)), this, "");
 
     /**
-     * The column <code>public.agent.updated_at</code>. 更新时间（时间戳，秒）
+     * The column <code>public.agent.updated_at</code>.
      */
-    public final TableField<AgentRecord, Long> UPDATED_AT = createField(DSL.name("updated_at"), SQLDataType.BIGINT.defaultValue(DSL.field(DSL.raw("(EXTRACT(epoch FROM CURRENT_TIMESTAMP))::bigint"), SQLDataType.BIGINT)), this, "更新时间（时间戳，秒）");
+    public final TableField<AgentRecord, Long> UPDATED_AT = createField(DSL.name("updated_at"), SQLDataType.BIGINT.defaultValue(DSL.field(DSL.raw("(EXTRACT(epoch FROM CURRENT_TIMESTAMP))::bigint"), SQLDataType.BIGINT)), this, "");
+
+    /**
+     * The column <code>public.agent.system_prompt</code>. 系统提示词（System Prompt）
+     */
+    public final TableField<AgentRecord, String> SYSTEM_PROMPT = createField(DSL.name("system_prompt"), SQLDataType.CLOB, this, "系统提示词（System Prompt）");
 
     private Agent(Name alias, Table<AgentRecord> aliased) {
         this(alias, aliased, (Field<?>[]) null, null);
     }
 
     private Agent(Name alias, Table<AgentRecord> aliased, Field<?>[] parameters, Condition where) {
-        super(alias, null, aliased, parameters, DSL.comment("Agent表"), TableOptions.table(), where);
+        super(alias, null, aliased, parameters, DSL.comment("Agent表（智能体）"), TableOptions.table(), where);
     }
 
     /**
@@ -154,6 +168,11 @@ public class Agent extends TableImpl<AgentRecord> {
     }
 
     @Override
+    public List<Index> getIndexes() {
+        return Arrays.asList(Indexes.IDX_AGENT_STATUS);
+    }
+
+    @Override
     public Identity<AgentRecord, Long> getIdentity() {
         return (Identity<AgentRecord, Long>) super.getIdentity();
     }
@@ -163,25 +182,80 @@ public class Agent extends TableImpl<AgentRecord> {
         return Keys.AGENT_PKEY;
     }
 
-    private transient AgentClientPath _agentClient;
+    private transient AgentMemoryPath _agentMemory;
 
     /**
      * Get the implicit to-many join path to the
-     * <code>public.agent_client</code> table
+     * <code>public.agent_memory</code> table
      */
-    public AgentClientPath agentClient() {
-        if (_agentClient == null)
-            _agentClient = new AgentClientPath(this, null, Keys.AGENT_CLIENT__FK_AGENT_CLIENT_AGENT.getInverseKey());
+    public AgentMemoryPath agentMemory() {
+        if (_agentMemory == null)
+            _agentMemory = new AgentMemoryPath(this, null, Keys.AGENT_MEMORY__FK_AGENT_MEMORY_AGENT.getInverseKey());
 
-        return _agentClient;
+        return _agentMemory;
+    }
+
+    private transient AgentModelPath _agentModel;
+
+    /**
+     * Get the implicit to-many join path to the <code>public.agent_model</code>
+     * table
+     */
+    public AgentModelPath agentModel() {
+        if (_agentModel == null)
+            _agentModel = new AgentModelPath(this, null, Keys.AGENT_MODEL__FK_AGENT_MODEL_AGENT.getInverseKey());
+
+        return _agentModel;
+    }
+
+    private transient AgentRagPath _agentRag;
+
+    /**
+     * Get the implicit to-many join path to the <code>public.agent_rag</code>
+     * table
+     */
+    public AgentRagPath agentRag() {
+        if (_agentRag == null)
+            _agentRag = new AgentRagPath(this, null, Keys.AGENT_RAG__FK_AGENT_RAG_AGENT.getInverseKey());
+
+        return _agentRag;
+    }
+
+    private transient OrchestratorAgentPath _orchestratorAgent;
+
+    /**
+     * Get the implicit to-many join path to the
+     * <code>public.orchestrator_agent</code> table
+     */
+    public OrchestratorAgentPath orchestratorAgent() {
+        if (_orchestratorAgent == null)
+            _orchestratorAgent = new OrchestratorAgentPath(this, null, Keys.ORCHESTRATOR_AGENT__FK_ORCHESTRATOR_AGENT_AGENT.getInverseKey());
+
+        return _orchestratorAgent;
     }
 
     /**
-     * Get the implicit many-to-many join path to the <code>public.client</code>
+     * Get the implicit many-to-many join path to the <code>public.model</code>
      * table
      */
-    public ClientPath client() {
-        return agentClient().client();
+    public ModelPath model() {
+        return agentModel().model();
+    }
+
+    /**
+     * Get the implicit many-to-many join path to the <code>public.rag</code>
+     * table
+     */
+    public RagPath rag() {
+        return agentRag().rag();
+    }
+
+    /**
+     * Get the implicit many-to-many join path to the
+     * <code>public.orchestrator</code> table
+     */
+    public OrchestratorPath orchestrator() {
+        return orchestratorAgent().orchestrator();
     }
 
     @Override

@@ -21,9 +21,12 @@ public class IMcpDao {
         return dslContext.insertInto(MCP)
                 .set(MCP.NAME, mcpPO.getName())
                 .set(MCP.TYPE, mcpPO.getType())
-                .set(MCP.ENDPOINT, mcpPO.getEndpoint())
-                .set(MCP.CONFIG, mcpPO.getConfig())
+                .set(MCP.DESCRIPTION, mcpPO.getDescription())
+                .set(MCP.BASE_URL, mcpPO.getBaseUrl())
+                .set(MCP.HEADERS, mcpPO.getHeaders())
                 .set(MCP.STATUS, mcpPO.getStatus())
+                .set(MCP.CREATED_AT, mcpPO.getCreatedAt())
+                .set(MCP.UPDATED_AT, mcpPO.getUpdatedAt())
                 .returning()
                 .fetchOneInto(McpPO.class);
     }
@@ -79,8 +82,9 @@ public class IMcpDao {
         return dslContext.update(MCP)
                 .set(MCP.NAME, mcpPO.getName())
                 .set(MCP.TYPE, mcpPO.getType())
-                .set(MCP.ENDPOINT, mcpPO.getEndpoint())
-                .set(MCP.CONFIG, mcpPO.getConfig())
+                .set(MCP.DESCRIPTION, mcpPO.getDescription())
+                .set(MCP.BASE_URL, mcpPO.getBaseUrl())
+                .set(MCP.HEADERS, mcpPO.getHeaders())
                 .set(MCP.STATUS, mcpPO.getStatus())
                 .set(MCP.UPDATED_AT, mcpPO.getUpdatedAt())
                 .where(MCP.ID.eq(mcpPO.getId()))
@@ -105,4 +109,3 @@ public class IMcpDao {
                 .execute();
     }
 }
-

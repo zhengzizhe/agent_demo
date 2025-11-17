@@ -5,13 +5,16 @@ package com.example.jooq;
 
 
 import com.example.jooq.tables.Agent;
-import com.example.jooq.tables.AgentClient;
-import com.example.jooq.tables.Client;
-import com.example.jooq.tables.ClientMcp;
-import com.example.jooq.tables.ClientModel;
-import com.example.jooq.tables.ClientRag;
+import com.example.jooq.tables.AgentMcp;
+import com.example.jooq.tables.AgentMemory;
+import com.example.jooq.tables.AgentModel;
+import com.example.jooq.tables.AgentRag;
 import com.example.jooq.tables.Mcp;
 import com.example.jooq.tables.Model;
+import com.example.jooq.tables.Orchestrator;
+import com.example.jooq.tables.OrchestratorAgent;
+import com.example.jooq.tables.OrchestratorMessage;
+import com.example.jooq.tables.OrchestratorRun;
 import com.example.jooq.tables.Rag;
 import com.example.jooq.tables.VectorDocument;
 
@@ -37,34 +40,29 @@ public class Public extends SchemaImpl {
     public static final Public PUBLIC = new Public();
 
     /**
-     * Agent表
+     * Agent表（智能体）
      */
     public final Agent AGENT = Agent.AGENT;
 
     /**
-     * Agent和Client的关联表
+     * Agent与MCP的关联表
      */
-    public final AgentClient AGENT_CLIENT = AgentClient.AGENT_CLIENT;
+    public final AgentMcp AGENT_MCP = AgentMcp.AGENT_MCP;
 
     /**
-     * Client表
+     * Agent共享记忆表，支持会话级和全局级别的记忆存储
      */
-    public final Client CLIENT = Client.CLIENT;
+    public final AgentMemory AGENT_MEMORY = AgentMemory.AGENT_MEMORY;
 
     /**
-     * Client和MCP的关联表
+     * Agent与Model的关联表
      */
-    public final ClientMcp CLIENT_MCP = ClientMcp.CLIENT_MCP;
+    public final AgentModel AGENT_MODEL = AgentModel.AGENT_MODEL;
 
     /**
-     * Client和Model的关联表
+     * Agent与RAG的关联表
      */
-    public final ClientModel CLIENT_MODEL = ClientModel.CLIENT_MODEL;
-
-    /**
-     * Client和RAG的关联表
-     */
-    public final ClientRag CLIENT_RAG = ClientRag.CLIENT_RAG;
+    public final AgentRag AGENT_RAG = AgentRag.AGENT_RAG;
 
     /**
      * MCP表（Model Context Protocol）
@@ -77,12 +75,32 @@ public class Public extends SchemaImpl {
     public final Model MODEL = Model.MODEL;
 
     /**
+     * Orchestrator表（编排器）
+     */
+    public final Orchestrator ORCHESTRATOR = Orchestrator.ORCHESTRATOR;
+
+    /**
+     * Orchestrator与Agent的关联表
+     */
+    public final OrchestratorAgent ORCHESTRATOR_AGENT = OrchestratorAgent.ORCHESTRATOR_AGENT;
+
+    /**
+     * Orchestrator消息记录表，记录所有Agent间的交互信息
+     */
+    public final OrchestratorMessage ORCHESTRATOR_MESSAGE = OrchestratorMessage.ORCHESTRATOR_MESSAGE;
+
+    /**
+     * Orchestrator执行会话表，记录每次Orchestrator执行的完整信息
+     */
+    public final OrchestratorRun ORCHESTRATOR_RUN = OrchestratorRun.ORCHESTRATOR_RUN;
+
+    /**
      * RAG表（Retrieval-Augmented Generation）
      */
     public final Rag RAG = Rag.RAG;
 
     /**
-     * The table <code>public.vector_document</code>.
+     * 存储向量嵌入数据的表
      */
     public final VectorDocument VECTOR_DOCUMENT = VectorDocument.VECTOR_DOCUMENT;
 
@@ -103,13 +121,16 @@ public class Public extends SchemaImpl {
     public final List<Table<?>> getTables() {
         return Arrays.asList(
             Agent.AGENT,
-            AgentClient.AGENT_CLIENT,
-            Client.CLIENT,
-            ClientMcp.CLIENT_MCP,
-            ClientModel.CLIENT_MODEL,
-            ClientRag.CLIENT_RAG,
+            AgentMcp.AGENT_MCP,
+            AgentMemory.AGENT_MEMORY,
+            AgentModel.AGENT_MODEL,
+            AgentRag.AGENT_RAG,
             Mcp.MCP,
             Model.MODEL,
+            Orchestrator.ORCHESTRATOR,
+            OrchestratorAgent.ORCHESTRATOR_AGENT,
+            OrchestratorMessage.ORCHESTRATOR_MESSAGE,
+            OrchestratorRun.ORCHESTRATOR_RUN,
             Rag.RAG,
             VectorDocument.VECTOR_DOCUMENT
         );

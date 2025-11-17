@@ -3,7 +3,6 @@ package com.example.ddd.domain.agent.service.execute;
 import com.example.ddd.common.utils.JSON;
 import com.example.ddd.domain.agent.service.armory.AiService;
 import com.example.ddd.domain.agent.service.armory.ServiceNode;
-
 import com.example.ddd.domain.agent.service.execute.context.UserContext;
 import com.example.ddd.domain.agent.service.execute.graph.GraphBuilder;
 import com.example.ddd.domain.agent.service.execute.graph.WorkspaceState;
@@ -17,7 +16,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.bsc.langgraph4j.CompiledGraph;
 import org.bsc.langgraph4j.GraphStateException;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
@@ -153,9 +154,9 @@ public class Orchestrator {
      * Step 2: 根据 TaskPlan 构建 StateGraph
      * 使用 GraphBuilder 构建图，执行器作为节点
      */
-    public CompiledGraph<WorkspaceState> buildGraph(TaskPlan taskPlan) throws GraphStateException {
+    public CompiledGraph<WorkspaceState> buildGraph(TaskPlan taskPlan, UserContext userContext) throws GraphStateException {
         log.info("多agent执行中 开始构建执行图: totalTasks={}", taskPlan.getTotalTasks());
-        return GraphBuilder.build(taskPlan, this);
+        return GraphBuilder.build(taskPlan, this, userContext);
     }
 
     /**
@@ -169,22 +170,28 @@ public class Orchestrator {
      * @return 执行结果流
      */
     public void execute(String userRequest, UserContext userContext) throws GraphStateException {
-        log.info("开始执行任务流程: {}", userRequest);
         try {
+            log.info("开始执行任务流程: {}", userRequest);
             TaskPlan taskPlan = plan(userRequest, userContext);
             log.info("任务计划生成完成: {}", taskPlan.getSummary());
-            CompiledGraph<WorkspaceState> graph = buildGraph(taskPlan);
+            // 构建图时传递UserContext，执行器会存储引用
+            CompiledGraph<WorkspaceState> graph = buildGraph(taskPlan, userContext);
             log.info("执行图构建完成");
             Map<String, Object> init = new HashMap<>();
             init.put("userMessage", userRequest);
             log.info("开始执行图");
             graph.invoke(init);
-        } finally {
-            UserContext.clear();
+        }catch (Exception e)
+        {
+            if (userContext != null) {
+                userContext.emit(UserContext.TaskStatusEvent.builder()
+                        .type("execution_failed")
+                        .message("流程异常")
+                        .error(e.getMessage())
+                        .build());
+            }
+            log.error("执行任务流程失败: {}", e.getMessage(), e);
         }
     }
 
-    public void execute(String userRequest) throws GraphStateException {
-        execute(userRequest, null);
-    }
 }

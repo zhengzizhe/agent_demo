@@ -28,7 +28,7 @@ public class RootNode extends AbstractArmorySupport {
     @Inject
     private IOrchestratorRepository orchestratorRepository;
     @Inject
-    RagNode ragNode;
+    McpNode mcpNode;
 
 
     @Override
@@ -61,7 +61,13 @@ public class RootNode extends AbstractArmorySupport {
             log.info("多agent构建中 查询RAG配置: orchestratorId={}, agent数量={}", orchestratorId, ragMap.size());
         }));
 
-        CompletableFuture.allOf(agentFuture, clientFuture, modelMapFuture, ragMapFuture).join();
+        CompletableFuture<Void> mcpMapFuture = CompletableFuture.runAsync(() -> dslContextFactory.execute(dslContext -> {
+            Map<Long, List<McpEntity>> mcpMap = agentRepository.queryMcpMapByOrchestratorId(dslContext, orchestratorId);
+            dynamicContext.put(MCP_KEY, Json.toJson(mcpMap));
+            log.info("多agent构建中 查询MCP配置: orchestratorId={}, agent数量={}", orchestratorId, mcpMap.size());
+        }));
+
+        CompletableFuture.allOf(agentFuture, clientFuture, modelMapFuture, ragMapFuture, mcpMapFuture).join();
 
         return router(armoryCommandEntity, dynamicContext);
     }
@@ -69,6 +75,6 @@ public class RootNode extends AbstractArmorySupport {
 
     @Override
     public ILogicHandler<ArmoryCommandEntity, DynamicContext, String> getNextHandler() {
-        return ragNode;
+        return mcpNode;
     }
 }

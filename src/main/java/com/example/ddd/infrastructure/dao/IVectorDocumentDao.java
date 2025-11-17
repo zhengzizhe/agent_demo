@@ -23,8 +23,8 @@ public class IVectorDocumentDao {
      * 插入向量文档
      */
     public VectorDocumentPO insert(DSLContext dslContext, VectorDocumentPO vectorDocumentPO) {
-        String sql = "INSERT INTO vector_document (rag_id, content, embedding, metadata, chunk_index) " +
-                "VALUES (?, ?, ?::vector, ?::jsonb, ?) RETURNING *";
+        String sql = "INSERT INTO vector_document (rag_id, text, embedding, metadata, chunk_index) " +
+                "VALUES (?, ?, ?::vector, ?::jsonb, ?) RETURNING embedding_id, rag_id, text, embedding, metadata, chunk_index, created_at, updated_at";
         
         try (Connection connection = dslContext.configuration().connectionProvider().acquire()) {
             PreparedStatement ps = connection.prepareStatement(sql);
@@ -62,7 +62,7 @@ public class IVectorDocumentDao {
      * 批量插入向量文档
      */
     public int batchInsert(DSLContext dslContext, List<VectorDocumentPO> documents) {
-        String sql = "INSERT INTO vector_document (rag_id, content, embedding, metadata, chunk_index) " +
+        String sql = "INSERT INTO vector_document (rag_id, text, embedding, metadata, chunk_index) " +
                 "VALUES (?, ?, ?::vector, ?::jsonb, ?)";
         
         try (Connection connection = dslContext.configuration().connectionProvider().acquire()) {
@@ -99,11 +99,11 @@ public class IVectorDocumentDao {
      * 根据ID查询向量文档
      */
     public VectorDocumentPO queryById(DSLContext dslContext, Long id) {
-        String sql = "SELECT * FROM vector_document WHERE id = ?";
+        String sql = "SELECT * FROM vector_document WHERE embedding_id = ?::uuid";
         
         try (Connection connection = dslContext.configuration().connectionProvider().acquire()) {
             PreparedStatement ps = connection.prepareStatement(sql);
-            ps.setLong(1, id);
+            ps.setString(1, id.toString());
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
                 return mapResultSetToPO(rs);
@@ -120,7 +120,6 @@ public class IVectorDocumentDao {
     public List<VectorDocumentPO> queryByRagId(DSLContext dslContext, Long ragId) {
         String sql = "SELECT * FROM vector_document WHERE rag_id = ? ORDER BY chunk_index";
         List<VectorDocumentPO> result = new ArrayList<>();
-        
         try (Connection connection = dslContext.configuration().connectionProvider().acquire()) {
             PreparedStatement ps = connection.prepareStatement(sql);
             ps.setLong(1, ragId);
@@ -194,11 +193,11 @@ public class IVectorDocumentDao {
      * 根据ID删除向量文档
      */
     public int deleteById(DSLContext dslContext, Long id) {
-        String sql = "DELETE FROM vector_document WHERE id = ?";
+        String sql = "DELETE FROM vector_document WHERE embedding_id = ?::uuid";
         
         try (Connection connection = dslContext.configuration().connectionProvider().acquire()) {
             PreparedStatement ps = connection.prepareStatement(sql);
-            ps.setLong(1, id);
+            ps.setString(1, id.toString());
             return ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("根据ID删除向量文档失败", e);
@@ -248,9 +247,17 @@ public class IVectorDocumentDao {
      */
     private VectorDocumentPO mapResultSetToPO(ResultSet rs) throws SQLException {
         VectorDocumentPO po = new VectorDocumentPO();
-        po.setId(rs.getLong("id"));
+        // UUID转换为Long：使用UUID的hashCode，或者使用字符串的hashCode
+        // 注意：这里假设id字段是Long类型，但实际数据库是UUID
+        // 如果需要保持UUID，应该将id字段改为String类型
+        String uuidStr = rs.getString("embedding_id");
+        if (uuidStr != null) {
+            // 使用UUID字符串的hashCode作为Long ID（临时方案）
+            // 更好的方案是将VectorDocumentPO.id改为String类型
+            po.setId((long) uuidStr.hashCode());
+        }
         po.setRagId(rs.getLong("rag_id"));
-        po.setContent(rs.getString("content"));
+        po.setContent(rs.getString("text"));
         
         // 处理embedding向量
         String embeddingStr = rs.getString("embedding");

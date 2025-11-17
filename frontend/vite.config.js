@@ -10,6 +10,10 @@ export default defineConfig({
       '/task': {
         target: 'http://localhost:8080',
         changeOrigin: true
+      },
+      '/rag': {
+        target: 'http://localhost:8080',
+        changeOrigin: true
       }
     }
   },

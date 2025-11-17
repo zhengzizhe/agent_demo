@@ -21,27 +21,21 @@ import java.util.concurrent.CountDownLatch;
 @Slf4j
 public class SilentExecutor extends BaseTaskExecutor {
 
-    public SilentExecutor(Task task, ServiceNode serviceNode) {
-        super(task, serviceNode);
+    public SilentExecutor(Task task, ServiceNode serviceNode, UserContext userContext) {
+        super(task, serviceNode, userContext);
     }
 
     @Override
     public Map<String, Object> apply(WorkspaceState state) {
         log.info("静默执行器执行任务: taskId={}, title={}", task.getId(), task.getTitle());
-        
         // 获取用户上下文
         UserContext userContext = getUserContext();
-        
-        // 发送任务开始事件
-        if (userContext != null) {
-            userContext.emit(UserContext.TaskStatusEvent.builder()
-                    .type("task_start")
-                    .taskId(task.getId())
-                    .message("任务开始执行")
-                    .build());
-        }
-        
-        String input = getTaskInput(state);
+        userContext.emit(UserContext.TaskStatusEvent.builder()
+                .type("task_start")
+                .taskId(task.getId())
+                .message("任务开始执行")
+                .build());
+        String input = getTaskInputString(state);
         AiService aiService = serviceNode.getAiService();
         if (aiService == null) {
             log.error("ServiceNode的AiService为空: taskId={}", task.getId());
@@ -56,13 +50,13 @@ public class SilentExecutor extends BaseTaskExecutor {
             }
             throw new IllegalStateException("ServiceNode的AiService为空: taskId=" + task.getId());
         }
-        
+
         try {
-            
+
             TokenStream tokenStream = aiService.chat(input);
             StringBuilder resultBuilder = new StringBuilder();
             CountDownLatch latch = new CountDownLatch(1);
-            
+
             // onPartialResponse: 静默执行器发送任务执行中事件（不包含内容）
             tokenStream.onPartialResponse(token -> {
                 resultBuilder.append(token);
@@ -75,13 +69,13 @@ public class SilentExecutor extends BaseTaskExecutor {
                             .build());
                 }
             });
-            
+
             tokenStream.onCompleteResponse(e -> {
                 AiMessage aiMessage = e.aiMessage();
                 if (aiMessage != null && aiMessage.text() != null) {
                     resultBuilder.append(aiMessage.text());
                 }
-                
+
                 // 发送任务完成事件（不包含内容）
                 if (userContext != null) {
                     userContext.emit(UserContext.TaskStatusEvent.builder()
@@ -90,13 +84,13 @@ public class SilentExecutor extends BaseTaskExecutor {
                             .message("任务执行完成")
                             .build());
                 }
-                
+
                 latch.countDown();
             });
-            
+
             tokenStream.onError(error -> {
                 log.error("静默执行器执行失败: taskId={}, error={}", task.getId(), error.getMessage());
-                
+
                 // 发送任务失败事件
                 if (userContext != null) {
                     userContext.emit(UserContext.TaskStatusEvent.builder()
@@ -106,10 +100,10 @@ public class SilentExecutor extends BaseTaskExecutor {
                             .error(error.getMessage())
                             .build());
                 }
-                
+
                 latch.countDown();
             });
-            
+
             tokenStream.start();
             try {
                 latch.await();
@@ -127,39 +121,21 @@ public class SilentExecutor extends BaseTaskExecutor {
                 }
                 throw new RuntimeException("等待token流完成被中断: taskId=" + task.getId(), e);
             }
-            
             String result = resultBuilder.toString();
             Map<String, Object> stateUpdate = saveTaskResult(state, result);
             log.info("静默执行器完成: taskId={}, resultLength={}", task.getId(), result.length());
             stateUpdate.put("currentAgent", serviceNode.getRole());
             stateUpdate.put("taskId", task.getId());
             return stateUpdate;
-        } catch (RuntimeException e) {
-            // RuntimeException 直接抛出
-            log.error("静默执行器运行时异常: taskId={}, error={}", task.getId(), e.getMessage(), e);
-            // 发送异常事件
-            if (userContext != null) {
-                userContext.emit(UserContext.TaskStatusEvent.builder()
-                        .type("task_failed")
-                        .taskId(task.getId())
-                        .message("任务执行失败")
-                        .error(e.getMessage())
-                        .build());
-            }
-            throw e;
         } catch (Exception e) {
-            // 其他异常包装后抛出
-            log.error("静默执行器异常: taskId={}, error={}", task.getId(), e.getMessage(), e);
-            // 发送异常事件
-            if (userContext != null) {
-                userContext.emit(UserContext.TaskStatusEvent.builder()
-                        .type("task_failed")
-                        .taskId(task.getId())
-                        .message("任务执行异常")
-                        .error(e.getMessage())
-                        .build());
-            }
-            throw new RuntimeException("静默执行器执行失败: taskId=" + task.getId(), e);
+            log.error("静默执行器运行时异常: taskId={}, error={}", task.getId(), e.getMessage(), e);
+            userContext.emit(UserContext.TaskStatusEvent.builder()
+                    .type("task_failed")
+                    .taskId(task.getId())
+                    .message("任务执行失败")
+                    .error(e.getMessage())
+                    .build());
+            throw e;
         }
     }
 }

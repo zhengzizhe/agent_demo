@@ -112,6 +112,7 @@
             <artifactId>micronaut-jdbc-hikari</artifactId>
             <scope>compile</scope>
         </dependency>
+
         <dependency>
             <groupId>io.micronaut.sql</groupId>
             <artifactId>micronaut-jooq</artifactId>
@@ -122,6 +123,12 @@
             <artifactId>logback-classic</artifactId>
             <scope>runtime</scope>
         </dependency>
+<!-- https://mvnrepository.com/artifact/dev.langchain4j/langchain4j-mcp -->
+<dependency>
+    <groupId>dev.langchain4j</groupId>
+    <artifactId>langchain4j-mcp</artifactId>
+    <version>1.5.0-beta11</version>
+</dependency>
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>

@@ -5,23 +5,29 @@ package com.example.jooq;
 
 
 import com.example.jooq.tables.Agent;
-import com.example.jooq.tables.AgentClient;
-import com.example.jooq.tables.Client;
-import com.example.jooq.tables.ClientMcp;
-import com.example.jooq.tables.ClientModel;
-import com.example.jooq.tables.ClientRag;
+import com.example.jooq.tables.AgentMcp;
+import com.example.jooq.tables.AgentMemory;
+import com.example.jooq.tables.AgentModel;
+import com.example.jooq.tables.AgentRag;
 import com.example.jooq.tables.Mcp;
 import com.example.jooq.tables.Model;
+import com.example.jooq.tables.Orchestrator;
+import com.example.jooq.tables.OrchestratorAgent;
+import com.example.jooq.tables.OrchestratorMessage;
+import com.example.jooq.tables.OrchestratorRun;
 import com.example.jooq.tables.Rag;
 import com.example.jooq.tables.VectorDocument;
-import com.example.jooq.tables.records.AgentClientRecord;
+import com.example.jooq.tables.records.AgentMcpRecord;
+import com.example.jooq.tables.records.AgentMemoryRecord;
+import com.example.jooq.tables.records.AgentModelRecord;
+import com.example.jooq.tables.records.AgentRagRecord;
 import com.example.jooq.tables.records.AgentRecord;
-import com.example.jooq.tables.records.ClientMcpRecord;
-import com.example.jooq.tables.records.ClientModelRecord;
-import com.example.jooq.tables.records.ClientRagRecord;
-import com.example.jooq.tables.records.ClientRecord;
 import com.example.jooq.tables.records.McpRecord;
 import com.example.jooq.tables.records.ModelRecord;
+import com.example.jooq.tables.records.OrchestratorAgentRecord;
+import com.example.jooq.tables.records.OrchestratorMessageRecord;
+import com.example.jooq.tables.records.OrchestratorRecord;
+import com.example.jooq.tables.records.OrchestratorRunRecord;
 import com.example.jooq.tables.records.RagRecord;
 import com.example.jooq.tables.records.VectorDocumentRecord;
 
@@ -44,13 +50,16 @@ public class Keys {
     // -------------------------------------------------------------------------
 
     public static final UniqueKey<AgentRecord> AGENT_PKEY = Internal.createUniqueKey(Agent.AGENT, DSL.name("agent_pkey"), new TableField[] { Agent.AGENT.ID }, true);
-    public static final UniqueKey<AgentClientRecord> UK_AGENT_CLIENT_UNIQUE = Internal.createUniqueKey(AgentClient.AGENT_CLIENT, DSL.name("uk_agent_client_unique"), new TableField[] { AgentClient.AGENT_CLIENT.AGENT_ID, AgentClient.AGENT_CLIENT.CLIENT_ID }, true);
-    public static final UniqueKey<ClientRecord> CLIENT_PKEY = Internal.createUniqueKey(Client.CLIENT, DSL.name("client_pkey"), new TableField[] { Client.CLIENT.ID }, true);
-    public static final UniqueKey<ClientMcpRecord> UK_CLIENT_MCP_UNIQUE = Internal.createUniqueKey(ClientMcp.CLIENT_MCP, DSL.name("uk_client_mcp_unique"), new TableField[] { ClientMcp.CLIENT_MCP.CLIENT_ID, ClientMcp.CLIENT_MCP.MCP_ID }, true);
-    public static final UniqueKey<ClientModelRecord> UK_CLIENT_MODEL_UNIQUE = Internal.createUniqueKey(ClientModel.CLIENT_MODEL, DSL.name("uk_client_model_unique"), new TableField[] { ClientModel.CLIENT_MODEL.CLIENT_ID, ClientModel.CLIENT_MODEL.MODEL_ID }, true);
-    public static final UniqueKey<ClientRagRecord> UK_CLIENT_RAG_UNIQUE = Internal.createUniqueKey(ClientRag.CLIENT_RAG, DSL.name("uk_client_rag_unique"), new TableField[] { ClientRag.CLIENT_RAG.CLIENT_ID, ClientRag.CLIENT_RAG.RAG_ID }, true);
+    public static final UniqueKey<AgentMcpRecord> PK_AGENT_MCP = Internal.createUniqueKey(AgentMcp.AGENT_MCP, DSL.name("pk_agent_mcp"), new TableField[] { AgentMcp.AGENT_MCP.AGENT_ID, AgentMcp.AGENT_MCP.MCP_ID }, true);
+    public static final UniqueKey<AgentMemoryRecord> AGENT_MEMORY_PKEY = Internal.createUniqueKey(AgentMemory.AGENT_MEMORY, DSL.name("agent_memory_pkey"), new TableField[] { AgentMemory.AGENT_MEMORY.ID }, true);
+    public static final UniqueKey<AgentModelRecord> PK_AGENT_MODEL = Internal.createUniqueKey(AgentModel.AGENT_MODEL, DSL.name("pk_agent_model"), new TableField[] { AgentModel.AGENT_MODEL.AGENT_ID, AgentModel.AGENT_MODEL.MODEL_ID }, true);
+    public static final UniqueKey<AgentRagRecord> PK_AGENT_RAG = Internal.createUniqueKey(AgentRag.AGENT_RAG, DSL.name("pk_agent_rag"), new TableField[] { AgentRag.AGENT_RAG.AGENT_ID, AgentRag.AGENT_RAG.RAG_ID }, true);
     public static final UniqueKey<McpRecord> MCP_PKEY = Internal.createUniqueKey(Mcp.MCP, DSL.name("mcp_pkey"), new TableField[] { Mcp.MCP.ID }, true);
     public static final UniqueKey<ModelRecord> MODEL_PKEY = Internal.createUniqueKey(Model.MODEL, DSL.name("model_pkey"), new TableField[] { Model.MODEL.ID }, true);
+    public static final UniqueKey<OrchestratorRecord> ORCHESTRATOR_PKEY = Internal.createUniqueKey(Orchestrator.ORCHESTRATOR, DSL.name("orchestrator_pkey"), new TableField[] { Orchestrator.ORCHESTRATOR.ID }, true);
+    public static final UniqueKey<OrchestratorAgentRecord> PK_ORCHESTRATOR_AGENT = Internal.createUniqueKey(OrchestratorAgent.ORCHESTRATOR_AGENT, DSL.name("pk_orchestrator_agent"), new TableField[] { OrchestratorAgent.ORCHESTRATOR_AGENT.ORCHESTRATOR_ID, OrchestratorAgent.ORCHESTRATOR_AGENT.AGENT_ID }, true);
+    public static final UniqueKey<OrchestratorMessageRecord> ORCHESTRATOR_MESSAGE_PKEY = Internal.createUniqueKey(OrchestratorMessage.ORCHESTRATOR_MESSAGE, DSL.name("orchestrator_message_pkey"), new TableField[] { OrchestratorMessage.ORCHESTRATOR_MESSAGE.ID }, true);
+    public static final UniqueKey<OrchestratorRunRecord> ORCHESTRATOR_RUN_PKEY = Internal.createUniqueKey(OrchestratorRun.ORCHESTRATOR_RUN, DSL.name("orchestrator_run_pkey"), new TableField[] { OrchestratorRun.ORCHESTRATOR_RUN.ID }, true);
     public static final UniqueKey<RagRecord> RAG_PKEY = Internal.createUniqueKey(Rag.RAG, DSL.name("rag_pkey"), new TableField[] { Rag.RAG.ID }, true);
     public static final UniqueKey<VectorDocumentRecord> VECTOR_DOCUMENT_PKEY = Internal.createUniqueKey(VectorDocument.VECTOR_DOCUMENT, DSL.name("vector_document_pkey"), new TableField[] { VectorDocument.VECTOR_DOCUMENT.EMBEDDING_ID }, true);
 
@@ -58,10 +67,13 @@ public class Keys {
     // FOREIGN KEY definitions
     // -------------------------------------------------------------------------
 
-    public static final ForeignKey<AgentClientRecord, AgentRecord> AGENT_CLIENT__FK_AGENT_CLIENT_AGENT = Internal.createForeignKey(AgentClient.AGENT_CLIENT, DSL.name("fk_agent_client_agent"), new TableField[] { AgentClient.AGENT_CLIENT.AGENT_ID }, Keys.AGENT_PKEY, new TableField[] { Agent.AGENT.ID }, true);
-    public static final ForeignKey<AgentClientRecord, ClientRecord> AGENT_CLIENT__FK_AGENT_CLIENT_CLIENT = Internal.createForeignKey(AgentClient.AGENT_CLIENT, DSL.name("fk_agent_client_client"), new TableField[] { AgentClient.AGENT_CLIENT.CLIENT_ID }, Keys.CLIENT_PKEY, new TableField[] { Client.CLIENT.ID }, true);
-    public static final ForeignKey<ClientModelRecord, ClientRecord> CLIENT_MODEL__FK_CLIENT_MODEL_CLIENT = Internal.createForeignKey(ClientModel.CLIENT_MODEL, DSL.name("fk_client_model_client"), new TableField[] { ClientModel.CLIENT_MODEL.CLIENT_ID }, Keys.CLIENT_PKEY, new TableField[] { Client.CLIENT.ID }, true);
-    public static final ForeignKey<ClientModelRecord, ModelRecord> CLIENT_MODEL__FK_CLIENT_MODEL_MODEL = Internal.createForeignKey(ClientModel.CLIENT_MODEL, DSL.name("fk_client_model_model"), new TableField[] { ClientModel.CLIENT_MODEL.MODEL_ID }, Keys.MODEL_PKEY, new TableField[] { Model.MODEL.ID }, true);
-    public static final ForeignKey<ClientRagRecord, ClientRecord> CLIENT_RAG__FK_CLIENT_RAG_CLIENT = Internal.createForeignKey(ClientRag.CLIENT_RAG, DSL.name("fk_client_rag_client"), new TableField[] { ClientRag.CLIENT_RAG.CLIENT_ID }, Keys.CLIENT_PKEY, new TableField[] { Client.CLIENT.ID }, true);
-    public static final ForeignKey<ClientRagRecord, RagRecord> CLIENT_RAG__FK_CLIENT_RAG_RAG = Internal.createForeignKey(ClientRag.CLIENT_RAG, DSL.name("fk_client_rag_rag"), new TableField[] { ClientRag.CLIENT_RAG.RAG_ID }, Keys.RAG_PKEY, new TableField[] { Rag.RAG.ID }, true);
+    public static final ForeignKey<AgentMemoryRecord, AgentRecord> AGENT_MEMORY__FK_AGENT_MEMORY_AGENT = Internal.createForeignKey(AgentMemory.AGENT_MEMORY, DSL.name("fk_agent_memory_agent"), new TableField[] { AgentMemory.AGENT_MEMORY.AGENT_ID }, Keys.AGENT_PKEY, new TableField[] { Agent.AGENT.ID }, true);
+    public static final ForeignKey<AgentModelRecord, AgentRecord> AGENT_MODEL__FK_AGENT_MODEL_AGENT = Internal.createForeignKey(AgentModel.AGENT_MODEL, DSL.name("fk_agent_model_agent"), new TableField[] { AgentModel.AGENT_MODEL.AGENT_ID }, Keys.AGENT_PKEY, new TableField[] { Agent.AGENT.ID }, true);
+    public static final ForeignKey<AgentModelRecord, ModelRecord> AGENT_MODEL__FK_AGENT_MODEL_MODEL = Internal.createForeignKey(AgentModel.AGENT_MODEL, DSL.name("fk_agent_model_model"), new TableField[] { AgentModel.AGENT_MODEL.MODEL_ID }, Keys.MODEL_PKEY, new TableField[] { Model.MODEL.ID }, true);
+    public static final ForeignKey<AgentRagRecord, AgentRecord> AGENT_RAG__FK_AGENT_RAG_AGENT = Internal.createForeignKey(AgentRag.AGENT_RAG, DSL.name("fk_agent_rag_agent"), new TableField[] { AgentRag.AGENT_RAG.AGENT_ID }, Keys.AGENT_PKEY, new TableField[] { Agent.AGENT.ID }, true);
+    public static final ForeignKey<AgentRagRecord, RagRecord> AGENT_RAG__FK_AGENT_RAG_RAG = Internal.createForeignKey(AgentRag.AGENT_RAG, DSL.name("fk_agent_rag_rag"), new TableField[] { AgentRag.AGENT_RAG.RAG_ID }, Keys.RAG_PKEY, new TableField[] { Rag.RAG.ID }, true);
+    public static final ForeignKey<OrchestratorAgentRecord, AgentRecord> ORCHESTRATOR_AGENT__FK_ORCHESTRATOR_AGENT_AGENT = Internal.createForeignKey(OrchestratorAgent.ORCHESTRATOR_AGENT, DSL.name("fk_orchestrator_agent_agent"), new TableField[] { OrchestratorAgent.ORCHESTRATOR_AGENT.AGENT_ID }, Keys.AGENT_PKEY, new TableField[] { Agent.AGENT.ID }, true);
+    public static final ForeignKey<OrchestratorAgentRecord, OrchestratorRecord> ORCHESTRATOR_AGENT__FK_ORCHESTRATOR_AGENT_ORCHESTRATOR = Internal.createForeignKey(OrchestratorAgent.ORCHESTRATOR_AGENT, DSL.name("fk_orchestrator_agent_orchestrator"), new TableField[] { OrchestratorAgent.ORCHESTRATOR_AGENT.ORCHESTRATOR_ID }, Keys.ORCHESTRATOR_PKEY, new TableField[] { Orchestrator.ORCHESTRATOR.ID }, true);
+    public static final ForeignKey<OrchestratorMessageRecord, OrchestratorRunRecord> ORCHESTRATOR_MESSAGE__FK_ORCHESTRATOR_MESSAGE_RUN = Internal.createForeignKey(OrchestratorMessage.ORCHESTRATOR_MESSAGE, DSL.name("fk_orchestrator_message_run"), new TableField[] { OrchestratorMessage.ORCHESTRATOR_MESSAGE.RUN_ID }, Keys.ORCHESTRATOR_RUN_PKEY, new TableField[] { OrchestratorRun.ORCHESTRATOR_RUN.ID }, true);
+    public static final ForeignKey<OrchestratorRunRecord, OrchestratorRecord> ORCHESTRATOR_RUN__FK_ORCHESTRATOR_RUN_ORCHESTRATOR = Internal.createForeignKey(OrchestratorRun.ORCHESTRATOR_RUN, DSL.name("fk_orchestrator_run_orchestrator"), new TableField[] { OrchestratorRun.ORCHESTRATOR_RUN.ORCHESTRATOR_ID }, Keys.ORCHESTRATOR_PKEY, new TableField[] { Orchestrator.ORCHESTRATOR.ID }, true);
 }

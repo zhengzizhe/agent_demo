@@ -3,12 +3,9 @@ package com.example.ddd.trigger.controller;
 import com.example.ddd.common.utils.BeanUtil;
 import com.example.ddd.domain.agent.model.entity.ArmoryCommandEntity;
 import com.example.ddd.domain.agent.service.armory.DynamicContext;
-
 import com.example.ddd.domain.agent.service.armory.RootNode;
 import com.example.ddd.domain.agent.service.execute.Orchestrator;
 import com.example.ddd.domain.agent.service.execute.context.UserContext;
-import com.example.ddd.domain.agent.service.execute.role.AgentRole;
-import com.example.ddd.domain.agent.service.execute.task.TaskPlan;
 import io.micronaut.http.MediaType;
 import io.micronaut.http.annotation.Body;
 import io.micronaut.http.annotation.Controller;
@@ -46,33 +43,25 @@ public class TaskExecuteController {
         rootNode.handle(armoryCommandEntity, new DynamicContext());
         log.info("多agent执行中 收到任务执行请求: orchestratorId={}, message={}", request.getOrchestratorId(), request.getMessage());
         return Flux.create(emitter -> {
+            Orchestrator orchestrator = getOrchestrator(request.getOrchestratorId());
+            if (orchestrator == null) {
+                emitter.error(new IllegalStateException("无法获取Orchestrator，请先调用 /armory 构建"));
+                return;
+            }
+            UserContext userContext = new UserContext();
+            userContext.startEventDispatcher(emitter);
             try {
-                Orchestrator orchestrator = getOrchestrator(request.getOrchestratorId());
-                if (orchestrator == null) {
-                    emitter.error(new IllegalStateException("无法获取Orchestrator，请先调用 /armory 构建"));
-                    return;
-                }
-                UserContext userContext = new UserContext();
-                userContext.startEventDispatcher(emitter);
-                new Thread(() -> {
-                    try {
-                        orchestrator.execute(request.getMessage(), userContext);
-                        // 执行完成后标记完成，等待队列处理完
-                        userContext.complete();
-                    } catch (GraphStateException e) {
-                        log.error("执行任务失败: {}", e.getMessage(), e);
-                        userContext.error("执行任务失败: " + e.getMessage());
-                        userContext.stopEventDispatcher();
-                        emitter.error(e);
-                    } catch (Exception e) {
-                        log.error("执行任务异常: {}", e.getMessage(), e);
-                        userContext.error("执行任务异常: " + e.getMessage());
-                        userContext.stopEventDispatcher();
-                        emitter.error(e);
-                    }
-                }).start();
+                orchestrator.execute(request.getMessage(), userContext);
+                userContext.complete();
+            } catch (GraphStateException e) {
+                log.error("执行任务失败: {}", e.getMessage(), e);
+                userContext.error("执行任务失败: " + e.getMessage());
+                userContext.stopEventDispatcher();
+                emitter.error(e);
             } catch (Exception e) {
-                log.error("创建任务执行流失败: {}", e.getMessage(), e);
+                log.error("执行任务异常: {}", e.getMessage(), e);
+                userContext.error("执行任务异常: " + e.getMessage());
+                userContext.stopEventDispatcher();
                 emitter.error(e);
             }
         });

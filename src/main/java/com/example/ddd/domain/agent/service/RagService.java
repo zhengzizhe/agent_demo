@@ -1,5 +1,6 @@
 package com.example.ddd.domain.agent.service;
 
+import com.example.ddd.configuration.config.OpenAIProperties;
 import com.example.ddd.domain.agent.adapter.repository.IRagRepository;
 import com.example.ddd.domain.agent.adapter.repository.IVectorDocumentRepository;
 import com.example.ddd.domain.agent.model.entity.RagEntity;
@@ -12,8 +13,6 @@ import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.openai.OpenAiEmbeddingModel;
-import dev.langchain4j.store.embedding.EmbeddingStore;
-import dev.langchain4j.store.embedding.pgvector.PgVectorEmbeddingStore;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
@@ -39,26 +38,63 @@ public class RagService {
     @Inject
     private DSLContextFactory dslContextFactory;
 
-
+    @Inject
+    private OpenAIProperties openAIProperties;
     /**
      * 添加文档到RAG知识库
      *
-     * @param ragId    RAG ID（保留参数，但使用硬编码配置）
+     * @param ragId    RAG ID
      * @param text     文档文本
      * @param metadata 文档元数据
      * @return 添加的文档块数量
      */
     public int addDocument(Long ragId, String text, Map<String, Object> metadata) {
-        EmbeddingStore<TextSegment> store = createEmbeddingStore();
+        RagEntity rag = dslContextFactory.callable(dslContext -> {
+            return ragRepository.queryById(dslContext, ragId);
+        });
+        if (rag == null) {
+            throw new IllegalArgumentException("未找到RAG: " + ragId);
+        }
         EmbeddingModel embeddingModel = createEmbeddingModel();
         var splitter = DocumentSplitters.recursive(1000, 200);
         Document document = Document.from(text, Metadata.from(metadata != null ? metadata : new HashMap<>()));
         List<TextSegment> segments = splitter.split(document);
         List<Embedding> embeddings = embeddingModel.embedAll(segments).content();
-        List<String> embeddingStoreIds = store.addAll(embeddings, segments);
-        log.info("文档已添加到RAG: ragId={}, segments={}, embeddingStoreIds={}", ragId, segments.size(), embeddingStoreIds.size());
-        return segments.size();
+        List<VectorDocumentEntity> entities = new java.util.ArrayList<>();
+        long currentTime = System.currentTimeMillis() / 1000; // 秒级时间戳
+        for (int i = 0; i < segments.size(); i++) {
+            TextSegment segment = segments.get(i);
+            Embedding embedding = embeddings.get(i);
+            
+            VectorDocumentEntity entity = new VectorDocumentEntity();
+            entity.setRagId(ragId);
+            entity.setContent(segment.text());
+            entity.setEmbedding(embedding.vector());
+            entity.setChunkIndex(i);
+            entity.setCreatedAt(currentTime);
+            entity.setUpdatedAt(currentTime);
+            
+            // 合并metadata
+            Map<String, Object> mergedMetadata = new HashMap<>();
+            if (metadata != null) {
+                mergedMetadata.putAll(metadata);
             }
+            // 添加chunk索引到metadata
+            mergedMetadata.put("chunkIndex", i);
+            mergedMetadata.put("totalChunks", segments.size());
+            entity.setMetadata(mergedMetadata);
+            
+            entities.add(entity);
+        }
+        
+        // 批量插入到数据库
+        int insertedCount = dslContextFactory.callable(dslContext -> {
+            return vectorDocumentRepository.batchInsert(dslContext, entities);
+        });
+        
+        log.info("文档已添加到RAG: ragId={}, segments={}, insertedCount={}", ragId, segments.size(), insertedCount);
+        return insertedCount;
+    }
     public List<VectorDocumentEntity> search(Long ragId, String queryText, int limit, double similarityThreshold) {
         return dslContextFactory.callable(dslContext -> {
             RagEntity rag = ragRepository.queryById(dslContext, ragId);
@@ -84,34 +120,41 @@ public class RagService {
         });
     }
 
+    /**
+     * 根据RAG ID查询所有文档
+     *
+     * @param ragId RAG ID
+     * @return 文档列表
+     */
+    public List<VectorDocumentEntity> queryDocuments(Long ragId) {
+        return dslContextFactory.callable(dslContext -> {
+            return vectorDocumentRepository.queryByRagId(dslContext, ragId);
+        });
+    }
+
+    /**
+     * 根据ID删除文档
+     *
+     * @param docId 文档ID
+     * @return 删除的文档数量
+     */
+    public int deleteDocument(Long docId) {
+        return dslContextFactory.callable(dslContext -> {
+            return vectorDocumentRepository.deleteById(dslContext, docId);
+        });
+    }
+
 
     /**
      * 创建EmbeddingModel（硬编码配置）
      */
     private EmbeddingModel createEmbeddingModel() {
         return OpenAiEmbeddingModel.builder()
-                .apiKey("sk-ReRvqCmAoA71cgoiC416F0809fEb46A28f7a07AcDd3e339e")
-                .baseUrl("https://apis.itedus.cn/v1/")
+                .apiKey(openAIProperties.getKey())
+                .baseUrl(openAIProperties.getUrl())
                 .modelName("text-embedding-3-small")
                 .build();
     }
 
-    /**
-     * 创建PgVector向量存储（硬编码配置）
-     */
-    private PgVectorEmbeddingStore createEmbeddingStore() {
-        return PgVectorEmbeddingStore.builder()
-                .host("localhost")
-                .port(5432)
-                .user("postgres")
-                .password("postgres")
-                .database("agent")
-                .table("vector_document")
-                .dimension(1536)
-                .useIndex(true)
-                .indexListSize(1000)
-                .createTable(true)
-                .build();
-    }
 }
 

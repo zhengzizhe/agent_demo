@@ -4,15 +4,19 @@
 package com.example.jooq.tables;
 
 
+import com.example.jooq.Indexes;
 import com.example.jooq.Keys;
 import com.example.jooq.Public;
 import com.example.jooq.tables.records.McpRecord;
 
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 
 import org.jooq.Condition;
 import org.jooq.Field;
 import org.jooq.Identity;
+import org.jooq.Index;
 import org.jooq.JSONB;
 import org.jooq.Name;
 import org.jooq.PlainSQL;
@@ -52,44 +56,51 @@ public class Mcp extends TableImpl<McpRecord> {
     }
 
     /**
-     * The column <code>public.mcp.id</code>. 主键ID
+     * The column <code>public.mcp.id</code>.
      */
-    public final TableField<McpRecord, Long> ID = createField(DSL.name("id"), SQLDataType.BIGINT.nullable(false).identity(true), this, "主键ID");
+    public final TableField<McpRecord, Long> ID = createField(DSL.name("id"), SQLDataType.BIGINT.nullable(false).identity(true), this, "");
 
     /**
-     * The column <code>public.mcp.name</code>. MCP名称
+     * The column <code>public.mcp.name</code>.
      */
-    public final TableField<McpRecord, String> NAME = createField(DSL.name("name"), SQLDataType.VARCHAR(255).nullable(false), this, "MCP名称");
+    public final TableField<McpRecord, String> NAME = createField(DSL.name("name"), SQLDataType.VARCHAR(255).nullable(false), this, "");
 
     /**
-     * The column <code>public.mcp.type</code>. MCP类型
+     * The column <code>public.mcp.type</code>.
      */
-    public final TableField<McpRecord, String> TYPE = createField(DSL.name("type"), SQLDataType.VARCHAR(100).nullable(false), this, "MCP类型");
+    public final TableField<McpRecord, String> TYPE = createField(DSL.name("type"), SQLDataType.VARCHAR(100).nullable(false), this, "");
 
     /**
-     * The column <code>public.mcp.endpoint</code>. MCP端点
+     * The column <code>public.mcp.description</code>. MCP服务器描述
      */
-    public final TableField<McpRecord, String> ENDPOINT = createField(DSL.name("endpoint"), SQLDataType.VARCHAR(500), this, "MCP端点");
+    public final TableField<McpRecord, String> DESCRIPTION = createField(DSL.name("description"), SQLDataType.CLOB, this, "MCP服务器描述");
 
     /**
-     * The column <code>public.mcp.config</code>. MCP配置信息（JSON格式）
+     * The column <code>public.mcp.base_url</code>.
+     * MCP服务器baseUrl（如：https://dashscope.aliyuncs.com/api/v1/mcps/ChatPPT/sse）
      */
-    public final TableField<McpRecord, JSONB> CONFIG = createField(DSL.name("config"), SQLDataType.JSONB, this, "MCP配置信息（JSON格式）");
+    public final TableField<McpRecord, String> BASE_URL = createField(DSL.name("base_url"), SQLDataType.VARCHAR(500), this, "MCP服务器baseUrl（如：https://dashscope.aliyuncs.com/api/v1/mcps/ChatPPT/sse）");
 
     /**
-     * The column <code>public.mcp.status</code>. 状态：ACTIVE, INACTIVE
+     * The column <code>public.mcp.headers</code>.
+     * MCP请求头（JSON格式，如：{"Authorization": "Bearer ..."}）
      */
-    public final TableField<McpRecord, String> STATUS = createField(DSL.name("status"), SQLDataType.VARCHAR(50).defaultValue(DSL.field(DSL.raw("'ACTIVE'::character varying"), SQLDataType.VARCHAR)), this, "状态：ACTIVE, INACTIVE");
+    public final TableField<McpRecord, JSONB> HEADERS = createField(DSL.name("headers"), SQLDataType.JSONB, this, "MCP请求头（JSON格式，如：{\"Authorization\": \"Bearer ...\"}）");
 
     /**
-     * The column <code>public.mcp.created_at</code>. 创建时间（时间戳，秒）
+     * The column <code>public.mcp.status</code>.
      */
-    public final TableField<McpRecord, Long> CREATED_AT = createField(DSL.name("created_at"), SQLDataType.BIGINT.defaultValue(DSL.field(DSL.raw("(EXTRACT(epoch FROM CURRENT_TIMESTAMP))::bigint"), SQLDataType.BIGINT)), this, "创建时间（时间戳，秒）");
+    public final TableField<McpRecord, String> STATUS = createField(DSL.name("status"), SQLDataType.VARCHAR(50).defaultValue(DSL.field(DSL.raw("'ACTIVE'::character varying"), SQLDataType.VARCHAR)), this, "");
 
     /**
-     * The column <code>public.mcp.updated_at</code>. 更新时间（时间戳，秒）
+     * The column <code>public.mcp.created_at</code>.
      */
-    public final TableField<McpRecord, Long> UPDATED_AT = createField(DSL.name("updated_at"), SQLDataType.BIGINT.defaultValue(DSL.field(DSL.raw("(EXTRACT(epoch FROM CURRENT_TIMESTAMP))::bigint"), SQLDataType.BIGINT)), this, "更新时间（时间戳，秒）");
+    public final TableField<McpRecord, Long> CREATED_AT = createField(DSL.name("created_at"), SQLDataType.BIGINT.defaultValue(DSL.field(DSL.raw("(EXTRACT(epoch FROM CURRENT_TIMESTAMP))::bigint"), SQLDataType.BIGINT)), this, "");
+
+    /**
+     * The column <code>public.mcp.updated_at</code>.
+     */
+    public final TableField<McpRecord, Long> UPDATED_AT = createField(DSL.name("updated_at"), SQLDataType.BIGINT.defaultValue(DSL.field(DSL.raw("(EXTRACT(epoch FROM CURRENT_TIMESTAMP))::bigint"), SQLDataType.BIGINT)), this, "");
 
     private Mcp(Name alias, Table<McpRecord> aliased) {
         this(alias, aliased, (Field<?>[]) null, null);
@@ -123,6 +134,11 @@ public class Mcp extends TableImpl<McpRecord> {
     @Override
     public Schema getSchema() {
         return aliased() ? null : Public.PUBLIC;
+    }
+
+    @Override
+    public List<Index> getIndexes() {
+        return Arrays.asList(Indexes.IDX_MCP_STATUS, Indexes.IDX_MCP_TYPE);
     }
 
     @Override

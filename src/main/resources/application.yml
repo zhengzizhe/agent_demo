@@ -54,6 +54,6 @@ jooq:
 # OpenAI API配置
 openai:
   api:
-    url: https://apis.itedus.cn/v1/
-    key: sk-ReRvqCmAoA71cgoiC416F0809fEb46A28f7a07AcDd3e339e
+    url: https://api.bianxie.ai/v1
+    key: sk-LjKtJWPQJI73Cxl3Qa373SUzshCQWaR7JBJVFMQbUnIOEEkZ
     model: gpt-4o

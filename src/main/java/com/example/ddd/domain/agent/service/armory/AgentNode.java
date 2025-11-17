@@ -4,11 +4,16 @@ import com.example.ddd.common.utils.BeanUtil;
 import com.example.ddd.common.utils.ILogicHandler;
 import com.example.ddd.common.utils.JSON;
 import com.example.ddd.domain.agent.model.entity.*;
+import dev.langchain4j.mcp.McpToolProvider;
+import dev.langchain4j.mcp.client.McpClient;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.rag.content.retriever.EmbeddingStoreContentRetriever;
 import dev.langchain4j.service.AiServices;
+import dev.langchain4j.service.tool.ToolProvider;
 import dev.langchain4j.store.embedding.EmbeddingStore;
+
+import java.util.ArrayList;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
@@ -46,10 +51,14 @@ public class AgentNode extends AbstractArmorySupport {
         Map<Long, List<RagEntity>> ragMap = JSON.parseObject(ragJson,
                 new com.fasterxml.jackson.core.type.TypeReference<Map<Long, List<RagEntity>>>() {
                 });
+        String mcpJson = dynamicContext.get(MCP_KEY);
+        Map<Long, List<McpEntity>> mcpMap = JSON.parseObject(mcpJson,
+                new com.fasterxml.jackson.core.type.TypeReference<Map<Long, List<McpEntity>>>() {
+                });
         String agentJson = dynamicContext.get(AGENT_KEY);
         OrchestratorEntity agent = JSON.parseObject(agentJson, OrchestratorEntity.class);
         try {
-            build(agent, clients, modelMap, ragMap);
+            build(agent, clients, modelMap, ragMap, mcpMap);
         } catch (Exception e) {
             log.error("多agent构建中 构建ServiceNode失败: orchestratorId={}, error={}", agentId, e.getMessage(), e);
             throw new RuntimeException(e);
@@ -58,7 +67,7 @@ public class AgentNode extends AbstractArmorySupport {
         return router(armoryCommandEntity, dynamicContext);
     }
 
-    private void build(OrchestratorEntity agent, List<AgentEntity> clients, Map<Long, List<ChatModelEntity>> modelMap, Map<Long, List<RagEntity>> ragMap) {
+    private void build(OrchestratorEntity agent, List<AgentEntity> clients, Map<Long, List<ChatModelEntity>> modelMap, Map<Long, List<RagEntity>> ragMap, Map<Long, List<McpEntity>> mcpMap) {
         Long agentId = agent.getId();
         log.info("多agent构建中 开始构建AiService: orchestratorId={}, agent数量={}", agentId, clients.size());
         for (AgentEntity client : clients) {
@@ -89,7 +98,12 @@ public class AgentNode extends AbstractArmorySupport {
                         log.warn("多agent构建中 EmbeddingModel {} 未找到，RAG功能可能不完整: agentId={}", ragEntity.getId(), client.getId());
                     }
                 }
-                AiService aiService = buildAiService(client, chatModel, embeddingStore, embeddingModel);
+
+
+
+                // 获取MCP列表
+                List<McpEntity> mcps = mcpMap != null ? mcpMap.get(client.getId()) : null;
+                AiService aiService = buildAiService(client, chatModel, embeddingStore, embeddingModel, mcps);
                 // buildAiService 现在会抛出异常而不是返回 null，所以这里不需要 null 检查
                 beanUtil.registerAiService(client.getId(), aiService);
                 ServiceNode serviceNode = buildServiceNode(client, aiService);
@@ -138,10 +152,12 @@ public class AgentNode extends AbstractArmorySupport {
      * @param chatModel      StreamingChatModel实例
      * @param embeddingStore EmbeddingStore实例（可选）
      * @param embeddingModel EmbeddingModel实例（可选）
+     * @param mcps           MCP列表（可选）
      * @return AiService实例
      */
     private AiService buildAiService(AgentEntity client, StreamingChatModel chatModel,
-                                     EmbeddingStore embeddingStore, EmbeddingModel embeddingModel) {
+                                     EmbeddingStore embeddingStore, EmbeddingModel embeddingModel,
+                                     List<McpEntity> mcps) {
         try {
             AiServices<AiService> builder = AiServices.builder(AiService.class)
                     .streamingChatModel(chatModel);
@@ -151,6 +167,26 @@ public class AgentNode extends AbstractArmorySupport {
                         .build();
                 builder.contentRetriever(build);
             }
+            if (mcps != null && !mcps.isEmpty()) {
+                List<McpClient> mcpClients = new ArrayList<>();
+                for (McpEntity mcp : mcps) {
+                    if ("ACTIVE".equals(mcp.getStatus())) {
+                        McpClient mcpClient = beanUtil.getMcpClient(mcp.getId());
+                        if (mcpClient != null) {
+                            mcpClients.add(mcpClient);
+                            log.debug("多agent构建中 获取MCP Client: mcpId={}, mcpName={}", mcp.getId(), mcp.getName());
+                        } else {
+                            log.warn("多agent构建中 MCP Client未找到: mcpId={}, mcpName={}", mcp.getId(), mcp.getName());
+                        }
+                    }
+                }
+                if (!mcpClients.isEmpty()) {
+                    ToolProvider toolProvider = createMcpToolProvider(mcpClients);
+                    builder.toolProvider(toolProvider);
+                    log.info("多agent构建中 为agentId={} 添加MCP ToolProvider: mcp数量={}", client.getId(), mcpClients.size());
+                }
+            }
+
             if (client.getSystemPrompt() != null && !client.getSystemPrompt().isEmpty()) {
                 builder.systemMessageProvider((e) -> client.getSystemPrompt());
             }
@@ -159,6 +195,17 @@ public class AgentNode extends AbstractArmorySupport {
             log.error("多agent构建中 构建AiService失败: agentId={}, error={}", client.getId(), e.getMessage(), e);
             throw new RuntimeException("构建AiService失败: agentId=" + client.getId(), e);
         }
+    }
+
+    /**
+     * 创建MCP ToolProvider
+     * 从MCP Client获取工具并返回
+     *
+     * @param mcpClients MCP客户端列表
+     * @return ToolProvider实例
+     */
+    private ToolProvider createMcpToolProvider(List<McpClient> mcpClients) {
+        return request -> McpToolProvider.builder().mcpClients(mcpClients).build().provideTools(request);
     }
 
     @Inject

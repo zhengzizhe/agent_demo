@@ -46,18 +46,21 @@ export function useEventHandlers(messagesManager) {
         break
 
       case 'task_start':
+        // task 类型事件只更新任务状态，不添加到消息列表
         if (event.taskId) {
           messagesManager.updateTaskInLastMessage(event.taskId, 'RUNNING')
         }
         break
 
       case 'task_running':
+        // task 类型事件只更新任务状态，不添加到消息列表
         if (event.taskId) {
           messagesManager.updateTaskInLastMessage(event.taskId, 'RUNNING')
         }
         break
 
       case 'streaming':
+        // streaming 事件需要显示内容，保留消息添加
         if (event.taskId && event.content) {
           messagesManager.updateTaskInLastMessage(event.taskId, 'RUNNING')
           messagesManager.appendToLastAssistantMessage(event.content)
@@ -65,20 +68,37 @@ export function useEventHandlers(messagesManager) {
         break
 
       case 'task_complete':
+        // task 类型事件只更新任务状态，不添加到消息列表
         if (event.taskId) {
           messagesManager.updateTaskInLastMessage(event.taskId, 'DONE', event.content)
-          if (event.content) {
-            messagesManager.appendToLastAssistantMessage('\n\n' + event.content)
-          }
+          // 不再添加消息内容到消息列表
         }
         break
 
       case 'task_failed':
+        // task 类型事件只更新任务状态，不添加到消息列表
         if (event.taskId) {
           messagesManager.updateTaskInLastMessage(event.taskId, 'FAILED', null, event.error)
-          if (event.error) {
-            messagesManager.appendToLastAssistantMessage(`\n\n❌ 任务失败: ${event.error}`)
-          }
+          // 不再添加错误消息到消息列表
+        }
+        break
+
+      case 'execution_failed':
+        // execution_failed 类型的事件，在对话下方显示红色错误框
+        isPlanning.value = false
+        isExecuting.value = false
+        const executionErrorMsg = event.error || event.message || '执行失败'
+        // 将错误信息附加到最后一条消息上
+        const lastMessage = messagesManager.messages.value[messagesManager.messages.value.length - 1]
+        if (lastMessage) {
+          lastMessage.executionError = executionErrorMsg
+          // 强制触发响应式更新
+          messagesManager.messages.value = [...messagesManager.messages.value]
+        } else {
+          // 如果没有消息，创建一个新的错误消息
+          messagesManager.addAssistantMessage('')
+          const newLastMessage = messagesManager.messages.value[messagesManager.messages.value.length - 1]
+          newLastMessage.executionError = executionErrorMsg
         }
         break
 

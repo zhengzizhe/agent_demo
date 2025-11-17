@@ -4,6 +4,18 @@
 package com.example.jooq;
 
 
+import com.example.jooq.tables.Agent;
+import com.example.jooq.tables.AgentMcp;
+import com.example.jooq.tables.AgentMemory;
+import com.example.jooq.tables.AgentModel;
+import com.example.jooq.tables.AgentRag;
+import com.example.jooq.tables.Mcp;
+import com.example.jooq.tables.Model;
+import com.example.jooq.tables.Orchestrator;
+import com.example.jooq.tables.OrchestratorAgent;
+import com.example.jooq.tables.OrchestratorMessage;
+import com.example.jooq.tables.OrchestratorRun;
+import com.example.jooq.tables.Rag;
 import com.example.jooq.tables.VectorDocument;
 
 import org.jooq.Index;
@@ -22,5 +34,41 @@ public class Indexes {
     // INDEX definitions
     // -------------------------------------------------------------------------
 
+    public static final Index IDX_AGENT_MCP_AGENT_ID = Internal.createIndex(DSL.name("idx_agent_mcp_agent_id"), AgentMcp.AGENT_MCP, new OrderField[] { AgentMcp.AGENT_MCP.AGENT_ID }, false);
+    public static final Index IDX_AGENT_MCP_MCP_ID = Internal.createIndex(DSL.name("idx_agent_mcp_mcp_id"), AgentMcp.AGENT_MCP, new OrderField[] { AgentMcp.AGENT_MCP.MCP_ID }, false);
+    public static final Index IDX_AGENT_MEMORY_AGENT_ID = Internal.createIndex(DSL.name("idx_agent_memory_agent_id"), AgentMemory.AGENT_MEMORY, new OrderField[] { AgentMemory.AGENT_MEMORY.AGENT_ID }, false);
+    public static final Index IDX_AGENT_MEMORY_EXPIRES_AT = Internal.createIndex(DSL.name("idx_agent_memory_expires_at"), AgentMemory.AGENT_MEMORY, new OrderField[] { AgentMemory.AGENT_MEMORY.EXPIRES_AT }, false);
+    public static final Index IDX_AGENT_MEMORY_KEY = Internal.createIndex(DSL.name("idx_agent_memory_key"), AgentMemory.AGENT_MEMORY, new OrderField[] { AgentMemory.AGENT_MEMORY.MEMORY_KEY }, false);
+    public static final Index IDX_AGENT_MEMORY_SESSION_ID = Internal.createIndex(DSL.name("idx_agent_memory_session_id"), AgentMemory.AGENT_MEMORY, new OrderField[] { AgentMemory.AGENT_MEMORY.SESSION_ID }, false);
+    public static final Index IDX_AGENT_MEMORY_TAGS = Internal.createIndex(DSL.name("idx_agent_memory_tags"), AgentMemory.AGENT_MEMORY, new OrderField[] { AgentMemory.AGENT_MEMORY.TAGS }, false);
+    public static final Index IDX_AGENT_MEMORY_TYPE = Internal.createIndex(DSL.name("idx_agent_memory_type"), AgentMemory.AGENT_MEMORY, new OrderField[] { AgentMemory.AGENT_MEMORY.MEMORY_TYPE }, false);
+    public static final Index IDX_AGENT_MODEL_AGENT_ID = Internal.createIndex(DSL.name("idx_agent_model_agent_id"), AgentModel.AGENT_MODEL, new OrderField[] { AgentModel.AGENT_MODEL.AGENT_ID }, false);
+    public static final Index IDX_AGENT_MODEL_MODEL_ID = Internal.createIndex(DSL.name("idx_agent_model_model_id"), AgentModel.AGENT_MODEL, new OrderField[] { AgentModel.AGENT_MODEL.MODEL_ID }, false);
+    public static final Index IDX_AGENT_RAG_AGENT_ID = Internal.createIndex(DSL.name("idx_agent_rag_agent_id"), AgentRag.AGENT_RAG, new OrderField[] { AgentRag.AGENT_RAG.AGENT_ID }, false);
+    public static final Index IDX_AGENT_RAG_RAG_ID = Internal.createIndex(DSL.name("idx_agent_rag_rag_id"), AgentRag.AGENT_RAG, new OrderField[] { AgentRag.AGENT_RAG.RAG_ID }, false);
+    public static final Index IDX_AGENT_STATUS = Internal.createIndex(DSL.name("idx_agent_status"), Agent.AGENT, new OrderField[] { Agent.AGENT.STATUS }, false);
+    public static final Index IDX_MCP_STATUS = Internal.createIndex(DSL.name("idx_mcp_status"), Mcp.MCP, new OrderField[] { Mcp.MCP.STATUS }, false);
+    public static final Index IDX_MCP_TYPE = Internal.createIndex(DSL.name("idx_mcp_type"), Mcp.MCP, new OrderField[] { Mcp.MCP.TYPE }, false);
+    public static final Index IDX_MODEL_PROVIDER = Internal.createIndex(DSL.name("idx_model_provider"), Model.MODEL, new OrderField[] { Model.MODEL.PROVIDER }, false);
+    public static final Index IDX_MODEL_STATUS = Internal.createIndex(DSL.name("idx_model_status"), Model.MODEL, new OrderField[] { Model.MODEL.STATUS }, false);
+    public static final Index IDX_ORCHESTRATOR_AGENT_AGENT_ID = Internal.createIndex(DSL.name("idx_orchestrator_agent_agent_id"), OrchestratorAgent.ORCHESTRATOR_AGENT, new OrderField[] { OrchestratorAgent.ORCHESTRATOR_AGENT.AGENT_ID }, false);
+    public static final Index IDX_ORCHESTRATOR_AGENT_ORCHESTRATOR_ID = Internal.createIndex(DSL.name("idx_orchestrator_agent_orchestrator_id"), OrchestratorAgent.ORCHESTRATOR_AGENT, new OrderField[] { OrchestratorAgent.ORCHESTRATOR_AGENT.ORCHESTRATOR_ID }, false);
+    public static final Index IDX_ORCHESTRATOR_AGENT_SEQ = Internal.createIndex(DSL.name("idx_orchestrator_agent_seq"), OrchestratorAgent.ORCHESTRATOR_AGENT, new OrderField[] { OrchestratorAgent.ORCHESTRATOR_AGENT.ORCHESTRATOR_ID, OrchestratorAgent.ORCHESTRATOR_AGENT.SEQ }, false);
+    public static final Index IDX_ORCHESTRATOR_CREATED_AT = Internal.createIndex(DSL.name("idx_orchestrator_created_at"), Orchestrator.ORCHESTRATOR, new OrderField[] { Orchestrator.ORCHESTRATOR.CREATED_AT }, false);
+    public static final Index IDX_ORCHESTRATOR_MESSAGE_AGENT_ROLE = Internal.createIndex(DSL.name("idx_orchestrator_message_agent_role"), OrchestratorMessage.ORCHESTRATOR_MESSAGE, new OrderField[] { OrchestratorMessage.ORCHESTRATOR_MESSAGE.AGENT_ROLE }, false);
+    public static final Index IDX_ORCHESTRATOR_MESSAGE_RUN_ID = Internal.createIndex(DSL.name("idx_orchestrator_message_run_id"), OrchestratorMessage.ORCHESTRATOR_MESSAGE, new OrderField[] { OrchestratorMessage.ORCHESTRATOR_MESSAGE.RUN_ID }, false);
+    public static final Index IDX_ORCHESTRATOR_MESSAGE_SEQUENCE = Internal.createIndex(DSL.name("idx_orchestrator_message_sequence"), OrchestratorMessage.ORCHESTRATOR_MESSAGE, new OrderField[] { OrchestratorMessage.ORCHESTRATOR_MESSAGE.RUN_ID, OrchestratorMessage.ORCHESTRATOR_MESSAGE.SEQUENCE }, false);
+    public static final Index IDX_ORCHESTRATOR_MESSAGE_TASK_ID = Internal.createIndex(DSL.name("idx_orchestrator_message_task_id"), OrchestratorMessage.ORCHESTRATOR_MESSAGE, new OrderField[] { OrchestratorMessage.ORCHESTRATOR_MESSAGE.TASK_ID }, false);
+    public static final Index IDX_ORCHESTRATOR_MESSAGE_TIMESTAMP = Internal.createIndex(DSL.name("idx_orchestrator_message_timestamp"), OrchestratorMessage.ORCHESTRATOR_MESSAGE, new OrderField[] { OrchestratorMessage.ORCHESTRATOR_MESSAGE.TIMESTAMP }, false);
+    public static final Index IDX_ORCHESTRATOR_MESSAGE_TYPE = Internal.createIndex(DSL.name("idx_orchestrator_message_type"), OrchestratorMessage.ORCHESTRATOR_MESSAGE, new OrderField[] { OrchestratorMessage.ORCHESTRATOR_MESSAGE.MESSAGE_TYPE }, false);
+    public static final Index IDX_ORCHESTRATOR_RUN_ORCHESTRATOR_ID = Internal.createIndex(DSL.name("idx_orchestrator_run_orchestrator_id"), OrchestratorRun.ORCHESTRATOR_RUN, new OrderField[] { OrchestratorRun.ORCHESTRATOR_RUN.ORCHESTRATOR_ID }, false);
+    public static final Index IDX_ORCHESTRATOR_RUN_SESSION_ID = Internal.createIndex(DSL.name("idx_orchestrator_run_session_id"), OrchestratorRun.ORCHESTRATOR_RUN, new OrderField[] { OrchestratorRun.ORCHESTRATOR_RUN.SESSION_ID }, false);
+    public static final Index IDX_ORCHESTRATOR_RUN_START_TIME = Internal.createIndex(DSL.name("idx_orchestrator_run_start_time"), OrchestratorRun.ORCHESTRATOR_RUN, new OrderField[] { OrchestratorRun.ORCHESTRATOR_RUN.START_TIME }, false);
+    public static final Index IDX_ORCHESTRATOR_RUN_STATUS = Internal.createIndex(DSL.name("idx_orchestrator_run_status"), OrchestratorRun.ORCHESTRATOR_RUN, new OrderField[] { OrchestratorRun.ORCHESTRATOR_RUN.STATUS }, false);
+    public static final Index IDX_ORCHESTRATOR_RUN_USER_ID = Internal.createIndex(DSL.name("idx_orchestrator_run_user_id"), OrchestratorRun.ORCHESTRATOR_RUN, new OrderField[] { OrchestratorRun.ORCHESTRATOR_RUN.USER_ID }, false);
+    public static final Index IDX_ORCHESTRATOR_STATUS = Internal.createIndex(DSL.name("idx_orchestrator_status"), Orchestrator.ORCHESTRATOR, new OrderField[] { Orchestrator.ORCHESTRATOR.STATUS }, false);
+    public static final Index IDX_RAG_STATUS = Internal.createIndex(DSL.name("idx_rag_status"), Rag.RAG, new OrderField[] { Rag.RAG.STATUS }, false);
+    public static final Index IDX_RAG_VECTOR_STORE_TYPE = Internal.createIndex(DSL.name("idx_rag_vector_store_type"), Rag.RAG, new OrderField[] { Rag.RAG.VECTOR_STORE_TYPE }, false);
+    public static final Index IDX_VECTOR_DOCUMENT_METADATA = Internal.createIndex(DSL.name("idx_vector_document_metadata"), VectorDocument.VECTOR_DOCUMENT, new OrderField[] { VectorDocument.VECTOR_DOCUMENT.METADATA }, false);
     public static final Index VECTOR_DOCUMENT_IVFFLAT_INDEX = Internal.createIndex(DSL.name("vector_document_ivfflat_index"), VectorDocument.VECTOR_DOCUMENT, new OrderField[] { VectorDocument.VECTOR_DOCUMENT.EMBEDDING }, false);
 }

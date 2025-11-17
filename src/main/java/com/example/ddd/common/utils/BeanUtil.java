@@ -1,8 +1,10 @@
 package com.example.ddd.common.utils;
 
+import com.example.ddd.domain.agent.model.entity.McpEntity;
 import com.example.ddd.domain.agent.service.armory.AiService;
 import com.example.ddd.domain.agent.service.armory.ServiceNode;
 import com.example.ddd.domain.agent.service.execute.Orchestrator;
+import dev.langchain4j.mcp.client.McpClient;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.store.embedding.EmbeddingStore;
@@ -248,4 +250,59 @@ public class BeanUtil {
     public Orchestrator getOrchestrator(Long agentId) {
         return agentOrchestrators.get(agentId);
     }
+
+    /**
+     * 注册MCP
+     *
+     * @param mcpId    MCP ID
+     * @param mcpEntity MCP实体
+     * @return 是否注册成功
+     */
+    public boolean registerMcp(Long mcpId, McpEntity mcpEntity) {
+        String qualifier = "Mcp" + COLON + mcpId;
+        McpEntity existing = getBean(McpEntity.class, qualifier);
+        if (existing != null) {
+            return true;
+        }
+        registerBean(McpEntity.class, mcpEntity, qualifier);
+        return true;
+    }
+
+    /**
+     * 获取MCP
+     *
+     * @param mcpId MCP ID
+     * @return MCP实体
+     */
+    public McpEntity getMcp(Long mcpId) {
+        return getBean(McpEntity.class, "Mcp" + COLON + mcpId);
+    }
+
+    /**
+     * 注册MCP Client
+     *
+     * @param mcpId    MCP ID
+     * @param mcpClient MCP客户端实例
+     * @return 是否注册成功
+     */
+    public boolean registerMcpClient(Long mcpId, McpClient mcpClient) {
+        String qualifier = "McpClient" + COLON + mcpId;
+       McpClient existing = getBean(McpClient.class, qualifier);
+        if (existing != null) {
+            return true;
+        }
+        registerBean(McpClient.class, mcpClient, qualifier);
+        return true;
+    }
+
+    /**
+     * 获取MCP Client
+     *
+     * @param mcpId MCP ID
+     * @return MCP客户端实例
+     */
+    public dev.langchain4j.mcp.client.McpClient getMcpClient(Long mcpId) {
+        return getBean(dev.langchain4j.mcp.client.McpClient.class, "McpClient" + COLON + mcpId);
+    }
+
 }

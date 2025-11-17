@@ -4,18 +4,22 @@
 package com.example.jooq.tables;
 
 
+import com.example.jooq.Indexes;
 import com.example.jooq.Keys;
 import com.example.jooq.Public;
-import com.example.jooq.tables.Client.ClientPath;
-import com.example.jooq.tables.ClientRag.ClientRagPath;
+import com.example.jooq.tables.Agent.AgentPath;
+import com.example.jooq.tables.AgentRag.AgentRagPath;
 import com.example.jooq.tables.records.RagRecord;
 
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 
 import org.jooq.Condition;
 import org.jooq.Field;
 import org.jooq.ForeignKey;
 import org.jooq.Identity;
+import org.jooq.Index;
 import org.jooq.InverseForeignKey;
 import org.jooq.JSONB;
 import org.jooq.Name;
@@ -58,105 +62,104 @@ public class Rag extends TableImpl<RagRecord> {
     }
 
     /**
-     * The column <code>public.rag.id</code>. 主键ID
+     * The column <code>public.rag.id</code>.
      */
-    public final TableField<RagRecord, Long> ID = createField(DSL.name("id"), SQLDataType.BIGINT.nullable(false).identity(true), this, "主键ID");
+    public final TableField<RagRecord, Long> ID = createField(DSL.name("id"), SQLDataType.BIGINT.nullable(false).identity(true), this, "");
 
     /**
-     * The column <code>public.rag.name</code>. RAG名称
+     * The column <code>public.rag.name</code>.
      */
-    public final TableField<RagRecord, String> NAME = createField(DSL.name("name"), SQLDataType.VARCHAR(255).nullable(false), this, "RAG名称");
+    public final TableField<RagRecord, String> NAME = createField(DSL.name("name"), SQLDataType.VARCHAR(255).nullable(false), this, "");
 
     /**
-     * The column <code>public.rag.vector_store_type</code>. 向量存储类型
+     * The column <code>public.rag.vector_store_type</code>.
      */
-    public final TableField<RagRecord, String> VECTOR_STORE_TYPE = createField(DSL.name("vector_store_type"), SQLDataType.VARCHAR(100), this, "向量存储类型");
+    public final TableField<RagRecord, String> VECTOR_STORE_TYPE = createField(DSL.name("vector_store_type"), SQLDataType.VARCHAR(100), this, "");
 
     /**
-     * The column <code>public.rag.embedding_model</code>. 嵌入模型
+     * The column <code>public.rag.embedding_model</code>.
      */
-    public final TableField<RagRecord, String> EMBEDDING_MODEL = createField(DSL.name("embedding_model"), SQLDataType.VARCHAR(255), this, "嵌入模型");
+    public final TableField<RagRecord, String> EMBEDDING_MODEL = createField(DSL.name("embedding_model"), SQLDataType.VARCHAR(255), this, "");
 
     /**
-     * The column <code>public.rag.chunk_size</code>. 分块大小
+     * The column <code>public.rag.chunk_size</code>.
      */
-    public final TableField<RagRecord, Integer> CHUNK_SIZE = createField(DSL.name("chunk_size"), SQLDataType.INTEGER.defaultValue(DSL.field(DSL.raw("1000"), SQLDataType.INTEGER)), this, "分块大小");
+    public final TableField<RagRecord, Integer> CHUNK_SIZE = createField(DSL.name("chunk_size"), SQLDataType.INTEGER.defaultValue(DSL.field(DSL.raw("1000"), SQLDataType.INTEGER)), this, "");
 
     /**
-     * The column <code>public.rag.chunk_overlap</code>. 分块重叠大小
+     * The column <code>public.rag.chunk_overlap</code>.
      */
-    public final TableField<RagRecord, Integer> CHUNK_OVERLAP = createField(DSL.name("chunk_overlap"), SQLDataType.INTEGER.defaultValue(DSL.field(DSL.raw("200"), SQLDataType.INTEGER)), this, "分块重叠大小");
+    public final TableField<RagRecord, Integer> CHUNK_OVERLAP = createField(DSL.name("chunk_overlap"), SQLDataType.INTEGER.defaultValue(DSL.field(DSL.raw("200"), SQLDataType.INTEGER)), this, "");
 
     /**
-     * The column <code>public.rag.database_type</code>. 数据库类型：POSTGRESQL,
-     * MYSQL等
+     * The column <code>public.rag.database_type</code>.
      */
-    public final TableField<RagRecord, String> DATABASE_TYPE = createField(DSL.name("database_type"), SQLDataType.VARCHAR(50).defaultValue(DSL.field(DSL.raw("'POSTGRESQL'::character varying"), SQLDataType.VARCHAR)), this, "数据库类型：POSTGRESQL, MYSQL等");
+    public final TableField<RagRecord, String> DATABASE_TYPE = createField(DSL.name("database_type"), SQLDataType.VARCHAR(50).defaultValue(DSL.field(DSL.raw("'POSTGRESQL'::character varying"), SQLDataType.VARCHAR)), this, "");
 
     /**
-     * The column <code>public.rag.database_host</code>. 数据库主机地址
+     * The column <code>public.rag.database_host</code>.
      */
-    public final TableField<RagRecord, String> DATABASE_HOST = createField(DSL.name("database_host"), SQLDataType.VARCHAR(255), this, "数据库主机地址");
+    public final TableField<RagRecord, String> DATABASE_HOST = createField(DSL.name("database_host"), SQLDataType.VARCHAR(255), this, "");
 
     /**
-     * The column <code>public.rag.database_port</code>. 数据库端口
+     * The column <code>public.rag.database_port</code>.
      */
-    public final TableField<RagRecord, Integer> DATABASE_PORT = createField(DSL.name("database_port"), SQLDataType.INTEGER.defaultValue(DSL.field(DSL.raw("5432"), SQLDataType.INTEGER)), this, "数据库端口");
+    public final TableField<RagRecord, Integer> DATABASE_PORT = createField(DSL.name("database_port"), SQLDataType.INTEGER.defaultValue(DSL.field(DSL.raw("5432"), SQLDataType.INTEGER)), this, "");
 
     /**
-     * The column <code>public.rag.database_name</code>. 数据库名称
+     * The column <code>public.rag.database_name</code>.
      */
-    public final TableField<RagRecord, String> DATABASE_NAME = createField(DSL.name("database_name"), SQLDataType.VARCHAR(255), this, "数据库名称");
+    public final TableField<RagRecord, String> DATABASE_NAME = createField(DSL.name("database_name"), SQLDataType.VARCHAR(255), this, "");
 
     /**
-     * The column <code>public.rag.database_user</code>. 数据库用户名
+     * The column <code>public.rag.database_user</code>.
      */
-    public final TableField<RagRecord, String> DATABASE_USER = createField(DSL.name("database_user"), SQLDataType.VARCHAR(255), this, "数据库用户名");
+    public final TableField<RagRecord, String> DATABASE_USER = createField(DSL.name("database_user"), SQLDataType.VARCHAR(255), this, "");
 
     /**
-     * The column <code>public.rag.database_password</code>. 数据库密码
+     * The column <code>public.rag.database_password</code>.
      */
-    public final TableField<RagRecord, String> DATABASE_PASSWORD = createField(DSL.name("database_password"), SQLDataType.VARCHAR(255), this, "数据库密码");
+    public final TableField<RagRecord, String> DATABASE_PASSWORD = createField(DSL.name("database_password"), SQLDataType.VARCHAR(255), this, "");
 
     /**
-     * The column <code>public.rag.table_name</code>. 向量存储表名
+     * The column <code>public.rag.table_name</code>.
      */
-    public final TableField<RagRecord, String> TABLE_NAME = createField(DSL.name("table_name"), SQLDataType.VARCHAR(255).defaultValue(DSL.field(DSL.raw("'vector_document'::character varying"), SQLDataType.VARCHAR)), this, "向量存储表名");
+    public final TableField<RagRecord, String> TABLE_NAME = createField(DSL.name("table_name"), SQLDataType.VARCHAR(255).defaultValue(DSL.field(DSL.raw("'vector_document'::character varying"), SQLDataType.VARCHAR)), this, "");
 
     /**
-     * The column <code>public.rag.dimension</code>. 向量维度
+     * The column <code>public.rag.dimension</code>.
      */
-    public final TableField<RagRecord, Integer> DIMENSION = createField(DSL.name("dimension"), SQLDataType.INTEGER.defaultValue(DSL.field(DSL.raw("1536"), SQLDataType.INTEGER)), this, "向量维度");
+    public final TableField<RagRecord, Integer> DIMENSION = createField(DSL.name("dimension"), SQLDataType.INTEGER.defaultValue(DSL.field(DSL.raw("1536"), SQLDataType.INTEGER)), this, "");
 
     /**
-     * The column <code>public.rag.use_index</code>. 是否使用索引
+     * The column <code>public.rag.use_index</code>.
      */
-    public final TableField<RagRecord, Boolean> USE_INDEX = createField(DSL.name("use_index"), SQLDataType.BOOLEAN.defaultValue(DSL.field(DSL.raw("true"), SQLDataType.BOOLEAN)), this, "是否使用索引");
+    public final TableField<RagRecord, Boolean> USE_INDEX = createField(DSL.name("use_index"), SQLDataType.BOOLEAN.defaultValue(DSL.field(DSL.raw("true"), SQLDataType.BOOLEAN)), this, "");
 
     /**
-     * The column <code>public.rag.index_list_size</code>. 索引列表大小
+     * The column <code>public.rag.index_list_size</code>.
      */
-    public final TableField<RagRecord, Integer> INDEX_LIST_SIZE = createField(DSL.name("index_list_size"), SQLDataType.INTEGER.defaultValue(DSL.field(DSL.raw("1000"), SQLDataType.INTEGER)), this, "索引列表大小");
+    public final TableField<RagRecord, Integer> INDEX_LIST_SIZE = createField(DSL.name("index_list_size"), SQLDataType.INTEGER.defaultValue(DSL.field(DSL.raw("1000"), SQLDataType.INTEGER)), this, "");
 
     /**
-     * The column <code>public.rag.config</code>. RAG配置信息（JSON格式，扩展配置）
+     * The column <code>public.rag.config</code>. RAG配置信息（JSON格式）
      */
-    public final TableField<RagRecord, JSONB> CONFIG = createField(DSL.name("config"), SQLDataType.JSONB, this, "RAG配置信息（JSON格式，扩展配置）");
+    public final TableField<RagRecord, JSONB> CONFIG = createField(DSL.name("config"), SQLDataType.JSONB, this, "RAG配置信息（JSON格式）");
 
     /**
-     * The column <code>public.rag.status</code>. 状态：ACTIVE, INACTIVE
+     * The column <code>public.rag.status</code>.
      */
-    public final TableField<RagRecord, String> STATUS = createField(DSL.name("status"), SQLDataType.VARCHAR(50).defaultValue(DSL.field(DSL.raw("'ACTIVE'::character varying"), SQLDataType.VARCHAR)), this, "状态：ACTIVE, INACTIVE");
+    public final TableField<RagRecord, String> STATUS = createField(DSL.name("status"), SQLDataType.VARCHAR(50).defaultValue(DSL.field(DSL.raw("'ACTIVE'::character varying"), SQLDataType.VARCHAR)), this, "");
 
     /**
-     * The column <code>public.rag.created_at</code>. 创建时间（时间戳，秒）
+     * The column <code>public.rag.created_at</code>.
      */
-    public final TableField<RagRecord, Long> CREATED_AT = createField(DSL.name("created_at"), SQLDataType.BIGINT.defaultValue(DSL.field(DSL.raw("(EXTRACT(epoch FROM CURRENT_TIMESTAMP))::bigint"), SQLDataType.BIGINT)), this, "创建时间（时间戳，秒）");
+    public final TableField<RagRecord, Long> CREATED_AT = createField(DSL.name("created_at"), SQLDataType.BIGINT.defaultValue(DSL.field(DSL.raw("(EXTRACT(epoch FROM CURRENT_TIMESTAMP))::bigint"), SQLDataType.BIGINT)), this, "");
 
     /**
-     * The column <code>public.rag.updated_at</code>. 更新时间（时间戳，秒）
+     * The column <code>public.rag.updated_at</code>.
      */
-    public final TableField<RagRecord, Long> UPDATED_AT = createField(DSL.name("updated_at"), SQLDataType.BIGINT.defaultValue(DSL.field(DSL.raw("(EXTRACT(epoch FROM CURRENT_TIMESTAMP))::bigint"), SQLDataType.BIGINT)), this, "更新时间（时间戳，秒）");
+    public final TableField<RagRecord, Long> UPDATED_AT = createField(DSL.name("updated_at"), SQLDataType.BIGINT.defaultValue(DSL.field(DSL.raw("(EXTRACT(epoch FROM CURRENT_TIMESTAMP))::bigint"), SQLDataType.BIGINT)), this, "");
 
     private Rag(Name alias, Table<RagRecord> aliased) {
         this(alias, aliased, (Field<?>[]) null, null);
@@ -226,6 +229,11 @@ public class Rag extends TableImpl<RagRecord> {
     }
 
     @Override
+    public List<Index> getIndexes() {
+        return Arrays.asList(Indexes.IDX_RAG_STATUS, Indexes.IDX_RAG_VECTOR_STORE_TYPE);
+    }
+
+    @Override
     public Identity<RagRecord, Long> getIdentity() {
         return (Identity<RagRecord, Long>) super.getIdentity();
     }
@@ -235,25 +243,25 @@ public class Rag extends TableImpl<RagRecord> {
         return Keys.RAG_PKEY;
     }
 
-    private transient ClientRagPath _clientRag;
+    private transient AgentRagPath _agentRag;
 
     /**
-     * Get the implicit to-many join path to the <code>public.client_rag</code>
+     * Get the implicit to-many join path to the <code>public.agent_rag</code>
      * table
      */
-    public ClientRagPath clientRag() {
-        if (_clientRag == null)
-            _clientRag = new ClientRagPath(this, null, Keys.CLIENT_RAG__FK_CLIENT_RAG_RAG.getInverseKey());
+    public AgentRagPath agentRag() {
+        if (_agentRag == null)
+            _agentRag = new AgentRagPath(this, null, Keys.AGENT_RAG__FK_AGENT_RAG_RAG.getInverseKey());
 
-        return _clientRag;
+        return _agentRag;
     }
 
     /**
-     * Get the implicit many-to-many join path to the <code>public.client</code>
+     * Get the implicit many-to-many join path to the <code>public.agent</code>
      * table
      */
-    public ClientPath client() {
-        return clientRag().client();
+    public AgentPath agent() {
+        return agentRag().agent();
     }
 
     @Override
