@@ -80,6 +80,15 @@ public class Orchestrator {
         TokenStream chat = supAi.chat(planningPrompt);
         CountDownLatch latch = new CountDownLatch(1);
         StringBuilder builder = new StringBuilder();
+        chat.onPartialResponse(token -> {
+            builder.append(token);
+            if (userContext != null) {
+                userContext.emit(UserContext.TaskStatusEvent.builder()
+                        .type("planning_running")
+                        .message("Supervisor正在生成任务计划")
+                        .build());
+            }
+        });
 
         chat.onCompleteResponse(e -> {
             AiMessage aiMessage = e.aiMessage();
