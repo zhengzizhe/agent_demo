@@ -105,7 +105,7 @@ public class AgentRepository implements IAgentRepository {
     }
 
     @Override
-    public Map<Long, List<ChatModelEntity>> queryModelMapByOrchestratorId(DSLContext dslContext, Long orchestratorId) {
+    public Map<Long, ChatModelEntity> queryModelMapByOrchestratorId(DSLContext dslContext, Long orchestratorId) {
         // 先查询orchestrator关联的agent IDs
         List<Long> agentIds = dslContext.select(field("agent_id"))
                 .from(table("orchestrator_agent"))
@@ -119,12 +119,13 @@ public class AgentRepository implements IAgentRepository {
             return new HashMap<>();
         }
 
-        // 为每个agent查询其models
-        Map<Long, List<ChatModelEntity>> modelMap = new HashMap<>();
+        // 为每个agent查询第一个model
+        Map<Long, ChatModelEntity> modelMap = new HashMap<>();
         for (Long agentId : agentIds) {
             List<ChatModelEntity> models = chatModelRepository.queryByAgentId(dslContext, agentId);
             if (!models.isEmpty()) {
-                modelMap.put(agentId, models);
+                // 只取第一个model
+                modelMap.put(agentId, models.get(0));
             }
         }
 

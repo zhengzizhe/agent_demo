@@ -58,14 +58,15 @@ public class BeanUtil {
     }
 
     /**
-     * 注册ChatModel
+     * 注册ChatModel（Orchestrator 独有命名）
      *
-     * @param modelId   模型ID
-     * @param chatModel ChatModel实例
+     * @param orchestratorId Orchestrator ID
+     * @param modelId        模型ID
+     * @param chatModel      ChatModel实例
      * @return 是否注册成功（如果已存在则返回true不处理，不存在则注册后返回true）
      */
-    public boolean registerChatModel(Long modelId, StreamingChatModel chatModel) {
-        String qualifier = "ChatModel" + COLON + modelId;
+    public boolean registerChatModel(Long orchestratorId, Long modelId, StreamingChatModel chatModel) {
+        String qualifier = "Orchestrator" + COLON + orchestratorId + COLON + "ChatModel" + COLON + modelId;
         try {
             StreamingChatModel existing = getBean(StreamingChatModel.class, qualifier);
             if (existing != null) {
@@ -79,14 +80,15 @@ public class BeanUtil {
     }
 
     /**
-     * 注册EmbeddingStore
+     * 注册EmbeddingStore（Orchestrator 独有命名）
      *
+     * @param orchestratorId Orchestrator ID
      * @param ragId          RAG ID
      * @param embeddingStore EmbeddingStore实例
      * @return 是否注册成功（如果已存在则返回true不处理，不存在则注册后返回true）
      */
-    public boolean registerEmbeddingStore(Long ragId, EmbeddingStore<?> embeddingStore) {
-        String qualifier = "EmbeddingStore" + COLON + ragId;
+    public boolean registerEmbeddingStore(Long orchestratorId, Long ragId, EmbeddingStore<?> embeddingStore) {
+        String qualifier = "Orchestrator" + COLON + orchestratorId + COLON + "EmbeddingStore" + COLON + ragId;
 
         EmbeddingStore<?> existing = getBean(EmbeddingStore.class, qualifier);
         if (existing != null) {
@@ -97,14 +99,15 @@ public class BeanUtil {
     }
 
     /**
-     * 注册EmbeddingModel
+     * 注册EmbeddingModel（Orchestrator 独有命名）
      *
+     * @param orchestratorId Orchestrator ID
      * @param ragId          RAG ID
      * @param embeddingModel EmbeddingModel实例
      * @return 是否注册成功（如果已存在则返回true不处理，不存在则注册后返回true）
      */
-    public boolean registerEmbeddingModel(Long ragId, EmbeddingModel embeddingModel) {
-        String qualifier = "EmbeddingModel" + COLON + ragId;
+    public boolean registerEmbeddingModel(Long orchestratorId, Long ragId, EmbeddingModel embeddingModel) {
+        String qualifier = "Orchestrator" + COLON + orchestratorId + COLON + "EmbeddingModel" + COLON + ragId;
 
         EmbeddingModel existing = getBean(EmbeddingModel.class, qualifier);
         if (existing != null) {
@@ -135,44 +138,48 @@ public class BeanUtil {
     }
 
     /**
-     * 获取ChatModel
+     * 获取ChatModel（Orchestrator 独有命名）
      *
-     * @param modelId 模型ID
+     * @param orchestratorId Orchestrator ID
+     * @param modelId        模型ID
      * @return ChatModel实例
      */
-    public StreamingChatModel getChatModel(Long modelId) {
-        return getBean(StreamingChatModel.class, "ChatModel" + COLON + modelId);
+    public StreamingChatModel getChatModel(Long orchestratorId, Long modelId) {
+        return getBean(StreamingChatModel.class, "Orchestrator" + COLON + orchestratorId + COLON + "ChatModel" + COLON + modelId);
     }
 
     /**
-     * 获取EmbeddingStore
+     * 获取EmbeddingStore（Orchestrator 独有命名）
      *
-     * @param ragId RAG ID
+     * @param orchestratorId Orchestrator ID
+     * @param ragId          RAG ID
      * @return EmbeddingStore实例
      */
-    public EmbeddingStore<?> getEmbeddingStore(Long ragId) {
-        return getBean(EmbeddingStore.class, "EmbeddingStore" + COLON + ragId);
+    public EmbeddingStore<?> getEmbeddingStore(Long orchestratorId, Long ragId) {
+        return getBean(EmbeddingStore.class, "Orchestrator" + COLON + orchestratorId + COLON + "EmbeddingStore" + COLON + ragId);
     }
 
     /**
-     * 获取EmbeddingModel
+     * 获取EmbeddingModel（Orchestrator 独有命名）
      *
-     * @param ragId RAG ID
+     * @param orchestratorId Orchestrator ID
+     * @param ragId          RAG ID
      * @return EmbeddingModel实例
      */
-    public EmbeddingModel getEmbeddingModel(Long ragId) {
-        return getBean(EmbeddingModel.class, "EmbeddingModel" + COLON + ragId);
+    public EmbeddingModel getEmbeddingModel(Long orchestratorId, Long ragId) {
+        return getBean(EmbeddingModel.class, "Orchestrator" + COLON + orchestratorId + COLON + "EmbeddingModel" + COLON + ragId);
     }
 
     /**
-     * 注册AiService
+     * 注册AiService（Orchestrator 独有命名）
      *
-     * @param clientId  Client ID
-     * @param aiService AiService实例
+     * @param orchestratorId Orchestrator ID
+     * @param clientId       Client ID
+     * @param aiService      AiService实例
      * @return 是否注册成功（如果已存在则返回true不处理，不存在则注册后返回true）
      */
-    public boolean registerAiService(Long clientId, AiService aiService) {
-        String qualifier = "AiService" + COLON + clientId;
+    public boolean registerAiService(Long orchestratorId, Long clientId, AiService aiService) {
+        String qualifier = "Orchestrator" + COLON + orchestratorId + COLON + "AiService" + COLON + clientId;
 
         AiService existing = getBean(AiService.class, qualifier);
         if (existing != null) {
@@ -184,13 +191,14 @@ public class BeanUtil {
     }
 
     /**
-     * 获取AiService
+     * 获取AiService（Orchestrator 独有命名）
      *
-     * @param clientId Client ID
+     * @param orchestratorId Orchestrator ID
+     * @param clientId       Client ID
      * @return AiService实例
      */
-    public AiService getAiService(Long clientId) {
-        return getBean(AiService.class, "AiService" + COLON + clientId);
+    public AiService getAiService(Long orchestratorId, Long clientId) {
+        return getBean(AiService.class, "Orchestrator" + COLON + orchestratorId + COLON + "AiService" + COLON + clientId);
     }
 
     /**
@@ -279,14 +287,15 @@ public class BeanUtil {
     }
 
     /**
-     * 注册MCP Client
+     * 注册MCP Client（Orchestrator 独有命名）
      *
-     * @param mcpId    MCP ID
-     * @param mcpClient MCP客户端实例
+     * @param orchestratorId Orchestrator ID
+     * @param mcpId          MCP ID
+     * @param mcpClient      MCP客户端实例
      * @return 是否注册成功
      */
-    public boolean registerMcpClient(Long mcpId, McpClient mcpClient) {
-        String qualifier = "McpClient" + COLON + mcpId;
+    public boolean registerMcpClient(Long orchestratorId, Long mcpId, McpClient mcpClient) {
+        String qualifier = "Orchestrator" + COLON + orchestratorId + COLON + "McpClient" + COLON + mcpId;
        McpClient existing = getBean(McpClient.class, qualifier);
         if (existing != null) {
             return true;
@@ -296,13 +305,14 @@ public class BeanUtil {
     }
 
     /**
-     * 获取MCP Client
+     * 获取MCP Client（Orchestrator 独有命名）
      *
-     * @param mcpId MCP ID
+     * @param orchestratorId Orchestrator ID
+     * @param mcpId          MCP ID
      * @return MCP客户端实例
      */
-    public dev.langchain4j.mcp.client.McpClient getMcpClient(Long mcpId) {
-        return getBean(dev.langchain4j.mcp.client.McpClient.class, "McpClient" + COLON + mcpId);
+    public dev.langchain4j.mcp.client.McpClient getMcpClient(Long orchestratorId, Long mcpId) {
+        return getBean(dev.langchain4j.mcp.client.McpClient.class, "Orchestrator" + COLON + orchestratorId + COLON + "McpClient" + COLON + mcpId);
     }
 
 }

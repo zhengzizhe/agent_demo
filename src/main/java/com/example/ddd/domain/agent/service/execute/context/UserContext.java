@@ -43,7 +43,7 @@ public class UserContext {
                         if (event != null) {
                             if (emitter != null && !emitter.isCancelled()) {
                                 emitter.next(event);
-                                log.info("事件分发器发送事件到前端: type={}, taskId={}, message={}", event.getType(), event.getTaskId(), event.getMessage());
+                                log.debug("事件分发器发送事件到前端: type={}, taskId={}, message={}", event.getType(), event.getTaskId(), event.getMessage());
                             } else {
                                 log.warn("Emitter已取消或为空，停止事件分发: type={}, taskId={}", event.getType(), event.getTaskId());
                                 break;
@@ -96,7 +96,7 @@ public class UserContext {
             }
             boolean offered = eventQueue.offer(event);
             if (offered) {
-                log.info("事件已加入队列: type={}, taskId={}, message={}", event.getType(), event.getTaskId(), event.getMessage());
+                log.debug("事件已加入队列: type={}, taskId={}, message={}", event.getType(), event.getTaskId(), event.getMessage());
             } else {
                 log.warn("事件队列已满，无法添加事件: type={}, taskId={}", event.getType(), event.getTaskId());
             }
@@ -114,7 +114,7 @@ public class UserContext {
         if (dispatcherThread != null && dispatcherThread.isAlive()) {
             try {
                 dispatcherThread.join(5000);
-                log.info("事件分发器线程已结束，最终队列大小: {}", eventQueue.size());
+                log.debug("事件分发器线程已结束，最终队列大小: {}", eventQueue.size());
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 log.warn("等待事件分发器线程被中断");
@@ -129,7 +129,7 @@ public class UserContext {
      */
     public void error(String error) {
         TaskStatusEvent event = TaskStatusEvent.builder()
-                .type("error")
+                .type(EventType.ERROR)
                 .error(error)
                 .build();
         emit(event);
@@ -140,18 +140,32 @@ public class UserContext {
      */
     @Serdeable
     public static class TaskStatusEvent {
-        private String type;
+        private EventType type;
         private String taskId;
         private String message;
         private String content;
         private String error;
 
-        public String getType() {
+        public EventType getType() {
             return type;
         }
 
-        public void setType(String type) {
+        public void setType(EventType type) {
             this.type = type;
+        }
+        
+        /**
+         * 获取事件类型的字符串值（用于序列化）
+         */
+        public String getTypeValue() {
+            return type != null ? type.getValue() : null;
+        }
+        
+        /**
+         * 获取事件类型的状态码（用于前端判断）
+         */
+        public Integer getCode() {
+            return type != null ? type.getCode() : null;
         }
 
         public String getTaskId() {
@@ -199,8 +213,13 @@ public class UserContext {
         public static class Builder {
             private final TaskStatusEvent event = new TaskStatusEvent();
 
-            public Builder type(String type) {
+            public Builder type(EventType type) {
                 event.setType(type);
+                return this;
+            }
+            
+            public Builder type(String type) {
+                event.setType(EventType.fromValue(type));
                 return this;
             }
 

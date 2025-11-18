@@ -49,8 +49,7 @@ public class RootNode extends AbstractArmorySupport {
         }));
 
         CompletableFuture<Void> modelMapFuture = CompletableFuture.runAsync(() -> dslContextFactory.execute(dslContext -> {
-            Map<Long, List<ChatModelEntity>> modelMap = agentRepository.queryModelMapByOrchestratorId(dslContext, orchestratorId);
-
+            Map<Long, ChatModelEntity> modelMap = agentRepository.queryModelMapByOrchestratorId(dslContext, orchestratorId);
             dynamicContext.put(MODEL_KEY, Json.toJson(modelMap));
             log.info("多agent构建中 查询model配置: orchestratorId={}, agent数量={}", orchestratorId, modelMap.size());
         }));

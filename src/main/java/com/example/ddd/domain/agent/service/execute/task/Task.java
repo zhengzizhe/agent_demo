@@ -6,7 +6,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
 import java.util.List;
+
 /**
  * 任务
  */
@@ -73,12 +75,6 @@ public class Task {
     private ExecutionStrategy executionStrategy;
 
     /**
-     * 子任务列表
-     */
-    @JsonProperty("children")
-    private List<Task> children;
-
-    /**
      * 任务输入配置
      */
     @Data
@@ -96,7 +92,7 @@ public class Task {
          * 来自任务输出（任务ID）
          */
         @JsonProperty("fromTask")
-        private String fromTask;
+        private List<String> fromTask;
 
         /**
          * 输入字段列表

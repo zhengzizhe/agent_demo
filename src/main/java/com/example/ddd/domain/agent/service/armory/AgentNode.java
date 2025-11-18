@@ -4,20 +4,21 @@ import com.example.ddd.common.utils.BeanUtil;
 import com.example.ddd.common.utils.ILogicHandler;
 import com.example.ddd.common.utils.JSON;
 import com.example.ddd.domain.agent.model.entity.*;
+import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.mcp.McpToolProvider;
 import dev.langchain4j.mcp.client.McpClient;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
+import dev.langchain4j.rag.content.retriever.ContentRetriever;
 import dev.langchain4j.rag.content.retriever.EmbeddingStoreContentRetriever;
 import dev.langchain4j.service.AiServices;
 import dev.langchain4j.service.tool.ToolProvider;
 import dev.langchain4j.store.embedding.EmbeddingStore;
-
-import java.util.ArrayList;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -40,8 +41,8 @@ public class AgentNode extends AbstractArmorySupport {
             return router(armoryCommandEntity, dynamicContext);
         }
         String chatModelJson = dynamicContext.get(MODEL_KEY);
-        Map<Long, List<ChatModelEntity>> modelMap = JSON.parseObject(chatModelJson,
-                new com.fasterxml.jackson.core.type.TypeReference<Map<Long, List<ChatModelEntity>>>() {
+        Map<Long, ChatModelEntity> modelMap = JSON.parseObject(chatModelJson,
+                new com.fasterxml.jackson.core.type.TypeReference<Map<Long, ChatModelEntity>>() {
                 });
         if (modelMap == null || modelMap.isEmpty()) {
             log.warn("多agent构建中 orchestratorId={} 没有配置Model，跳过ServiceNode构建", agentId);
@@ -67,45 +68,26 @@ public class AgentNode extends AbstractArmorySupport {
         return router(armoryCommandEntity, dynamicContext);
     }
 
-    private void build(OrchestratorEntity agent, List<AgentEntity> clients, Map<Long, List<ChatModelEntity>> modelMap, Map<Long, List<RagEntity>> ragMap, Map<Long, List<McpEntity>> mcpMap) {
+    private void build(OrchestratorEntity agent, List<AgentEntity> clients, Map<Long, ChatModelEntity> modelMap, Map<Long, List<RagEntity>> ragMap, Map<Long, List<McpEntity>> mcpMap) {
         Long agentId = agent.getId();
         log.info("多agent构建中 开始构建AiService: orchestratorId={}, agent数量={}", agentId, clients.size());
         for (AgentEntity client : clients) {
             try {
-                // 1. 获取该agent对应的ChatModel列表
-                List<ChatModelEntity> chatModels = modelMap.get(client.getId());
-                if (chatModels == null || chatModels.isEmpty()) {
+                ChatModelEntity chatModelEntity = modelMap.get(client.getId());
+                if (chatModelEntity == null) {
                     log.warn("多agent构建中 agentId={} 没有配置ChatModel，跳过AiService构建", client.getId());
                     continue;
                 }
-                ChatModelEntity chatModelEntity = chatModels.get(0);
-                StreamingChatModel chatModel = beanUtil.getChatModel(chatModelEntity.getId());
+                StreamingChatModel chatModel = beanUtil.getChatModel(agentId, chatModelEntity.getId());
                 if (chatModel == null) {
-                    log.warn("多agent构建中 ChatModel {} 未找到，跳过AiService构建: agentId={}", chatModelEntity.getId(), client.getId());
+                    log.warn("多agent构建中 ChatModel {} 未找到，跳过AiService构建: orchestratorId={}, agentId={}",
+                            chatModelEntity.getId(), agentId, client.getId());
                     continue;
                 }
-                EmbeddingStore<?> embeddingStore = null;
-                EmbeddingModel embeddingModel = null;
-                List<RagEntity> rags = ragMap.get(client.getId());
-                if (rags != null && !rags.isEmpty()) {
-                    RagEntity ragEntity = rags.get(0);
-                    embeddingStore = beanUtil.getEmbeddingStore(ragEntity.getId());
-                    embeddingModel = beanUtil.getEmbeddingModel(ragEntity.getId());
-                    if (embeddingStore == null) {
-                        log.warn("多agent构建中 EmbeddingStore {} 未找到，将不使用RAG: agentId={}", ragEntity.getId(), client.getId());
-                    }
-                    if (embeddingModel == null) {
-                        log.warn("多agent构建中 EmbeddingModel {} 未找到，RAG功能可能不完整: agentId={}", ragEntity.getId(), client.getId());
-                    }
-                }
-
-
-
-                // 获取MCP列表
+                List<RagEntity> rags = ragMap != null ? ragMap.get(client.getId()) : null;
                 List<McpEntity> mcps = mcpMap != null ? mcpMap.get(client.getId()) : null;
-                AiService aiService = buildAiService(client, chatModel, embeddingStore, embeddingModel, mcps);
-                // buildAiService 现在会抛出异常而不是返回 null，所以这里不需要 null 检查
-                beanUtil.registerAiService(client.getId(), aiService);
+                AiService aiService = buildAiService(agentId, client, chatModel, rags, mcps);
+                beanUtil.registerAiService(agentId, client.getId(), aiService);
                 ServiceNode serviceNode = buildServiceNode(client, aiService);
                 if (serviceNode != null) {
                     beanUtil.registerServiceNode(agentId, serviceNode);
@@ -148,30 +130,60 @@ public class AgentNode extends AbstractArmorySupport {
     /**
      * 构建AiService实例
      *
+     * @param orchestratorId Orchestrator ID
      * @param client         Client实体
-     * @param chatModel      StreamingChatModel实例
-     * @param embeddingStore EmbeddingStore实例（可选）
-     * @param embeddingModel EmbeddingModel实例（可选）
-     * @param mcps           MCP列表（可选）
+     * @param chatModel      StreamingChatModel实例（单个model）
+     * @param rags           RAG列表（可选，支持多个RAG）
+     * @param mcps           MCP列表（可选，支持多个MCP）
      * @return AiService实例
      */
-    private AiService buildAiService(AgentEntity client, StreamingChatModel chatModel,
-                                     EmbeddingStore embeddingStore, EmbeddingModel embeddingModel,
-                                     List<McpEntity> mcps) {
+    private AiService buildAiService(Long orchestratorId, AgentEntity client, StreamingChatModel chatModel,
+                                     List<RagEntity> rags, List<McpEntity> mcps) {
         try {
             AiServices<AiService> builder = AiServices.builder(AiService.class)
+
                     .streamingChatModel(chatModel);
-            if (embeddingStore != null && embeddingModel != null) {
-                EmbeddingStoreContentRetriever build = EmbeddingStoreContentRetriever.builder().embeddingStore(embeddingStore)
-                        .embeddingModel(embeddingModel)
-                        .build();
-                builder.contentRetriever(build);
+            if (rags != null && !rags.isEmpty()) {
+                List<ContentRetriever> contentRetrievers = new ArrayList<>();
+                for (RagEntity ragEntity : rags) {
+                    EmbeddingStore<?> embeddingStore = beanUtil.getEmbeddingStore(orchestratorId, ragEntity.getId());
+                    EmbeddingModel embeddingModel = beanUtil.getEmbeddingModel(orchestratorId, ragEntity.getId());
+                    if (embeddingStore != null && embeddingModel != null) {
+                        @SuppressWarnings("unchecked")
+                        EmbeddingStore<TextSegment> textSegmentStore = (EmbeddingStore<TextSegment>) embeddingStore;
+                        EmbeddingStoreContentRetriever retriever = EmbeddingStoreContentRetriever.builder()
+                                .embeddingStore(textSegmentStore)
+                                .embeddingModel(embeddingModel)
+                                .build();
+                        contentRetrievers.add(retriever);
+                        log.debug("多agent构建中 收集RAG ContentRetriever: ragId={}, ragName={}, agentId={}",
+                                ragEntity.getId(), ragEntity.getName(), client.getId());
+                    } else {
+                        if (embeddingStore == null) {
+                            log.warn("多agent构建中 EmbeddingStore {} 未找到，跳过该RAG: agentId={}", ragEntity.getId(), client.getId());
+                        }
+                        if (embeddingModel == null) {
+                            log.warn("多agent构建中 EmbeddingModel {} 未找到，跳过该RAG: agentId={}", ragEntity.getId(), client.getId());
+                        }
+                    }
+                }
+
+                if (!contentRetrievers.isEmpty()) {
+                    ContentRetriever contentRetriever = contentRetrievers.get(0);
+                    if (contentRetrievers.size() > 1) {
+                        log.info("多agent构建中 agentId={} 配置了{}个RAG，使用第一个RAG",
+                                client.getId(), contentRetrievers.size());
+                    }
+                    builder.contentRetriever(contentRetriever);
+                }
             }
+
+            // 支持多个MCP：遍历所有MCP并添加
             if (mcps != null && !mcps.isEmpty()) {
                 List<McpClient> mcpClients = new ArrayList<>();
                 for (McpEntity mcp : mcps) {
                     if ("ACTIVE".equals(mcp.getStatus())) {
-                        McpClient mcpClient = beanUtil.getMcpClient(mcp.getId());
+                        McpClient mcpClient = beanUtil.getMcpClient(orchestratorId, mcp.getId());
                         if (mcpClient != null) {
                             mcpClients.add(mcpClient);
                             log.debug("多agent构建中 获取MCP Client: mcpId={}, mcpName={}", mcp.getId(), mcp.getName());

@@ -4,24 +4,53 @@
     :style="{ animationDelay: `${animationDelay}s` }"
   >
     <div class="message-avatar">
-      <span v-if="message.role === 'user'">U</span>
-      <span v-else>AI</span>
+      <div class="avatar-glow"></div>
+      <span v-if="message.role === 'user'" class="avatar-icon">👤</span>
+      <span v-else class="avatar-icon">🤖</span>
     </div>
-    <div class="message-content">
-      <div class="message-text" v-html="formattedContent"></div>
-      <div v-if="message.streaming" class="streaming-indicator">
-        <span class="typing-dot"></span>
-        <span class="typing-dot"></span>
-        <span class="typing-dot"></span>
+    <div class="message-content" :data-message-id="message.id || message.timestamp || Date.now()">
+      <div class="message-card">
+        <div class="message-card-glow"></div>
+        <div class="message-text" v-html="formattedContent"></div>
+        <div v-if="message.streaming" class="streaming-indicator">
+          <div class="streaming-pulse"></div>
+          <span class="typing-dot"></span>
+          <span class="typing-dot"></span>
+          <span class="typing-dot"></span>
+        </div>
+      </div>
+      <!-- 导出按钮（仅AI消息显示，hover显示） -->
+      <div
+        v-if="message.role === 'assistant' && !message.streaming"
+        class="export-pdf-wrapper"
+      >
+        <button
+          class="export-pdf-btn"
+          @click="handleExportMessage"
+          :disabled="isExporting"
+          :title="isExporting ? '导出中...' : '导出为PDF'"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M14 2V8H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M16 13H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M16 17H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M10 9H9H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span v-if="isExporting">导出中...</span>
+          <span v-else>导出</span>
+        </button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, nextTick, watch, ref } from 'vue'
 import { getMessageContent } from '../utils/message.js'
 import { formatMessage, createMarkdownRenderer } from '../utils/markdown.js'
+import { usePdfExport } from '../composables/usePdfExport.js'
+import hljs from 'highlight.js'
 
 const props = defineProps({
   message: {
@@ -38,7 +67,17 @@ const props = defineProps({
 let md = null
 onMounted(() => {
   md = createMarkdownRenderer()
+  nextTick(() => {
+    initCodeBlockInteractions()
+  })
 })
+
+// 监听消息内容变化，重新初始化代码块交互
+watch(() => props.message, () => {
+  nextTick(() => {
+    initCodeBlockInteractions()
+  })
+}, { deep: true })
 
 // 格式化消息内容
 const formattedContent = computed(() => {
@@ -47,6 +86,319 @@ const formattedContent = computed(() => {
   }
   const content = getMessageContent(props.message)
   return formatMessage(content, md)
+})
+
+// PDF 导出
+const pdfExport = usePdfExport()
+const isExporting = ref(false)
+
+// 导出单条消息
+const handleExportMessage = async (event) => {
+  event.stopPropagation()
+  isExporting.value = true
+  try {
+    // 使用 ref 或直接查找当前消息元素
+    const messageId = props.message.id || props.message.timestamp || Date.now()
+    const messageElement = document.querySelector(`[data-message-id="${messageId}"]`)
+    if (!messageElement) {
+      console.error('消息元素不存在')
+      return
+    }
+    
+    // 导出整个消息内容区域（包含消息卡片）
+    const messageCard = messageElement.querySelector('.message-card')
+    if (!messageCard) {
+      console.error('消息卡片不存在')
+      return
+    }
+    
+    // 检查消息文本内容是否存在
+    const messageText = messageCard.querySelector('.message-text')
+    if (!messageText) {
+      console.error('消息文本不存在')
+      return
+    }
+    
+    console.log('准备导出，消息文本内容长度:', messageText.innerHTML.length)
+    console.log('消息文本前200字符:', messageText.innerHTML.substring(0, 200))
+    
+    const date = new Date().toISOString().split('T')[0]
+    const timestamp = props.message.timestamp ? new Date(props.message.timestamp).getTime() : Date.now()
+    const filename = `message-${date}-${timestamp}.pdf`
+    
+    // 传递整个消息卡片元素，确保包含所有内容
+    await pdfExport.exportSingleMessage(messageCard, filename)
+  } catch (error) {
+    console.error('导出 PDF 失败:', error)
+    alert('导出 PDF 失败，请稍后重试')
+  } finally {
+    isExporting.value = false
+  }
+}
+
+// 初始化代码块交互功能
+function initCodeBlockInteractions() {
+  // 使用 nextTick 确保 DOM 已更新
+  nextTick(() => {
+    // 查找当前消息的容器
+    const messageElement = document.querySelector(`[data-message-id="${props.message.id || props.message.timestamp || Date.now()}"]`) || 
+                           document.querySelector('.message-content')
+    if (!messageElement) return
+    
+    // 初始化所有代码块（避免重复初始化）
+    const codeBlocks = messageElement.querySelectorAll('.feishu-code-block-wrapper:not([data-initialized])')
+    codeBlocks.forEach(block => {
+      block.setAttribute('data-initialized', 'true')
+      initCodeBlock(block)
+    })
+    
+    // 初始化折叠块
+    const collapseBlocks = messageElement.querySelectorAll('.feishu-collapse-block:not([data-initialized])')
+    collapseBlocks.forEach(block => {
+      block.setAttribute('data-initialized', 'true')
+      initCollapseBlock(block)
+    })
+  })
+}
+
+// 初始化折叠块
+function initCollapseBlock(block) {
+  const header = block.querySelector('.feishu-collapse-header')
+  const content = block.querySelector('.feishu-collapse-content')
+  const icon = block.querySelector('.feishu-collapse-icon')
+  
+  if (!header || !content || !icon) return
+  
+  // 默认折叠
+  content.style.display = 'none'
+  block.classList.add('collapsed')
+  
+  header.addEventListener('click', () => {
+    const isCollapsed = block.classList.contains('collapsed')
+    if (isCollapsed) {
+      block.classList.remove('collapsed')
+      content.style.display = 'block'
+      icon.style.transform = 'rotate(90deg)'
+    } else {
+      block.classList.add('collapsed')
+      content.style.display = 'none'
+      icon.style.transform = 'rotate(0deg)'
+    }
+  })
+}
+
+function initCodeBlock(block) {
+  const codeId = block.getAttribute('data-code-id')
+  if (!codeId) return
+  
+  // 语言选择器
+  const langSelector = block.querySelector('.feishu-code-lang-selector')
+  const langDropdown = block.querySelector('.feishu-code-lang-dropdown')
+  const langText = block.querySelector('.feishu-code-lang-text')
+  
+  if (langSelector && langDropdown) {
+    langSelector.addEventListener('click', (e) => {
+      e.stopPropagation()
+      const isVisible = langDropdown.style.display !== 'none'
+      // 关闭所有其他下拉菜单
+      document.querySelectorAll('.feishu-code-lang-dropdown').forEach(dd => {
+        if (dd !== langDropdown) dd.style.display = 'none'
+      })
+      langDropdown.style.display = isVisible ? 'none' : 'block'
+    })
+    
+    // 语言选项点击
+    langDropdown.querySelectorAll('.feishu-code-lang-option').forEach(option => {
+      option.addEventListener('click', (e) => {
+        e.stopPropagation()
+        const newLang = option.getAttribute('data-lang')
+        changeCodeLanguage(block, newLang)
+        langDropdown.style.display = 'none'
+      })
+    })
+  }
+  
+  // 背景主题切换按钮
+  const themeBtn = block.querySelector('.feishu-code-theme')
+  const codeContent = block.querySelector('.feishu-code-content')
+  const codePre = block.querySelector('.feishu-code-pre')
+  if (themeBtn && codeContent && codePre) {
+    // 默认黑色主题
+    const currentTheme = themeBtn.getAttribute('data-theme') || 'dark'
+    applyTheme(block, currentTheme)
+    
+    themeBtn.addEventListener('click', () => {
+      const currentTheme = themeBtn.getAttribute('data-theme') || 'dark'
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark'
+      themeBtn.setAttribute('data-theme', newTheme)
+      applyTheme(block, newTheme)
+    })
+  }
+  
+  // 自动换行按钮
+  const wordWrapBtn = block.querySelector('.feishu-code-wordwrap')
+  if (wordWrapBtn && codeContent) {
+    wordWrapBtn.addEventListener('click', () => {
+      const isActive = wordWrapBtn.classList.contains('active')
+      if (isActive) {
+        wordWrapBtn.classList.remove('active')
+        codeContent.classList.remove('word-wrap')
+      } else {
+        wordWrapBtn.classList.add('active')
+        codeContent.classList.add('word-wrap')
+      }
+    })
+  }
+  
+  // 复制按钮
+  const copyBtn = block.querySelector('.feishu-code-copy')
+  if (copyBtn) {
+    copyBtn.addEventListener('click', async () => {
+      const encodedCode = block.getAttribute('data-code-encoded')
+      if (encodedCode) {
+        try {
+          const code = decodeURIComponent(escape(atob(encodedCode)))
+          await navigator.clipboard.writeText(code)
+          const span = copyBtn.querySelector('span')
+          const originalText = span.textContent
+          copyBtn.classList.add('copied')
+          span.textContent = '已复制'
+          setTimeout(() => {
+            copyBtn.classList.remove('copied')
+            span.textContent = originalText
+          }, 2000)
+        } catch (err) {
+          console.error('复制失败:', err)
+        }
+      }
+    })
+  }
+}
+
+// 切换代码语言
+function changeCodeLanguage(block, newLang) {
+  const encodedCode = block.getAttribute('data-code-encoded')
+  if (!encodedCode) return
+  
+  const code = decodeURIComponent(escape(atob(encodedCode)))
+  const codeElement = block.querySelector('.feishu-code-pre code')
+  const langText = block.querySelector('.feishu-code-lang-text')
+  
+  if (!codeElement || !langText) return
+  
+  // 更新语言
+  block.setAttribute('data-lang', newLang)
+  
+  // 重新高亮代码
+  let highlightedCode = ''
+  if (newLang && hljs.getLanguage(newLang)) {
+    try {
+      const result = hljs.highlight(code, { language: newLang, ignoreIllegals: true })
+      highlightedCode = result.value
+    } catch (err) {
+      highlightedCode = escapeHtml(code)
+    }
+  } else {
+    highlightedCode = escapeHtml(code)
+  }
+  
+  // 更新代码类名
+  codeElement.className = newLang ? `hljs language-${newLang}` : 'hljs'
+  codeElement.innerHTML = highlightedCode
+  
+  // 更新语言标签
+  const langMap = {
+    '': 'Plain Text',
+    'javascript': 'JavaScript',
+    'typescript': 'TypeScript',
+    'python': 'Python',
+    'java': 'Java',
+    'cpp': 'C++',
+    'c': 'C',
+    'csharp': 'C#',
+    'go': 'Go',
+    'rust': 'Rust',
+    'php': 'PHP',
+    'ruby': 'Ruby',
+    'swift': 'Swift',
+    'kotlin': 'Kotlin',
+    'html': 'HTML',
+    'css': 'CSS',
+    'scss': 'SCSS',
+    'json': 'JSON',
+    'xml': 'XML',
+    'yaml': 'YAML',
+    'markdown': 'Markdown',
+    'sql': 'SQL',
+    'bash': 'Bash',
+    'shell': 'Shell',
+    'dockerfile': 'Dockerfile',
+    'nginx': 'Nginx',
+    'vue': 'Vue',
+    'react': 'React'
+  }
+  langText.textContent = langMap[newLang] || (newLang ? newLang.toUpperCase() : 'Plain Text')
+  
+  // 更新下拉菜单中的 active 状态
+  const dropdown = block.querySelector('.feishu-code-lang-dropdown')
+  if (dropdown) {
+    dropdown.querySelectorAll('.feishu-code-lang-option').forEach(option => {
+      if (option.getAttribute('data-lang') === newLang) {
+        option.classList.add('active')
+      } else {
+        option.classList.remove('active')
+      }
+    })
+  }
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div')
+  div.textContent = text
+  return div.innerHTML
+}
+
+// 应用主题
+function applyTheme(block, theme) {
+  const codeContent = block.querySelector('.feishu-code-content')
+  const codePre = block.querySelector('.feishu-code-pre')
+  const themeBtn = block.querySelector('.feishu-code-theme')
+  const themeIconDark = themeBtn?.querySelector('.theme-icon-dark')
+  const themeIconLight = themeBtn?.querySelector('.theme-icon-light')
+  
+  if (!codeContent || !codePre) return
+  
+  // 移除之前的主题类
+  block.classList.remove('theme-dark', 'theme-light')
+  
+  if (theme === 'dark') {
+    // 黑色主题
+    block.classList.add('theme-dark')
+    codeContent.style.background = '#1e1e1e'
+    codePre.style.color = '#d4d4d4'
+    
+    // 切换图标
+    if (themeIconDark) themeIconDark.style.display = 'block'
+    if (themeIconLight) themeIconLight.style.display = 'none'
+  } else {
+    // 浅色主题
+    block.classList.add('theme-light')
+    codeContent.style.background = '#fafafa'
+    codePre.style.color = '#1d2129'
+    
+    // 切换图标
+    if (themeIconDark) themeIconDark.style.display = 'none'
+    if (themeIconLight) themeIconLight.style.display = 'block'
+  }
+}
+
+// 点击外部关闭下拉菜单
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.feishu-code-lang-selector')) {
+    document.querySelectorAll('.feishu-code-lang-dropdown').forEach(dd => {
+      dd.style.display = 'none'
+    })
+  }
 })
 </script>
 
@@ -61,36 +413,59 @@ const formattedContent = computed(() => {
 .message.user {
   align-self: flex-end;
   flex-direction: row-reverse;
-  max-width: 85%;
+  max-width: 70%; /* 最大宽度限制 */
+  width: fit-content; /* 根据内容自适应 */
+  margin-left: auto; /* 右对齐 */
 }
 
 .message.assistant {
   align-self: flex-start;
-  max-width: 85%;
+  max-width: 70%; /* 最大宽度限制 */
+  min-width: fit-content; /* 根据内容自适应 */
+  margin-left: 52px; /* 头像宽度(40px) + gap(12px) = 52px，与头像右边缘对齐 */
 }
 
 .message-avatar {
   width: 40px;
   height: 40px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #10a37f 0%, #19c37d 100%);
+  border-radius: 12px;
+  background: linear-gradient(135deg, #2196f3 0%, #42a5f5 50%, #1976d2 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 700;
   flex-shrink: 0;
   color: white;
   box-shadow: 
-    0 4px 12px rgba(16, 163, 127, 0.2),
-    0 2px 4px rgba(16, 163, 127, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3);
-  border: none;
+    0 8px 24px rgba(33, 150, 243, 0.3),
+    0 4px 8px rgba(33, 150, 243, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.2);
   letter-spacing: -0.02em;
-  animation: avatarPopIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation: avatarPopIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
   will-change: transform;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
+  z-index: 2;
+}
+
+.avatar-glow {
+  position: absolute;
+  inset: -4px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #2196f3, #42a5f5);
+  opacity: 0.3;
+  filter: blur(12px);
+  z-index: -1;
+  animation: avatarGlow 2s ease-in-out infinite;
+}
+
+.avatar-icon {
+  font-size: 20px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+  animation: iconFloat 3s ease-in-out infinite;
 }
 
 .message-avatar::before {
@@ -107,49 +482,105 @@ const formattedContent = computed(() => {
 }
 
 .message.user .message-avatar {
-  background: linear-gradient(135deg, #19c37d 0%, #16a570 100%);
-  color: white;
+  background: linear-gradient(135deg, #42a5f5 0%, #1976d2 50%, #1565c0 100%);
   box-shadow: 
-    0 2px 6px rgba(25, 195, 125, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  border: none;
+    0 8px 24px rgba(66, 165, 245, 0.35),
+    0 4px 8px rgba(66, 165, 245, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.25);
+}
+
+.message.user .avatar-glow {
+  background: linear-gradient(135deg, #42a5f5, #1976d2);
+  opacity: 0.4;
 }
 
 .message-content {
-  flex: 1;
+  flex: 0 1 auto; /* 不拉伸，根据内容自适应 */
   min-width: 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: fit-content; /* 根据内容自适应宽度 */
+  max-width: 100%; /* 不超过父容器 */
+}
+
+.message.user .message-content {
+  align-items: flex-end; /* 用户消息内容右对齐 */
+}
+
+.message-content:hover .export-pdf-wrapper {
+  opacity: 1;
+  visibility: visible;
+}
+
+.message-card {
+  position: relative;
+  background: linear-gradient(135deg, #ffffff 0%, #fafafa 50%, #ffffff 100%);
+  border-radius: 14px;
+  padding: 2px;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.1),
+    0 4px 8px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  animation: messageCardSlideIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: transform, opacity;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+  width: fit-content; /* 根据内容自适应宽度 */
+  max-width: 100%; /* 不超过父容器 */
+}
+
+/* 当消息前面有任务列表时，调整消息气泡的顶部圆角 - 通过全局样式处理 */
+
+.message-card-glow {
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(33, 150, 243, 0.1) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.5s;
+  pointer-events: none;
+}
+
+.message-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 12px 40px rgba(33, 150, 243, 0.15),
+    0 6px 12px rgba(33, 150, 243, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+}
+
+.message-card:hover .message-card-glow {
+  opacity: 1;
 }
 
 .message-text {
-  background: linear-gradient(135deg, #ffffff 0%, #fafafa 100%);
+  background: #ffffff;
   padding: 20px 24px;
-  border-radius: 16px;
+  border-radius: 14px;
   line-height: 1.75;
   word-wrap: break-word;
+  word-break: break-word;
   font-size: 15px;
-  color: #353740;
-  letter-spacing: -0.01em;
+  color: #2d2d2d;
+  letter-spacing: 0.01em;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-  box-shadow: 
-    0 4px 16px rgba(0, 0, 0, 0.08),
-    0 2px 4px rgba(0, 0, 0, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
-  border: 1.5px solid rgba(16, 163, 127, 0.1);
   position: relative;
-  animation: messageTextFadeIn 0.5s ease-out both;
-  will-change: opacity, transform;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', 'Hiragino Sans GB', sans-serif;
+  width: fit-content; /* 根据内容自适应宽度 */
+  max-width: 100%; /* 不超过父容器 */
 }
 
-.message-text:hover {
-  box-shadow: 
-    0 6px 20px rgba(16, 163, 127, 0.12),
-    0 3px 6px rgba(16, 163, 127, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
-  border-color: rgba(16, 163, 127, 0.2);
-  transform: translateY(-1px);
+.message.user .message-text {
+  min-width: auto; /* 用户消息不需要最小宽度限制 */
 }
 
 .message-text::before {
@@ -158,13 +589,21 @@ const formattedContent = computed(() => {
   top: 0;
   left: 0;
   right: 0;
-  height: 1px;
-  background: linear-gradient(to right, transparent, rgba(0, 0, 0, 0.05), transparent);
+  height: 2px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(33, 150, 243, 0.2) 20%, 
+    rgba(66, 165, 245, 0.3) 50%, 
+    rgba(33, 150, 243, 0.2) 80%, 
+    transparent 100%);
+  border-radius: 18px 18px 0 0;
 }
 
 .message-text p {
-  margin: 0.9em 0;
-  line-height: 1.8;
+  margin: 0 0 12px 0;
+  line-height: 1.75;
+  text-align: justify;
+  text-justify: inter-ideograph;
 }
 
 .message-text p:first-child {
@@ -175,69 +614,197 @@ const formattedContent = computed(() => {
   margin-bottom: 0;
 }
 
+.message-text p + p {
+  margin-top: 8px;
+}
+
 .message-text p::selection {
-  background: rgba(16, 163, 127, 0.2);
+  background: rgba(33, 150, 243, 0.2);
 }
 
 .message-text *::selection {
-  background: rgba(16, 163, 127, 0.2);
+  background: rgba(33, 150, 243, 0.2);
 }
 
 .message-text h1,
 .message-text h2,
 .message-text h3,
-.message-text h4 {
-  margin: 1.2em 0 0.7em 0;
+.message-text h4,
+.message-text h5,
+.message-text h6 {
+  margin: 32px 0 16px 0;
   font-weight: 600;
-  color: #202123;
-  line-height: 1.4;
+  color: #1a1a1a;
+  line-height: 1.5;
+  letter-spacing: -0.01em;
+}
+
+.message-text h1:first-child,
+.message-text h2:first-child,
+.message-text h3:first-child,
+.message-text h4:first-child {
+  margin-top: 0;
 }
 
 .message-text h1 {
-  font-size: 1.6em;
-  border-bottom: 2px solid #e5e5e6;
-  padding-bottom: 0.4em;
-  margin-top: 0.5em;
+  font-size: 1.75em;
+  font-weight: 700;
+  border-bottom: 2px solid #e8e8e8;
+  padding-bottom: 12px;
+  margin-bottom: 20px;
+  margin-top: 0;
+  color: #0d0d0d;
 }
 
 .message-text h2 {
-  font-size: 1.4em;
-  border-bottom: 1px solid #e5e5e6;
-  padding-bottom: 0.3em;
+  font-size: 1.5em;
+  font-weight: 650;
+  border-bottom: 1px solid #e8e8e8;
+  padding-bottom: 10px;
+  margin-bottom: 18px;
+  margin-top: 32px;
+  color: #1a1a1a;
 }
 
 .message-text h3 {
-  font-size: 1.2em;
+  font-size: 1.25em;
+  font-weight: 600;
+  margin-bottom: 14px;
+  margin-top: 28px;
+  color: #2d2d2d;
 }
 
 .message-text h4 {
   font-size: 1.1em;
+  font-weight: 600;
+  margin-bottom: 12px;
+  margin-top: 24px;
+  color: #404040;
+}
+
+.message-text h5 {
+  font-size: 1.05em;
+  font-weight: 600;
+  margin-bottom: 10px;
+  margin-top: 20px;
   color: #565869;
+}
+
+.message-text h6 {
+  font-size: 1em;
+  font-weight: 600;
+  margin-bottom: 8px;
+  margin-top: 18px;
+  color: #6b6b6b;
 }
 
 .message-text ul,
 .message-text ol {
-  margin: 1em 0;
-  padding-left: 1.8em;
-  line-height: 1.7;
+  margin: 16px 0;
+  padding-left: 0;
+  line-height: 1.85;
+  list-style: none;
 }
 
 .message-text ul {
-  list-style-type: disc;
+  counter-reset: list-counter;
 }
 
 .message-text ol {
-  list-style-type: decimal;
+  counter-reset: list-counter;
 }
 
 .message-text li {
-  margin: 0.5em 0;
-  line-height: 1.7;
-  padding-left: 0.3em;
+  margin: 8px 0;
+  line-height: 1.85;
+  padding: 8px 12px 8px 32px;
+  text-align: left;
+  position: relative;
+  background: linear-gradient(135deg, rgba(33, 150, 243, 0.04) 0%, rgba(66, 165, 245, 0.02) 100%);
+  border-left: 3px solid rgba(33, 150, 243, 0.2);
+  border-radius: 6px;
+  transition: all 0.3s ease;
 }
 
-.message-text li::marker {
-  color: #10a37f;
+.message-text li:hover {
+  background: linear-gradient(135deg, rgba(33, 150, 243, 0.08) 0%, rgba(66, 165, 245, 0.04) 100%);
+  border-left-color: #2196f3;
+  transform: translateX(4px);
+  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.1);
+}
+
+.message-text ul > li::before {
+  content: '▸';
+  position: absolute;
+  left: 12px;
+  top: 8px;
+  color: #2196f3;
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1.85;
+}
+
+.message-text ol > li {
+  counter-increment: list-counter;
+}
+
+.message-text ol > li::before {
+  content: counter(list-counter);
+  position: absolute;
+  left: 10px;
+  top: 8px;
+  width: 20px;
+  height: 20px;
+  background: linear-gradient(135deg, #10a37f 0%, #19c37d 100%);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 12px;
+  line-height: 20px;
+  text-align: center;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(16, 163, 127, 0.3);
+}
+
+.message-text ul ul,
+.message-text ol ol,
+.message-text ul ol,
+.message-text ol ul {
+  margin: 8px 0 8px 16px;
+  padding-left: 0;
+}
+
+.message-text ul ul > li,
+.message-text ol ol > li,
+.message-text ul ol > li,
+.message-text ol ul > li {
+  padding-left: 28px;
+  background: linear-gradient(135deg, rgba(33, 150, 243, 0.02) 0%, rgba(66, 165, 245, 0.01) 100%);
+  border-left-color: rgba(33, 150, 243, 0.15);
+}
+
+.message-text ul ul > li::before {
+  content: '▪';
+  font-size: 12px;
+  left: 10px;
+}
+
+.message-text ol ol > li::before {
+  width: 18px;
+  height: 18px;
+  font-size: 11px;
+  line-height: 18px;
+  left: 8px;
+  top: 9px;
+}
+
+.message-text li > p {
+  margin: 0;
+}
+
+.message-text li > ul,
+.message-text li > ol {
+  margin-top: 8px;
+  margin-bottom: 0;
 }
 
 .message-text code {
@@ -246,67 +813,580 @@ const formattedContent = computed(() => {
 }
 
 .message-text :deep(.inline-code) {
-  background: rgba(16, 163, 127, 0.1);
-  color: #10a37f;
+  background: #f0f4f8;
+  color: #2196f3;
   padding: 2px 6px;
   border-radius: 4px;
-  border: 1px solid rgba(16, 163, 127, 0.2);
+  border: 1px solid #e0e8f0;
   font-size: 0.9em;
   font-weight: 500;
-  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-family: 'Consolas', 'Monaco', 'Courier New', 'Fira Code', monospace;
+  letter-spacing: 0;
 }
 
-.message-text :deep(.code-block) {
-  background: linear-gradient(135deg, #f7f7f8 0%, #f0f0f0 100%);
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-left: 4px solid #10a37f;
+/* 飞书风格代码块样式 */
+.message-text :deep(.feishu-code-block-wrapper) {
+  margin: 20px 0;
   border-radius: 8px;
-  padding: 16px 20px;
-  margin: 1.4em 0;
-  overflow-x: auto;
-  font-size: 0.9em;
-  line-height: 1.7;
+  overflow: hidden;
+  background: #f7f8fa;
+  border: 1px solid #e5e6eb;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.message-text :deep(.feishu-code-header) {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e6eb;
+  min-height: 36px;
+}
+
+.message-text :deep(.feishu-code-header-left) {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.message-text :deep(.feishu-code-icon) {
+  font-size: 13px;
+  color: #646a73;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.message-text :deep(.feishu-code-icon)::before {
+  content: '▼';
+  font-size: 10px;
+  color: #86909c;
+}
+
+.message-text :deep(.feishu-code-lang-selector) {
   position: relative;
-  box-shadow: 
-    0 2px 8px rgba(0, 0, 0, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8),
-    inset -1px 0 0 rgba(16, 163, 127, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s;
 }
 
-.message-text :deep(.code-block) code {
-  color: #353740;
-  display: block;
+.message-text :deep(.feishu-code-lang-selector:hover) {
+  background: #f2f3f5;
+}
+
+.message-text :deep(.feishu-code-lang-text) {
+  font-size: 13px;
+  color: #1d2129;
+  font-weight: 500;
+}
+
+.message-text :deep(.feishu-code-dropdown-icon) {
+  color: #86909c;
+  transition: transform 0.2s;
+}
+
+.message-text :deep(.feishu-code-lang-selector:hover .feishu-code-dropdown-icon) {
+  color: #1d2129;
+}
+
+.message-text :deep(.feishu-code-lang-dropdown) {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  background: #ffffff;
+  border: 1px solid #e5e6eb;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  max-height: 300px;
+  overflow-y: auto;
+  min-width: 150px;
+}
+
+.message-text :deep(.feishu-code-lang-option) {
+  padding: 8px 12px;
+  font-size: 13px;
+  color: #1d2129;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.message-text :deep(.feishu-code-lang-option:hover) {
+  background: #f2f3f5;
+}
+
+.message-text :deep(.feishu-code-lang-option.active) {
+  background: #e8f4fd;
+  color: #165dff;
+  font-weight: 500;
+}
+
+.message-text :deep(.feishu-code-header-right) {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.message-text :deep(.feishu-code-divider) {
+  width: 1px;
+  height: 16px;
+  background: #e5e6eb;
+  margin: 0 8px;
+}
+
+.message-text :deep(.feishu-code-action-btn) {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border: none;
+  background: transparent;
+  color: #646a73;
+  font-size: 13px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s;
+  font-weight: 500;
+}
+
+.message-text :deep(.feishu-code-action-btn:hover) {
+  background: #f2f3f5;
+  color: #1d2129;
+}
+
+.message-text :deep(.feishu-code-action-btn.active) {
+  background: #e8f4fd;
+  color: #165dff;
+}
+
+.message-text :deep(.feishu-code-action-btn.copied) {
+  background: #e8f5e9;
+  color: #00b42a;
+}
+
+.message-text :deep(.feishu-code-action-btn svg) {
+  flex-shrink: 0;
+}
+
+.message-text :deep(.feishu-code-theme .theme-icon-dark),
+.message-text :deep(.feishu-code-theme .theme-icon-light) {
+  width: 16px;
+  height: 16px;
+}
+
+.message-text :deep(.feishu-code-content) {
+  background: #1e1e1e;
+  overflow-x: auto;
+  position: relative;
+}
+
+.message-text :deep(.feishu-code-content.word-wrap) {
+  overflow-x: visible;
+}
+
+.message-text :deep(.feishu-code-content.word-wrap .feishu-code-pre) {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  word-break: break-all;
+}
+
+.message-text :deep(.feishu-code-pre) {
+  margin: 0;
+  padding: 16px 20px;
+  background: transparent;
+  font-family: 'Consolas', 'Monaco', 'Courier New', 'Fira Code', monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #d4d4d4;
+  overflow-x: auto;
   white-space: pre;
-  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-  font-size: 0.95em;
 }
 
-.message-text :deep(.code-block)::-webkit-scrollbar {
+.message-text :deep(.feishu-code-pre code) {
+  display: block;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+.message-text :deep(.feishu-code-pre code.hljs) {
+  background: transparent;
+  color: inherit;
+}
+
+.message-text :deep(.feishu-code-pre .hljs) {
+  background: transparent !important;
+}
+
+.message-text :deep(.feishu-code-content)::-webkit-scrollbar {
   height: 8px;
 }
 
-.message-text :deep(.code-block)::-webkit-scrollbar-track {
-  background: #f7f7f8;
+/* 深色主题滚动条 */
+.message-text :deep(.feishu-code-block-wrapper.theme-dark .feishu-code-content)::-webkit-scrollbar-track {
+  background: #2d2d2d;
+}
+
+.message-text :deep(.feishu-code-block-wrapper.theme-dark .feishu-code-content)::-webkit-scrollbar-thumb {
+  background: #555;
   border-radius: 4px;
+}
+
+.message-text :deep(.feishu-code-block-wrapper.theme-dark .feishu-code-content)::-webkit-scrollbar-thumb:hover {
+  background: #666;
+}
+
+/* 浅色主题滚动条 */
+.message-text :deep(.feishu-code-block-wrapper.theme-light .feishu-code-content)::-webkit-scrollbar-track {
+  background: #f0f0f0;
+}
+
+.message-text :deep(.feishu-code-block-wrapper.theme-light .feishu-code-content)::-webkit-scrollbar-thumb {
+  background: #c9cdd4;
+  border-radius: 4px;
+}
+
+.message-text :deep(.feishu-code-block-wrapper.theme-light .feishu-code-content)::-webkit-scrollbar-thumb:hover {
+  background: #a8adb8;
+}
+
+/* 默认深色主题滚动条 */
+.message-text :deep(.feishu-code-content)::-webkit-scrollbar-track {
+  background: #2d2d2d;
+}
+
+.message-text :deep(.feishu-code-content)::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 4px;
+}
+
+.message-text :deep(.feishu-code-content)::-webkit-scrollbar-thumb:hover {
+  background: #666;
+}
+
+.message-text :deep(.feishu-code-lang-dropdown)::-webkit-scrollbar {
+  width: 6px;
+}
+
+.message-text :deep(.feishu-code-lang-dropdown)::-webkit-scrollbar-track {
+  background: #f7f8fa;
+}
+
+.message-text :deep(.feishu-code-lang-dropdown)::-webkit-scrollbar-thumb {
+  background: #c9cdd4;
+  border-radius: 3px;
+}
+
+.message-text :deep(.feishu-code-lang-dropdown)::-webkit-scrollbar-thumb:hover {
+  background: #a8adb8;
+}
+
+
+/* ========== 飞书风格电子表格 ========== */
+.message-text :deep(.feishu-spreadsheet-wrapper) {
+  margin: 20px 0;
+  overflow-x: auto;
+  border-radius: 8px;
+  border: 1px solid #e5e6eb;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.message-text :deep(.feishu-spreadsheet) {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0;
+  font-size: 13px;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+}
+
+.message-text :deep(.feishu-spreadsheet th) {
+  background: #f2f3f5;
+  color: #1d2129;
+  font-weight: 600;
+  padding: 10px 12px;
+  text-align: left;
+  border: 1px solid #e5e6eb;
+  border-right: 2px solid #d9dce0;
+  border-bottom: 2px solid #d9dce0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.message-text :deep(.feishu-spreadsheet td) {
+  padding: 10px 12px;
+  border: 1px solid #e5e6eb;
+  color: #1d2129;
+  background: #ffffff;
+}
+
+.message-text :deep(.feishu-spreadsheet tr:nth-child(even) td) {
+  background: #fafbfc;
+}
+
+.message-text :deep(.feishu-spreadsheet tr:hover td) {
+  background: #f2f3f5;
+}
+
+/* ========== 飞书风格引用块 ========== */
+.message-text :deep(.feishu-quote-block) {
+  margin: 20px 0;
+  padding: 16px 20px;
+  background: #f7f8fa;
+  border-left: 4px solid #165dff;
+  border-radius: 6px;
+  display: flex;
+  gap: 12px;
+  position: relative;
+}
+
+.message-text :deep(.feishu-quote-icon) {
+  width: 4px;
+  background: #165dff;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.message-text :deep(.feishu-quote-content) {
+  flex: 1;
+  color: #646a73;
+  line-height: 1.6;
+}
+
+.message-text :deep(.feishu-quote-content p) {
+  margin: 0;
+}
+
+.message-text :deep(.feishu-quote-content p + p) {
+  margin-top: 8px;
+}
+
+/* ========== 飞书风格分隔线 ========== */
+.message-text :deep(.feishu-divider) {
+  margin: 24px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.message-text :deep(.feishu-divider-line) {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(to right, transparent, #e5e6eb, transparent);
+}
+
+/* ========== 飞书风格信息块 ========== */
+.message-text :deep(.feishu-info-block),
+.message-text :deep(.feishu-tip-block),
+.message-text :deep(.feishu-success-block),
+.message-text :deep(.feishu-warning-block),
+.message-text :deep(.feishu-error-block),
+.message-text :deep(.feishu-note-block),
+.message-text :deep(.feishu-question-block) {
+  margin: 20px 0;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.message-text :deep(.feishu-info-block) {
+  background: #e8f4fd;
+  border-color: #165dff;
+}
+
+.message-text :deep(.feishu-tip-block) {
+  background: #e8f5e9;
+  border-color: #00b42a;
+}
+
+.message-text :deep(.feishu-success-block) {
+  background: #e8f5e9;
+  border-color: #00b42a;
+}
+
+.message-text :deep(.feishu-warning-block) {
+  background: #fff7e6;
+  border-color: #ff7d00;
+}
+
+.message-text :deep(.feishu-error-block) {
+  background: #ffece8;
+  border-color: #f53f3f;
+}
+
+.message-text :deep(.feishu-note-block) {
+  background: #f2f3f5;
+  border-color: #86909c;
+}
+
+.message-text :deep(.feishu-question-block) {
+  background: #f0f5ff;
+  border-color: #722ed1;
+}
+
+.message-text :deep(.feishu-block-header) {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.message-text :deep(.feishu-info-block .feishu-block-header) {
+  color: #165dff;
+  background: rgba(22, 93, 255, 0.08);
+}
+
+.message-text :deep(.feishu-tip-block .feishu-block-header),
+.message-text :deep(.feishu-success-block .feishu-block-header) {
+  color: #00b42a;
+  background: rgba(0, 180, 42, 0.08);
+}
+
+.message-text :deep(.feishu-warning-block .feishu-block-header) {
+  color: #ff7d00;
+  background: rgba(255, 125, 0, 0.08);
+}
+
+.message-text :deep(.feishu-error-block .feishu-block-header) {
+  color: #f53f3f;
+  background: rgba(245, 63, 63, 0.08);
+}
+
+.message-text :deep(.feishu-note-block .feishu-block-header) {
+  color: #86909c;
+  background: rgba(134, 144, 156, 0.08);
+}
+
+.message-text :deep(.feishu-question-block .feishu-block-header) {
+  color: #722ed1;
+  background: rgba(114, 46, 209, 0.08);
+}
+
+.message-text :deep(.feishu-block-icon) {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.message-text :deep(.feishu-block-title) {
+  font-size: 14px;
+}
+
+.message-text :deep(.feishu-block-content) {
+  padding: 16px;
+  color: #1d2129;
+  line-height: 1.6;
+}
+
+.message-text :deep(.feishu-block-content p) {
+  margin: 0;
+}
+
+.message-text :deep(.feishu-block-content p + p) {
+  margin-top: 8px;
+}
+
+/* ========== 飞书风格折叠块 ========== */
+.message-text :deep(.feishu-collapse-block) {
+  margin: 20px 0;
+  border: 1px solid #e5e6eb;
+  border-radius: 8px;
+  background: #ffffff;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.message-text :deep(.feishu-collapse-header) {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  cursor: pointer;
+  user-select: none;
+  background: #f7f8fa;
+  transition: background-color 0.2s;
+}
+
+.message-text :deep(.feishu-collapse-header:hover) {
+  background: #f2f3f5;
+}
+
+.message-text :deep(.feishu-collapse-icon) {
+  width: 16px;
+  height: 16px;
+  color: #646a73;
+  transition: transform 0.3s ease;
+  flex-shrink: 0;
+}
+
+.message-text :deep(.feishu-collapse-block.collapsed .feishu-collapse-icon) {
+  transform: rotate(0deg);
+}
+
+.message-text :deep(.feishu-collapse-block:not(.collapsed) .feishu-collapse-icon) {
+  transform: rotate(90deg);
+}
+
+.message-text :deep(.feishu-collapse-title) {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1d2129;
+  flex: 1;
+}
+
+.message-text :deep(.feishu-collapse-content) {
+  padding: 16px;
+  color: #646a73;
+  line-height: 1.6;
+  border-top: 1px solid #f2f3f5;
+}
+
+.message-text :deep(.feishu-collapse-content p) {
+  margin: 0;
+}
+
+.message-text :deep(.feishu-collapse-content p + p) {
+  margin-top: 8px;
+}
+
+.message-text :deep(.code-block)::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 5px;
 }
 
 .message-text :deep(.code-block)::-webkit-scrollbar-thumb {
-  background: #d1d1d6;
-  border-radius: 4px;
+  background: linear-gradient(135deg, #2196f3, #42a5f5);
+  border-radius: 5px;
+  border: 2px solid rgba(0, 0, 0, 0.2);
 }
 
 .message-text :deep(.code-block)::-webkit-scrollbar-thumb:hover {
-  background: #b5b5b9;
+  background: linear-gradient(135deg, #19c37d, #10a37f);
 }
 
 .message-text strong {
-  color: #202123;
+  color: #1a1a1a;
   font-weight: 600;
   letter-spacing: -0.01em;
 }
 
 .message-text em {
-  color: #565869;
+  color: #404040;
   font-style: italic;
 }
 
@@ -316,28 +1396,35 @@ const formattedContent = computed(() => {
   text-decoration-color: #ef4444;
 }
 
+.message-text u {
+  text-decoration: underline;
+  text-decoration-color: #2196f3;
+  text-underline-offset: 2px;
+}
+
 /* 链接卡片样式 */
 .message-text :deep(.link-card-wrapper) {
   display: block;
-  margin: 1em 0;
+  margin: 20px 0;
   animation: linkCardSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .message-text :deep(.link-card) {
   display: flex;
   flex-direction: column;
-  padding: 16px 18px;
-  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 12px;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 50%, #ffffff 100%);
+  border: 2px solid rgba(33, 150, 243, 0.15);
+  border-radius: 14px;
   text-decoration: none;
   color: #353740;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
   box-shadow: 
-    0 2px 8px rgba(0, 0, 0, 0.04),
-    0 1px 2px rgba(0, 0, 0, 0.02);
+    0 4px 16px rgba(33, 150, 243, 0.12),
+    0 2px 8px rgba(33, 150, 243, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 .message-text :deep(.link-card)::before {
@@ -346,79 +1433,126 @@ const formattedContent = computed(() => {
   top: 0;
   left: 0;
   right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, #10a37f, #19c37d);
+  height: 4px;
+  background: linear-gradient(90deg, #2196f3 0%, #42a5f5 50%, #2196f3 100%);
+  background-size: 200% 100%;
   transform: scaleX(0);
   transform-origin: left;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: gradientShift 3s ease infinite;
+}
+
+.message-text :deep(.link-card)::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(33, 150, 243, 0.08) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.4s;
+  pointer-events: none;
 }
 
 .message-text :deep(.link-card):hover {
-  transform: translateY(-2px);
+  transform: translateY(-4px);
+  border-color: rgba(33, 150, 243, 0.3);
   box-shadow: 
-    0 6px 16px rgba(16, 163, 127, 0.15),
-    0 2px 6px rgba(16, 163, 127, 0.1);
-  border-color: rgba(16, 163, 127, 0.2);
+    0 8px 24px rgba(33, 150, 243, 0.2),
+    0 4px 12px rgba(33, 150, 243, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  background: linear-gradient(135deg, #ffffff 0%, #f0f7f5 50%, #ffffff 100%);
 }
 
 .message-text :deep(.link-card):hover::before {
   transform: scaleX(1);
 }
 
+.message-text :deep(.link-card):hover::after {
+  opacity: 1;
+}
+
 .message-text :deep(.link-card-title) {
-  font-size: 15px;
-  font-weight: 600;
-  color: #202123;
-  margin-bottom: 6px;
-  line-height: 1.4;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 10px;
+  line-height: 1.5;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
+  position: relative;
+  z-index: 1;
+  transition: color 0.3s;
+}
+
+.message-text :deep(.link-card):hover .link-card-title {
+  color: #2196f3;
 }
 
 .message-text :deep(.link-card-meta) {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 8px;
-  padding-top: 8px;
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 2px solid rgba(33, 150, 243, 0.1);
+  position: relative;
+  z-index: 1;
+}
+
+.message-text :deep(.link-card):hover .link-card-meta {
+  border-top-color: rgba(33, 150, 243, 0.2);
 }
 
 .message-text :deep(.link-card-domain) {
-  font-size: 12px;
-  color: #8e8ea0;
-  font-weight: 500;
+  font-size: 13px;
+  color: #565869;
+  font-weight: 600;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  transition: color 0.3s;
 }
 
 .message-text :deep(.link-card-domain)::before {
   content: '';
   display: inline-block;
-  width: 12px;
-  height: 12px;
-  background: linear-gradient(135deg, #10a37f, #19c37d);
-  border-radius: 2px;
+  width: 16px;
+  height: 16px;
+  background: linear-gradient(135deg, #10a37f 0%, #19c37d 100%);
+  border-radius: 4px;
   flex-shrink: 0;
+  box-shadow: 
+    0 2px 6px rgba(33, 150, 243, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  transition: transform 0.3s;
+}
+
+.message-text :deep(.link-card):hover .link-card-domain {
+  color: #2196f3;
+}
+
+.message-text :deep(.link-card):hover .link-card-domain::before {
+  transform: scale(1.1) rotate(5deg);
 }
 
 .message-text :deep(.link-card-icon) {
-  width: 14px;
-  height: 14px;
+  width: 18px;
+  height: 18px;
   color: #8e8ea0;
-  opacity: 0.6;
-  transition: all 0.2s;
+  opacity: 0.7;
+  transition: all 0.3s;
   flex-shrink: 0;
 }
 
 .message-text :deep(.link-card):hover .link-card-icon {
-  color: #10a37f;
+  color: #2196f3;
   opacity: 1;
-  transform: translate(2px, -2px);
+  transform: translate(3px, -3px) scale(1.1);
 }
 
 /* 用户消息中的链接卡片 */
@@ -460,17 +1594,17 @@ const formattedContent = computed(() => {
 
 /* 保留普通文本链接样式（非卡片） */
 .message-text :deep(a:not(.link-card)) {
-  color: #10a37f;
+  color: #2196f3;
   text-decoration: none;
-  border-bottom: 1px solid rgba(16, 163, 127, 0.3);
+  border-bottom: 1px solid rgba(33, 150, 243, 0.3);
   transition: all 0.2s;
   padding-bottom: 1px;
 }
 
 .message-text :deep(a:not(.link-card)):hover {
   color: #0d8f6e;
-  border-bottom-color: #10a37f;
-  background: rgba(16, 163, 127, 0.08);
+  border-bottom-color: #2196f3;
+  background: rgba(33, 150, 243, 0.08);
   padding: 0 2px;
   margin: 0 -2px;
   border-radius: 3px;
@@ -478,35 +1612,392 @@ const formattedContent = computed(() => {
 
 .message-text :deep(hr) {
   border: none;
-  border-top: 1px solid #e5e5e6;
-  margin: 1.8em 0;
+  border-top: 1px solid #e0e0e0;
+  margin: 32px 0;
   height: 1px;
 }
 
-.message-text :deep(blockquote) {
-  border-left: 3px solid #10a37f;
-  background: rgba(16, 163, 127, 0.05);
-  padding: 12px 16px;
-  margin: 1em 0;
+.message-text :deep(table) {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 24px 0;
+  font-size: 0.95em;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 
+    0 4px 16px rgba(0, 0, 0, 0.08),
+    0 2px 8px rgba(33, 150, 243, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  border: 2px solid rgba(33, 150, 243, 0.15);
+}
+
+.message-text :deep(table th),
+.message-text :deep(table td) {
+  border: 1px solid rgba(33, 150, 243, 0.15);
+  padding: 14px 18px;
+  text-align: left;
+  transition: all 0.3s ease;
+}
+
+.message-text :deep(table th) {
+  background: linear-gradient(135deg, #10a37f 0%, #19c37d 100%);
+  font-weight: 700;
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  border-color: rgba(33, 150, 243, 0.3);
+  position: relative;
+}
+
+.message-text :deep(table th)::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.message-text :deep(table th:first-child) {
+  border-top-left-radius: 8px;
+}
+
+.message-text :deep(table th:last-child) {
+  border-top-right-radius: 8px;
+}
+
+.message-text :deep(table tr:nth-child(even) td) {
+  background: linear-gradient(135deg, #f8f9fa 0%, #f0f7f5 100%);
+}
+
+.message-text :deep(table tr:nth-child(odd) td) {
+  background: #ffffff;
+}
+
+.message-text :deep(table tr:hover td) {
+  background: linear-gradient(135deg, #e8f5f0 0%, #e0f2eb 100%);
+  transform: scale(1.01);
+  box-shadow: inset 0 0 0 2px rgba(33, 150, 243, 0.1);
+}
+
+.message-text :deep(table tr:last-child td:first-child) {
+  border-bottom-left-radius: 8px;
+}
+
+.message-text :deep(table tr:last-child td:last-child) {
+  border-bottom-right-radius: 8px;
+}
+
+/* 表格中的代码块样式 */
+.message-text :deep(table .table-code-block) {
+  display: block;
+  background: #f7f8fa;
+  border: 1px solid #e5e6eb;
   border-radius: 4px;
+  padding: 8px 12px;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #1d2129;
+  white-space: pre;
+  word-break: normal;
+  max-width: 100%;
+  overflow-x: auto;
+  margin: 4px 0;
+  min-width: 0;
+}
+
+.message-text :deep(table .table-code-block.hljs) {
+  background: #f7f8fa;
+  padding: 8px 12px;
+}
+
+.message-text :deep(table .table-code-block code) {
+  background: transparent;
+  padding: 0;
+  border: none;
+  font-size: inherit;
+  font-family: inherit;
+}
+
+.message-text :deep(table td),
+.message-text :deep(table th) {
+  vertical-align: top;
+}
+
+/* 导出按钮包装器（hover显示） */
+.export-pdf-wrapper {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s, visibility 0.2s;
+  align-self: flex-start;
+  margin-top: 4px;
+}
+
+/* 导出按钮样式 */
+.export-pdf-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  color: #646a73;
+  background: #f7f8fa;
+  border: 1px solid #e5e6eb;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 500;
+}
+
+.export-pdf-btn:hover:not(:disabled) {
+  background: #f2f3f5;
+  border-color: #d9dce0;
+  color: #1d2129;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.export-pdf-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.export-pdf-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.export-pdf-btn svg {
+  flex-shrink: 0;
+  stroke-width: 2;
+}
+
+/* 图片渲染样式 */
+.message-text :deep(.image-wrapper) {
+  margin: 24px 0;
+  text-align: center;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 
+    0 4px 16px rgba(0, 0, 0, 0.1),
+    0 2px 8px rgba(33, 150, 243, 0.08);
+  border: 2px solid rgba(33, 150, 243, 0.1);
+  background: #f8f9fa;
+  transition: all 0.3s ease;
+}
+
+.message-text :deep(.image-wrapper):hover {
+  box-shadow: 
+    0 8px 24px rgba(0, 0, 0, 0.15),
+    0 4px 12px rgba(33, 150, 243, 0.12);
+  border-color: rgba(33, 150, 243, 0.2);
+  transform: translateY(-2px);
+}
+
+.message-text :deep(.markdown-image) {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0;
+  border-radius: 0;
+}
+
+.message-text :deep(.image-caption) {
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
   color: #565869;
-  font-style: italic;
-  line-height: 1.7;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+  border-top: 1px solid rgba(33, 150, 243, 0.1);
+}
+
+/* 自定义信息框样式 */
+.message-text :deep(.info-box),
+.message-text :deep(.tip-box),
+.message-text :deep(.warning-box),
+.message-text :deep(.error-box),
+.message-text :deep(.note-box) {
+  margin: 20px 0;
+  padding: 16px 20px;
+  border-radius: 10px;
+  border-left: 4px solid;
+  position: relative;
+  box-shadow: 
+    0 2px 8px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  transition: all 0.3s ease;
+}
+
+.message-text :deep(.info-box) {
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+  border-left-color: #2196f3;
+  color: #0d47a1;
+}
+
+.message-text :deep(.tip-box) {
+  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+  border-left-color: #2196f3;
+  color: #1b5e20;
+}
+
+.message-text :deep(.warning-box) {
+  background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+  border-left-color: #ff9800;
+  color: #e65100;
+}
+
+.message-text :deep(.error-box) {
+  background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+  border-left-color: #f44336;
+  color: #b71c1c;
+}
+
+.message-text :deep(.note-box) {
+  background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
+  border-left-color: #9c27b0;
+  color: #4a148c;
+}
+
+.message-text :deep(.info-box):hover,
+.message-text :deep(.tip-box):hover,
+.message-text :deep(.warning-box):hover,
+.message-text :deep(.error-box):hover,
+.message-text :deep(.note-box):hover {
+  transform: translateX(4px);
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+/* 折叠块样式 */
+.message-text :deep(.collapse-box) {
+  margin: 20px 0;
+  border: 2px solid rgba(33, 150, 243, 0.15);
+  border-radius: 10px;
+  overflow: hidden;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.message-text :deep(.collapse-header) {
+  padding: 14px 18px;
+  background: linear-gradient(135deg, rgba(33, 150, 243, 0.08) 0%, rgba(66, 165, 245, 0.06) 100%);
+  cursor: pointer;
+  font-weight: 600;
+  color: #2196f3;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.3s ease;
+  user-select: none;
+}
+
+.message-text :deep(.collapse-header):hover {
+  background: linear-gradient(135deg, rgba(33, 150, 243, 0.12) 0%, rgba(66, 165, 245, 0.08) 100%);
+}
+
+.message-text :deep(.collapse-content) {
+  padding: 16px 18px;
+  display: none;
+}
+
+.message-text :deep(.collapse-box.open .collapse-content) {
+  display: block;
+}
+
+.message-text :deep(.collapse-icon) {
+  transition: transform 0.3s ease;
+  font-size: 14px;
+}
+
+.message-text :deep(.collapse-box.open .collapse-icon) {
+  transform: rotate(90deg);
+}
+
+/* 任务列表样式（checkbox） */
+.message-text :deep(.task-list) {
+  list-style: none;
+  padding-left: 0;
+}
+
+.message-text :deep(.task-list-item) {
+  display: flex;
+  align-items: flex-start;
+  margin: 8px 0;
+  padding: 8px 12px;
+  background: linear-gradient(135deg, rgba(33, 150, 243, 0.03) 0%, rgba(66, 165, 245, 0.02) 100%);
+  border-radius: 6px;
+  border-left: 3px solid rgba(33, 150, 243, 0.2);
+}
+
+.message-text :deep(.task-list-item input[type="checkbox"]) {
+  margin-right: 10px;
+  margin-top: 4px;
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #2196f3;
+}
+
+.message-text :deep(.task-list-item.checked) {
+  background: linear-gradient(135deg, rgba(16, 163, 127, 0.08) 0%, rgba(25, 195, 125, 0.05) 100%);
+  border-left-color: #2196f3;
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+
+.message-text :deep(blockquote) {
+  border-left: 4px solid #2196f3;
+  background: #f8f9fa;
+  padding: 20px 24px;
+  margin: 20px 0;
+  border-radius: 6px;
+  color: #404040;
+  font-style: normal;
+  line-height: 1.85;
+  position: relative;
+  box-shadow: 
+    0 1px 3px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  transition: all 0.3s ease;
+}
+
+.message-text :deep(blockquote):hover {
+  background: #f0f2f5;
+  border-left-color: #42a5f5;
+  box-shadow: 
+    0 2px 6px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 .message-text :deep(blockquote) p {
-  margin: 0;
+  margin: 0 0 12px 0;
+}
+
+.message-text :deep(blockquote) p:last-child {
+  margin-bottom: 0;
+}
+
+.message.user .message-card {
+  background: linear-gradient(135deg, #42a5f5 0%, #1976d2 50%, #1565c0 100%);
+  box-shadow: 
+    0 8px 32px rgba(66, 165, 245, 0.3),
+    0 4px 12px rgba(66, 165, 245, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  width: fit-content; /* 根据内容自适应宽度 */
+  max-width: 100%; /* 不超过父容器 */
 }
 
 .message.user .message-text {
-  background: linear-gradient(135deg, #19c37d 0%, #16a570 100%);
+  background: linear-gradient(135deg, #42a5f5 0%, #1976d2 100%);
   color: white;
-  box-shadow: 
-    0 4px 12px rgba(25, 195, 125, 0.25),
-    0 2px 4px rgba(25, 195, 125, 0.15);
-  border: none;
   position: relative;
-  animation: userMessageSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  width: fit-content; /* 根据内容自适应宽度 */
+  max-width: 100%; /* 不超过父容器 */
 }
 
 .message.user .message-text::before {
@@ -542,17 +2033,34 @@ const formattedContent = computed(() => {
 
 .streaming-indicator {
   display: flex;
-  gap: 4px;
-  padding: 8px 16px;
+  gap: 6px;
+  padding: 12px 20px;
   align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.streaming-pulse {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(33, 150, 243, 0.3), transparent);
+  animation: pulse 2s ease-in-out infinite;
 }
 
 .typing-dot {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
-  background: #8e8ea0;
+  background: linear-gradient(135deg, #2196f3, #42a5f5);
   animation: typing 1.4s infinite;
+  box-shadow: 0 2px 6px rgba(33, 150, 243, 0.4);
+  position: relative;
+  z-index: 1;
 }
 
 .typing-dot:nth-child(2) {
@@ -602,6 +2110,18 @@ const formattedContent = computed(() => {
   }
 }
 
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
 @keyframes avatarPopIn {
   from {
     opacity: 0;
@@ -632,12 +2152,54 @@ const formattedContent = computed(() => {
 
 @keyframes typing {
   0%, 60%, 100% {
-    transform: translateY(0);
-    opacity: 0.7;
+    transform: translateY(0) scale(1);
+    opacity: 0.6;
   }
   30% {
-    transform: translateY(-10px);
+    transform: translateY(-12px) scale(1.2);
     opacity: 1;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.5);
+    opacity: 0;
+  }
+}
+
+@keyframes avatarGlow {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.1);
+  }
+}
+
+@keyframes iconFloat {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-3px) rotate(5deg);
+  }
+}
+
+@keyframes messageCardSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 </style>

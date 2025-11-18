@@ -3,6 +3,7 @@ package com.example.ddd.domain.agent.service.execute;
 import com.example.ddd.common.utils.JSON;
 import com.example.ddd.domain.agent.service.armory.AiService;
 import com.example.ddd.domain.agent.service.armory.ServiceNode;
+import com.example.ddd.domain.agent.service.execute.context.EventType;
 import com.example.ddd.domain.agent.service.execute.context.UserContext;
 import com.example.ddd.domain.agent.service.execute.graph.GraphBuilder;
 import com.example.ddd.domain.agent.service.execute.graph.WorkspaceState;
@@ -63,7 +64,7 @@ public class Orchestrator {
         log.info("多agent执行中 Supervisor开始生成任务计划: userRequest={}", userRequest);
         if (userContext != null) {
             userContext.emit(UserContext.TaskStatusEvent.builder()
-                    .type("planning_start")
+                    .type(EventType.PLANNING_START)
                     .message("Supervisor开始生成任务计划")
                     .build());
         }
@@ -81,34 +82,19 @@ public class Orchestrator {
         CountDownLatch latch = new CountDownLatch(1);
         StringBuilder builder = new StringBuilder();
         chat.onPartialResponse(token -> {
-            builder.append(token);
-            if (userContext != null) {
-                userContext.emit(UserContext.TaskStatusEvent.builder()
-                        .type("planning_running")
-                        .message("Supervisor正在生成任务计划")
-                        .build());
-            }
+
         });
 
         chat.onCompleteResponse(e -> {
             AiMessage aiMessage = e.aiMessage();
             builder.append(aiMessage.text());
-            if (userContext != null) {
-                UserContext.TaskStatusEvent.Builder eventBuilder = UserContext.TaskStatusEvent.builder()
-                        .type("planning_complete")
-                        .message("Supervisor任务计划生成完成");
-                if (aiMessage != null && aiMessage.text() != null) {
-                    eventBuilder.content(aiMessage.text());
-                }
-                userContext.emit(eventBuilder.build());
-            }
             latch.countDown();
         });
         chat.onError(error -> {
             log.error("多agent执行中 Supervisor生成计划失败: error={}", error.getMessage(), error);
             if (userContext != null) {
                 userContext.emit(UserContext.TaskStatusEvent.builder()
-                        .type("planning_failed")
+                        .type(EventType.PLANNING_FAILED)
                         .message("Supervisor任务计划生成失败")
                         .error(error.getMessage())
                         .build());
@@ -121,15 +107,15 @@ public class Orchestrator {
             String response = builder.toString();
             log.info("多agent执行中 Supervisor返回的计划: response={}", response);
             TaskPlan taskPlan = JSON.parseObject(response, TaskPlan.class);
-            if (taskPlan == null || taskPlan.getTasks() == null || taskPlan.getTasks().isEmpty()) {
+            if (taskPlan == null) {
                 throw new IllegalStateException("Supervisor生成的任务计划为空或无效");
             }
             log.info("多agent执行中 任务计划生成成功: summary={}, totalTasks={}",
                     taskPlan.getSummary(), taskPlan.getTotalTasks());
             if (userContext != null) {
                 userContext.emit(UserContext.TaskStatusEvent.builder()
-                        .type("plan_ready")
-                        .message("任务计划已就绪")
+                        .type(EventType.PLAN_READY)
+                        .message(taskPlan.getSummary())
                         .content(JSON.toJSON(taskPlan))
                         .build());
             }
@@ -138,7 +124,7 @@ public class Orchestrator {
             log.error("多agent执行中 解析任务计划失败: error={}", e.getMessage(), e);
             if (userContext != null) {
                 userContext.emit(UserContext.TaskStatusEvent.builder()
-                        .type("plan_parse_failed")
+                        .type(EventType.PLAN_PARSE_FAILED)
                         .message("解析任务计划失败")
                         .error(e.getMessage())
                         .build());
@@ -183,16 +169,17 @@ public class Orchestrator {
             TaskPlan taskPlan = plan(userRequest, userContext);
             log.info("任务计划生成完成: {}", taskPlan.getSummary());
             CompiledGraph<WorkspaceState> graph = buildGraph(taskPlan, userContext);
-            log.info("执行图构建完成");
-            Map<String, Object> init = new HashMap<>();
-            init.put("userMessage", userRequest);
-            log.info("开始执行图");
-            graph.invoke(init);
-        }catch (Exception e)
-        {
+            if (graph != null) {
+                log.info("执行图构建完成");
+                Map<String, Object> init = new HashMap<>();
+                init.put("userMessage", userRequest);
+                log.info("开始执行图");
+                graph.invoke(init);
+            }
+        } catch (Exception e) {
             if (userContext != null) {
                 userContext.emit(UserContext.TaskStatusEvent.builder()
-                        .type("execution_failed")
+                        .type(EventType.EXECUTION_FAILED)
                         .message("流程异常")
                         .error(e.getMessage())
                         .build());

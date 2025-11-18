@@ -9,8 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.example.jooq.tables.Rag.RAG;
-import static org.jooq.impl.DSL.table;
-import static org.jooq.impl.DSL.field;
+import static com.example.jooq.tables.AgentRag.AGENT_RAG;
 
 /**
  * RAG数据访问对象
@@ -112,12 +111,11 @@ public class IRagDao {
             return new ArrayList<>();
         }
         // 先通过 agent_rag 关联表查询 rag IDs
-        List<Long> ragIds = dslContext.select(field("rag_id"))
-                .from(table("agent_rag"))
-                .where(field("agent_id").in(clientIds))
-                .fetch()
+        List<Long> ragIds = dslContext.select(AGENT_RAG.RAG_ID)
+                .from(AGENT_RAG)
+                .where(AGENT_RAG.AGENT_ID.in(clientIds))
+                .fetchInto(Long.class)
                 .stream()
-                .map(record -> (Long) record.get("rag_id"))
                 .distinct()
                 .collect(java.util.stream.Collectors.toList());
         
@@ -136,13 +134,10 @@ public class IRagDao {
      */
     public List<RagPO> queryByClientId(DSLContext dslContext, Long clientId) {
         // 先通过 agent_rag 关联表查询 rag IDs
-        List<Long> ragIds = dslContext.select(field("rag_id"))
-                .from(table("agent_rag"))
-                .where(field("agent_id").eq(clientId))
-                .fetch()
-                .stream()
-                .map(record -> (Long) record.get("rag_id"))
-                .collect(java.util.stream.Collectors.toList());
+        List<Long> ragIds = dslContext.select(AGENT_RAG.RAG_ID)
+                .from(AGENT_RAG)
+                .where(AGENT_RAG.AGENT_ID.eq(clientId))
+                .fetchInto(Long.class);
         
         if (ragIds.isEmpty()) {
             return new ArrayList<>();
@@ -156,24 +151,22 @@ public class IRagDao {
 
     /**
      * 根据Agent ID查询关联的RAG列表
-     * 先查询agent关联的client IDs，然后通过clientId查询RAG
      */
     public List<RagPO> queryByAgentId(DSLContext dslContext, Long agentId) {
-        // 先查询agent关联的client IDs
-        List<Long> clientIds = dslContext.select(field("client_id"))
-                .from(table("agent_client"))
-                .where(field("agent_id").eq(agentId))
-                .fetch()
-                .stream()
-                .map(record -> (Long) record.get("client_id"))
-                .collect(java.util.stream.Collectors.toList());
+        // 直接通过 agent_rag 关联表查询 rag IDs
+        List<Long> ragIds = dslContext.select(AGENT_RAG.RAG_ID)
+                .from(AGENT_RAG)
+                .where(AGENT_RAG.AGENT_ID.eq(agentId))
+                .fetchInto(Long.class);
         
-        if (clientIds.isEmpty()) {
+        if (ragIds.isEmpty()) {
             return new ArrayList<>();
         }
         
-        // 通过clientId查询RAG
-        return queryByClientIds(dslContext, clientIds);
+        // 查询这些 rag IDs 对应的 RAG
+        return dslContext.selectFrom(RAG)
+                .where(RAG.ID.in(ragIds))
+                .fetchInto(RagPO.class);
     }
 
     /**

@@ -1,7 +1,6 @@
 package com.example.ddd.domain.agent.service.execute.graph;
 
 import com.example.ddd.domain.agent.service.armory.ServiceNode;
-
 import com.example.ddd.domain.agent.service.execute.Orchestrator;
 import com.example.ddd.domain.agent.service.execute.context.UserContext;
 import com.example.ddd.domain.agent.service.execute.executor.ExecutorFactory;
@@ -14,7 +13,10 @@ import org.bsc.langgraph4j.CompiledGraph;
 import org.bsc.langgraph4j.GraphStateException;
 import org.bsc.langgraph4j.StateGraph;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.bsc.langgraph4j.action.AsyncNodeAction.node_async;
@@ -41,16 +43,20 @@ public class GraphBuilder {
      *
      * @param taskPlan     任务计划
      * @param orchestrator 编排器（包含 supervisor 和 worker 节点）
-     * @param userContext   用户上下文
+     * @param userContext  用户上下文
      * @return 编译后的图
      */
     public static CompiledGraph<WorkspaceState> build(TaskPlan taskPlan, Orchestrator orchestrator, UserContext userContext) throws GraphStateException {
-        if (taskPlan == null || taskPlan.getTasks() == null || taskPlan.getTasks().isEmpty()) {
+        if (taskPlan == null) {
             throw new IllegalArgumentException("TaskPlan 不能为空");
+        }
+        if (taskPlan.getTasks() == null || taskPlan.getTasks().isEmpty()) {
+            return null;
         }
         if (orchestrator == null) {
             throw new IllegalArgumentException("Orchestrator 不能为空");
         }
+
         Map<Long, ServiceNode> workersByID = orchestrator.getWorkersByID();
         return build(taskPlan, workersByID, userContext);
     }
@@ -98,14 +104,18 @@ public class GraphBuilder {
         for (Map.Entry<String, Task.TaskInputs> entry : inputMap.entrySet()) {
             String taskId = entry.getKey();
             Task.TaskInputs inputs = entry.getValue();
-            if (inputs != null && StringUtils.isNotBlank(inputs.getFromTask())) {
-                String fromTask = inputs.getFromTask();
-                graph.addEdge(fromTask, taskId);
-                allTargets.add(taskId);
+            if (inputs != null && inputs.getFromTask() != null && !inputs.getFromTask().isEmpty()) {
+                // 支持多个依赖任务，为每个依赖任务添加边
+                List<String> fromTasks = inputs.getFromTask();
+                for (String fromTask : fromTasks) {
+                    if (StringUtils.isNotBlank(fromTask)) {
+                        graph.addEdge(fromTask, taskId);
+                        allTargets.add(taskId);
+                    }
+                }
             }
         }
 
-        // 3. 自动推导入口节点（即没有被任何任务指向的任务）
         List<String> rootNodes = allNodes.stream()
                 .filter(node -> !allTargets.contains(node))
                 .toList();
@@ -120,20 +130,16 @@ public class GraphBuilder {
         for (String root : rootNodes) {
             graph.addEdge(StateGraph.START, root);
         }
-        // 找出所有叶子节点（没有出边的节点）
-        Set<String> allSources = new HashSet<>(); // 所有作为 fromTask 的节点ID
+        Set<String> allSources = new HashSet<>();
         for (Task task : taskPlan.getTasks()) {
-            if (task.getInputs() != null && StringUtils.isNotBlank(task.getInputs().getFromTask())) {
-                allSources.add(task.getInputs().getFromTask());
+            if (task.getInputs() != null && task.getInputs().getFromTask() != null && !task.getInputs().getFromTask().isEmpty()) {
+                allSources.addAll(task.getInputs().getFromTask());
             }
         }
 
-// 叶子节点 = 所有节点 - 作为 fromTask 的节点
         List<String> leafNodes = allNodes.stream()
                 .filter(node -> !allSources.contains(node))
                 .toList();
-
-// 为所有叶子节点添加指向 END 的边
         for (String leaf : leafNodes) {
             graph.addEdge(leaf, StateGraph.END);
         }

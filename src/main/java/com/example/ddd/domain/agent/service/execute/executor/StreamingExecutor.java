@@ -2,6 +2,7 @@ package com.example.ddd.domain.agent.service.execute.executor;
 
 import com.example.ddd.domain.agent.service.armory.AiService;
 import com.example.ddd.domain.agent.service.armory.ServiceNode;
+import com.example.ddd.domain.agent.service.execute.context.EventType;
 import com.example.ddd.domain.agent.service.execute.context.UserContext;
 import com.example.ddd.domain.agent.service.execute.graph.WorkspaceState;
 import com.example.ddd.domain.agent.service.execute.task.Task;
@@ -29,11 +30,12 @@ public class StreamingExecutor extends BaseTaskExecutor {
 
     @Override
     public Map<String, Object> apply(WorkspaceState state) {
+
         log.info("流式输出执行器执行任务: taskId={}, title={}", task.getId(), task.getTitle());
         UserContext userContext = getUserContext();
         if (userContext != null) {
             userContext.emit(UserContext.TaskStatusEvent.builder()
-                    .type("task_start")
+                    .type(EventType.TASK_START)
                     .taskId(task.getId())
                     .message("任务开始执行")
                     .build());
@@ -63,7 +65,7 @@ public class StreamingExecutor extends BaseTaskExecutor {
                 resultBuilder.append(token);
                 if (userContext != null) {
                     userContext.emit(UserContext.TaskStatusEvent.builder()
-                            .type("streaming")
+                            .type(EventType.STREAMING)
                             .taskId(task.getId())
                             .content(token)
                             .build());
@@ -77,7 +79,7 @@ public class StreamingExecutor extends BaseTaskExecutor {
                 }
                 if (userContext != null) {
                     userContext.emit(UserContext.TaskStatusEvent.builder()
-                            .type("task_complete")
+                            .type(EventType.TASK_COMPLETE)
                             .taskId(task.getId())
                             .message("任务执行完成")
                             .build());
@@ -88,7 +90,7 @@ public class StreamingExecutor extends BaseTaskExecutor {
                 log.error("流式输出执行器执行失败: taskId={}, error={}", task.getId(), error.getMessage());
                 if (userContext != null) {
                     userContext.emit(UserContext.TaskStatusEvent.builder()
-                            .type("task_failed")
+                            .type(EventType.TASK_FAILED)
                             .taskId(task.getId())
                             .message("任务执行失败")
                             .error(error.getMessage())
@@ -105,7 +107,7 @@ public class StreamingExecutor extends BaseTaskExecutor {
                 // 发送中断事件
                 if (userContext != null) {
                     userContext.emit(UserContext.TaskStatusEvent.builder()
-                            .type("task_failed")
+                            .type(EventType.TASK_FAILED)
                             .taskId(task.getId())
                             .message("任务执行被中断")
                             .error("等待token流完成被中断")

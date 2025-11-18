@@ -20,9 +20,9 @@ public interface IAgentRepository {
     List<AgentEntity> queryByOrchestratorId(DSLContext dslContext, Long orchestratorId);
 
     /**
-     * 根据Orchestrator ID查询Model映射（agentId -> List<ChatModelEntity>）
+     * 根据Orchestrator ID查询Model映射（agentId -> ChatModelEntity），每个agent只查询第一个model
      */
-    Map<Long, List<ChatModelEntity>> queryModelMapByOrchestratorId(DSLContext dslContext, Long orchestratorId);
+    Map<Long, ChatModelEntity> queryModelMapByOrchestratorId(DSLContext dslContext, Long orchestratorId);
 
     /**
      * 根据Orchestrator ID查询RAG映射（agentId -> List<RagEntity>）

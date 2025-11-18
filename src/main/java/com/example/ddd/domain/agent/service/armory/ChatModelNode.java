@@ -11,7 +11,6 @@ import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.List;
 import java.util.Map;
 
 import static com.example.ddd.common.constant.IAgentConstant.MODEL_KEY;
@@ -29,21 +28,20 @@ public class ChatModelNode extends AbstractArmorySupport {
         Long agentId = armoryCommandEntity.getOrchestratorId();
         log.info("多agent构建中 开始构建ChatModel: orchestratorId={}", agentId);
         String chatModelJson = dynamicContext.get(MODEL_KEY);
-        Map<Long, List<ChatModelEntity>> modelMap = JSON.parseObject(chatModelJson,
-                new com.fasterxml.jackson.core.type.TypeReference<Map<Long, List<ChatModelEntity>>>() {
+        Map<Long, ChatModelEntity> modelMap = JSON.parseObject(chatModelJson,
+                new com.fasterxml.jackson.core.type.TypeReference<Map<Long, ChatModelEntity>>() {
                 });
         if (modelMap == null || modelMap.isEmpty()) {
             log.warn("多agent构建中 orchestratorId={} 没有配置Model，跳过ChatModel构建", agentId);
             return router(armoryCommandEntity, dynamicContext);
         }
 
-        modelMap.values().stream()
-                .flatMap(List::stream)
-                .forEach(chatModelEntity -> {
-                    log.info("多agent构建中 构建ChatModel: modelName={}, orchestratorId={}", chatModelEntity.getName(), agentId);
-                    StreamingChatModel chatModel = getChatModel(chatModelEntity);
-                    beanUtil.registerChatModel(chatModelEntity.getId(), chatModel);
-                });
+        // 遍历所有model并注册
+        modelMap.values().forEach(chatModelEntity -> {
+            log.info("多agent构建中 构建ChatModel: modelName={}, orchestratorId={}", chatModelEntity.getName(), agentId);
+            StreamingChatModel chatModel = getChatModel(chatModelEntity);
+            beanUtil.registerChatModel(agentId, chatModelEntity.getId(), chatModel);
+        });
 
         return router(armoryCommandEntity, dynamicContext);
     }

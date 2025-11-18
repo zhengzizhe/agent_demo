@@ -76,7 +76,7 @@
           <!-- 用户消息后的等待动画（三个点跳动） -->
           <transition name="typing-fade">
             <div 
-              v-if="msg.role === 'user' && index === messages.length - 1 && isExecuting && !isPlanning"
+              v-if="msg.role === 'user' && index === messages.length - 1 && (isExecuting || isPlanning)"
               class="typing-indicator"
             >
               <div class="typing-avatar">AI</div>
@@ -166,6 +166,7 @@ const messagesContainerRef = ref(null)
 const taskExecution = useTaskExecution(messagesManager, eventHandlers, form, messagesContainerRef)
 const { executeTask } = taskExecution
 
+
 // 计算属性
 const canSend = computed(() => {
   return form.orchestratorId && form.message.trim().length > 0
@@ -178,8 +179,8 @@ const canSend = computed(() => {
   flex-direction: column;
   height: 100vh;
   background: 
-    radial-gradient(circle at 20% 50%, rgba(16, 163, 127, 0.03) 0%, transparent 50%),
-    radial-gradient(circle at 80% 80%, rgba(25, 195, 125, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 20% 50%, rgba(33, 150, 243, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(66, 165, 245, 0.03) 0%, transparent 50%),
     linear-gradient(to bottom, #ffffff 0%, #f7f7f8 100%);
   color: #353740;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -194,18 +195,18 @@ const canSend = computed(() => {
   z-index: 100;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(16, 163, 127, 0.1);
-  box-shadow: 0 2px 8px rgba(16, 163, 127, 0.05);
+  border-bottom: 1px solid rgba(33, 150, 243, 0.1);
+  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.05);
 }
 
 .nav-content {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 0 48px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 64px;
+  height: 72px;
 }
 
 .nav-logo {
@@ -215,25 +216,54 @@ const canSend = computed(() => {
 }
 
 .logo-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #10a37f 0%, #19c37d 100%);
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #2196f3 0%, #42a5f5 50%, #1976d2 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
-  font-weight: 700;
+  font-size: 24px;
+  font-weight: 800;
   color: white;
   box-shadow: 
-    0 4px 12px rgba(16, 163, 127, 0.25),
-    0 2px 4px rgba(16, 163, 127, 0.15);
+    0 6px 20px rgba(33, 150, 243, 0.3),
+    0 3px 8px rgba(33, 150, 243, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  position: relative;
+  overflow: visible;
+  transition: all 0.3s ease;
+}
+
+.logo-icon::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #2196f3, #42a5f5);
+  opacity: 0.2;
+  filter: blur(10px);
+  z-index: -1;
+}
+
+.logo-icon:hover {
+  transform: scale(1.05) rotate(5deg);
+  box-shadow: 
+    0 8px 24px rgba(33, 150, 243, 0.4),
+    0 4px 10px rgba(33, 150, 243, 0.25);
 }
 
 .logo-text {
-  font-size: 18px;
-  font-weight: 600;
+  font-size: 22px;
+  font-weight: 700;
   color: #202123;
+  letter-spacing: -0.02em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  background: linear-gradient(135deg, #2196f3, #42a5f5);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .nav-tabs {
@@ -244,41 +274,79 @@ const canSend = computed(() => {
 .nav-tab {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 20px;
-  font-size: 14px;
-  font-weight: 500;
+  gap: 10px;
+  padding: 14px 28px;
+  font-size: 15px;
+  font-weight: 600;
   color: #565869;
   background: transparent;
-  border: none;
-  border-radius: 8px;
+  border: 2px solid transparent;
+  border-radius: 12px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.nav-tab::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(33, 150, 243, 0.1), rgba(66, 165, 245, 0.1));
+  opacity: 0;
+  transition: opacity 0.3s;
+  border-radius: 12px;
 }
 
 .nav-tab:hover {
-  background: rgba(16, 163, 127, 0.05);
-  color: #10a37f;
+  color: #2196f3;
+  transform: translateY(-2px);
+}
+
+.nav-tab:hover::before {
+  opacity: 1;
 }
 
 .nav-tab.active {
-  background: linear-gradient(135deg, rgba(16, 163, 127, 0.1) 0%, rgba(25, 195, 125, 0.1) 100%);
-  color: #10a37f;
-  font-weight: 600;
+  background: linear-gradient(135deg, rgba(33, 150, 243, 0.15) 0%, rgba(66, 165, 245, 0.12) 100%);
+  color: #2196f3;
+  font-weight: 700;
+  border-color: rgba(33, 150, 243, 0.2);
+  box-shadow: 
+    0 4px 12px rgba(33, 150, 243, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.nav-tab.active::before {
+  opacity: 1;
 }
 
 .tab-icon {
-  font-size: 16px;
+  font-size: 18px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+  transition: transform 0.3s ease;
+}
+
+.nav-tab:hover .tab-icon {
+  transform: scale(1.1) rotate(5deg);
+}
+
+.nav-tab.active .tab-icon {
+  transform: scale(1.15);
+  filter: drop-shadow(0 2px 4px rgba(33, 150, 243, 0.3));
 }
 
 .tab-text {
-  font-size: 14px;
+  font-size: 15px;
+  letter-spacing: -0.01em;
 }
+
 
 .rag-container {
   flex: 1;
-  overflow-y: auto;
-  background: #f7f7f8;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .app::before {
@@ -300,8 +368,8 @@ const canSend = computed(() => {
   right: 0;
   bottom: 0;
   background: 
-    radial-gradient(circle at 10% 20%, rgba(16, 163, 127, 0.02) 0%, transparent 40%),
-    radial-gradient(circle at 90% 60%, rgba(25, 195, 125, 0.02) 0%, transparent 40%);
+    radial-gradient(circle at 10% 20%, rgba(33, 150, 243, 0.02) 0%, transparent 40%),
+    radial-gradient(circle at 90% 60%, rgba(66, 165, 245, 0.02) 0%, transparent 40%);
   pointer-events: none;
   z-index: 0;
 }
@@ -320,20 +388,66 @@ const canSend = computed(() => {
 .dialog-messages {
   flex: 1;
   overflow-y: auto;
-  padding: 32px 24px;
+  padding: 48px 120px;
   display: flex;
   flex-direction: column;
   gap: 20px;
-  max-width: 768px;
+  max-width: 1800px;
   margin: 0 auto;
   width: 100%;
   scroll-behavior: smooth;
   position: relative;
   min-height: 0;
+  align-items: flex-start; /* 确保消息左对齐 */
+}
+
+.dialog-messages > .message {
+  width: 100%;
+  display: flex;
 }
 
 .dialog-messages > * {
   flex-shrink: 0;
+}
+
+/* 当任务列表后面跟着消息时，调整消息气泡的样式，形成一体效果 */
+.dialog-messages > .message-task-box + .message.assistant {
+  margin-top: 0; /* 移除顶部间距 */
+}
+
+.dialog-messages > .message-task-box + .message.assistant .message-card {
+  border-radius: 0 0 14px 14px; /* 只有底部圆角，顶部直角，与任务列表连接 */
+  border-top: none; /* 移除顶部边框，与任务列表无缝连接 */
+  box-shadow: 
+    0 4px 16px rgba(0, 0, 0, 0.08),
+    0 2px 4px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.02); /* 统一阴影效果，与任务列表一致 */
+  margin-top: 0;
+  background: linear-gradient(135deg, #ffffff 0%, #fafafa 50%, #ffffff 100%); /* 统一背景渐变 */
+}
+
+.dialog-messages > .message-task-box + .message.assistant .message-text {
+  border-radius: 0 0 14px 14px; /* 文本区域也使用相同的圆角 */
+  background: #ffffff; /* 确保文本区域背景为纯白 */
+}
+
+/* 添加连接过渡效果 - 微妙的连接线 */
+.dialog-messages > .message-task-box + .message.assistant .message-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(0, 0, 0, 0.04) 20%, 
+    rgba(0, 0, 0, 0.06) 50%, 
+    rgba(0, 0, 0, 0.04) 80%, 
+    transparent 100%);
+  pointer-events: none;
+  z-index: 1;
 }
 
 .welcome-message {
@@ -344,25 +458,28 @@ const canSend = computed(() => {
   flex: 1;
   text-align: center;
   color: #8e8ea0;
+  width: 100%; /* 确保占满宽度 */
+  align-self: center; /* 覆盖父容器的 align-items: flex-start */
+  margin: 0 auto; /* 水平居中 */
 }
 
 .welcome-icon {
-  width: 80px;
-  height: 80px;
-  border-radius: 20px;
-  background: linear-gradient(135deg, #10a37f 0%, #19c37d 100%);
+  width: 100px;
+  height: 100px;
+  border-radius: 24px;
+  background: linear-gradient(135deg, #2196f3 0%, #42a5f5 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 32px;
+  font-size: 40px;
   font-weight: 700;
   color: white;
-  margin-bottom: 24px;
+  margin-bottom: 32px;
   position: relative;
   animation: welcomeIconFloat 3s ease-in-out infinite;
   box-shadow: 
-    0 8px 24px rgba(16, 163, 127, 0.2),
-    0 4px 8px rgba(16, 163, 127, 0.15),
+    0 8px 24px rgba(33, 150, 243, 0.2),
+    0 4px 8px rgba(33, 150, 243, 0.15),
     inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
@@ -371,7 +488,7 @@ const canSend = computed(() => {
   position: absolute;
   inset: -6px;
   border-radius: 26px;
-  background: linear-gradient(135deg, rgba(16, 163, 127, 0.2), rgba(25, 195, 125, 0.15));
+  background: linear-gradient(135deg, rgba(33, 150, 243, 0.2), rgba(66, 165, 245, 0.15));
   opacity: 0;
   animation: welcomeIconGlow 3s ease-in-out infinite;
   z-index: -1;
@@ -385,11 +502,11 @@ const canSend = computed(() => {
 }
 
 .welcome-message h2 {
-  margin: 0 0 12px 0;
+  margin: 0 0 16px 0;
   color: #202123;
-  font-size: 32px;
+  font-size: 40px;
   font-weight: 700;
-  background: linear-gradient(135deg, #10a37f 0%, #19c37d 100%);
+  background: linear-gradient(135deg, #2196f3 0%, #42a5f5 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -398,10 +515,10 @@ const canSend = computed(() => {
 
 .welcome-message p {
   margin: 0;
-  font-size: 16px;
+  font-size: 18px;
   color: #565869;
-  line-height: 1.6;
-  max-width: 500px;
+  line-height: 1.7;
+  max-width: 600px;
 }
 
 /* 错误消息样式 */
@@ -642,11 +759,11 @@ const canSend = computed(() => {
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #10a37f 0%, #19c37d 100%);
+  background: linear-gradient(135deg, #2196f3 0%, #42a5f5 100%);
   animation: dotBounce 1.4s ease-in-out infinite;
   box-shadow: 
-    0 2px 8px rgba(16, 163, 127, 0.3),
-    0 1px 3px rgba(16, 163, 127, 0.2);
+    0 2px 8px rgba(33, 150, 243, 0.3),
+    0 1px 3px rgba(33, 150, 243, 0.2);
 }
 
 .loading-dot:nth-child(1) {
@@ -722,7 +839,7 @@ const canSend = computed(() => {
   width: 40px;
   height: 40px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #10a37f 0%, #19c37d 100%);
+  background: linear-gradient(135deg, #2196f3 0%, #42a5f5 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -731,8 +848,8 @@ const canSend = computed(() => {
   color: white;
   flex-shrink: 0;
   box-shadow: 
-    0 4px 12px rgba(16, 163, 127, 0.25),
-    0 2px 4px rgba(16, 163, 127, 0.15),
+    0 4px 12px rgba(33, 150, 243, 0.25),
+    0 2px 4px rgba(33, 150, 243, 0.15),
     inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
@@ -747,11 +864,11 @@ const canSend = computed(() => {
   align-items: center;
   padding: 16px 20px;
   background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-  border: 1.5px solid rgba(16, 163, 127, 0.15);
+  border: 1.5px solid rgba(33, 150, 243, 0.15);
   border-radius: 12px;
   box-shadow: 
-    0 4px 16px rgba(16, 163, 127, 0.08),
-    0 2px 4px rgba(16, 163, 127, 0.04),
+    0 4px 16px rgba(33, 150, 243, 0.08),
+    0 2px 4px rgba(33, 150, 243, 0.04),
     inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
@@ -759,11 +876,11 @@ const canSend = computed(() => {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #10a37f 0%, #19c37d 100%);
+  background: linear-gradient(135deg, #2196f3 0%, #42a5f5 100%);
   animation: typingDotBounce 1.4s ease-in-out infinite;
   box-shadow: 
-    0 2px 6px rgba(16, 163, 127, 0.3),
-    0 1px 2px rgba(16, 163, 127, 0.2);
+    0 2px 6px rgba(33, 150, 243, 0.3),
+    0 1px 2px rgba(33, 150, 243, 0.2);
 }
 
 .typing-dot-item:nth-child(1) {

@@ -24,7 +24,8 @@ export function useTaskExecution(messagesManager, eventHandlers, formRef, messag
     messagesManager.clearError()
     eventHandlers.isExecuting.value = true
 
-    scrollToBottom()
+    // 用户发送消息后立即滚动到底部
+    scrollToBottom(true)
 
     try {
       const response = await fetch('/task/execute', {
@@ -63,6 +64,12 @@ export function useTaskExecution(messagesManager, eventHandlers, formRef, messag
       return reader.read().then(({ done, value }) => {
         if (done) {
           eventHandlers.isExecuting.value = false
+          eventHandlers.isPlanning.value = false
+          // 流式响应结束时，将最后一条消息的 streaming 状态设置为 false
+          const lastMessage = messagesManager.messages.value[messagesManager.messages.value.length - 1]
+          if (lastMessage && lastMessage.role === 'assistant' && lastMessage.streaming) {
+            messagesManager.updateLastAssistantMessage(lastMessage.content, false)
+          }
           return
         }
 
@@ -100,12 +107,40 @@ export function useTaskExecution(messagesManager, eventHandlers, formRef, messag
   }
 
   /**
-   * 滚动到底部
+   * 滚动到底部（平滑滚动）
    */
-  const scrollToBottom = () => {
+  let scrollTimer = null
+  let lastScrollTime = 0
+  
+  const scrollToBottom = (immediate = false) => {
     nextTick(() => {
       if (messagesContainerRef && messagesContainerRef.value) {
-        messagesContainerRef.value.scrollTop = messagesContainerRef.value.scrollHeight
+        const container = messagesContainerRef.value
+        
+        // 清除之前的定时器（防抖）
+        if (scrollTimer) {
+          clearTimeout(scrollTimer)
+        }
+        
+        // 对于流式更新，使用防抖延迟滚动，避免过于频繁
+        const delay = immediate ? 0 : 50
+        
+        scrollTimer = setTimeout(() => {
+          // 使用 requestAnimationFrame 确保 DOM 更新后再滚动
+          requestAnimationFrame(() => {
+            const now = Date.now()
+            // 如果距离上次滚动时间太短，使用平滑滚动；否则可以稍微快一点
+            const timeSinceLastScroll = now - lastScrollTime
+            const useSmooth = timeSinceLastScroll > 100 || !immediate
+            
+            container.scrollTo({
+              top: container.scrollHeight,
+              behavior: useSmooth ? 'smooth' : 'auto'
+            })
+            
+            lastScrollTime = now
+          })
+        }, delay)
       }
     })
   }

@@ -9,8 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.example.jooq.tables.Model.MODEL;
-import static org.jooq.impl.DSL.table;
-import static org.jooq.impl.DSL.field;
+import static com.example.jooq.tables.AgentModel.AGENT_MODEL;
 
 /**
  * Model数据访问对象
@@ -114,12 +113,11 @@ public class IModelDao {
             return new ArrayList<>();
         }
         // 先通过 agent_model 关联表查询 model IDs
-        List<Long> modelIds = dslContext.select(field("model_id"))
-                .from(table("agent_model"))
-                .where(field("agent_id").in(clientIds))
-                .fetch()
+        List<Long> modelIds = dslContext.select(AGENT_MODEL.MODEL_ID)
+                .from(AGENT_MODEL)
+                .where(AGENT_MODEL.AGENT_ID.in(clientIds))
+                .fetchInto(Long.class)
                 .stream()
-                .map(record -> (Long) record.get("model_id"))
                 .distinct()
                 .collect(java.util.stream.Collectors.toList());
         
@@ -138,13 +136,10 @@ public class IModelDao {
      */
     public List<ModelPO> queryByClientId(DSLContext dslContext, Long clientId) {
         // 先通过 agent_model 关联表查询 model IDs
-        List<Long> modelIds = dslContext.select(field("model_id"))
-                .from(table("agent_model"))
-                .where(field("agent_id").eq(clientId))
-                .fetch()
-                .stream()
-                .map(record -> (Long) record.get("model_id"))
-                .collect(java.util.stream.Collectors.toList());
+        List<Long> modelIds = dslContext.select(AGENT_MODEL.MODEL_ID)
+                .from(AGENT_MODEL)
+                .where(AGENT_MODEL.AGENT_ID.eq(clientId))
+                .fetchInto(Long.class);
         
         if (modelIds.isEmpty()) {
             return new ArrayList<>();

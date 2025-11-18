@@ -2,6 +2,7 @@ package com.example.ddd.domain.agent.service.execute.executor;
 
 import com.example.ddd.domain.agent.service.armory.AiService;
 import com.example.ddd.domain.agent.service.armory.ServiceNode;
+import com.example.ddd.domain.agent.service.execute.context.EventType;
 import com.example.ddd.domain.agent.service.execute.context.UserContext;
 import com.example.ddd.domain.agent.service.execute.graph.WorkspaceState;
 import com.example.ddd.domain.agent.service.execute.task.Task;
@@ -31,7 +32,7 @@ public class SilentExecutor extends BaseTaskExecutor {
         // 获取用户上下文
         UserContext userContext = getUserContext();
         userContext.emit(UserContext.TaskStatusEvent.builder()
-                .type("task_start")
+                .type(EventType.TASK_START)
                 .taskId(task.getId())
                 .message("任务开始执行")
                 .build());
@@ -42,7 +43,7 @@ public class SilentExecutor extends BaseTaskExecutor {
             // 发送失败事件
             if (userContext != null) {
                 userContext.emit(UserContext.TaskStatusEvent.builder()
-                        .type("task_failed")
+                        .type(EventType.TASK_FAILED)
                         .taskId(task.getId())
                         .message("AiService未初始化")
                         .error("AiService为空")
@@ -59,15 +60,7 @@ public class SilentExecutor extends BaseTaskExecutor {
 
             // onPartialResponse: 静默执行器发送任务执行中事件（不包含内容）
             tokenStream.onPartialResponse(token -> {
-                resultBuilder.append(token);
-                // 发送任务执行中事件，让前端知道任务正在执行
-                if (userContext != null) {
-                    userContext.emit(UserContext.TaskStatusEvent.builder()
-                            .type("task_running")
-                            .taskId(task.getId())
-                            .message("任务执行中")
-                            .build());
-                }
+
             });
 
             tokenStream.onCompleteResponse(e -> {
@@ -75,11 +68,10 @@ public class SilentExecutor extends BaseTaskExecutor {
                 if (aiMessage != null && aiMessage.text() != null) {
                     resultBuilder.append(aiMessage.text());
                 }
-
                 // 发送任务完成事件（不包含内容）
                 if (userContext != null) {
                     userContext.emit(UserContext.TaskStatusEvent.builder()
-                            .type("task_complete")
+                            .type(EventType.TASK_COMPLETE)
                             .taskId(task.getId())
                             .message("任务执行完成")
                             .build());
@@ -94,7 +86,7 @@ public class SilentExecutor extends BaseTaskExecutor {
                 // 发送任务失败事件
                 if (userContext != null) {
                     userContext.emit(UserContext.TaskStatusEvent.builder()
-                            .type("task_failed")
+                            .type(EventType.TASK_FAILED)
                             .taskId(task.getId())
                             .message("任务执行失败")
                             .error(error.getMessage())
@@ -113,7 +105,7 @@ public class SilentExecutor extends BaseTaskExecutor {
                 // 发送中断事件
                 if (userContext != null) {
                     userContext.emit(UserContext.TaskStatusEvent.builder()
-                            .type("task_failed")
+                            .type(EventType.TASK_FAILED)
                             .taskId(task.getId())
                             .message("任务执行被中断")
                             .error("等待token流完成被中断")

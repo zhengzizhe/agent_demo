@@ -29,7 +29,7 @@ public class RagController {
     /**
      * 添加文档到RAG知识库
      *
-     * @param ragId RAG ID（路径参数）
+     * @param ragId   RAG ID（路径参数）
      * @param request 添加文档请求
      * @return 添加的文档块数量
      */
@@ -37,15 +37,15 @@ public class RagController {
     @Status(HttpStatus.CREATED)
     public Map<String, Object> addDocument(@PathVariable Long ragId, @Body RagAddDocumentRequest request) {
         int segmentCount = ragService.addDocument(
-            ragId,
-            request.getText(),
-            request.getMetadata()
+                ragId,
+                request.getText(),
+                request.getMetadata()
         );
         return Map.of(
-            "success", true,
-            "ragId", ragId,
-            "segmentCount", segmentCount,
-            "message", "文档添加成功"
+                "success", true,
+                "ragId", ragId,
+                "segmentCount", segmentCount,
+                "message", "文档添加成功"
         );
     }
 
@@ -53,7 +53,7 @@ public class RagController {
      * 上传文件并导入到RAG知识库
      *
      * @param ragId RAG ID（路径参数）
-     * @param file 上传的文件
+     * @param file  上传的文件
      * @return 导入结果
      */
     @Post(value = "/{ragId}/documents/upload", consumes = "multipart/form-data", produces = "application/json")
@@ -65,21 +65,16 @@ public class RagController {
             // 验证文件
             if (file == null || file.getSize() == 0) {
                 return Map.of(
-                    "success", false,
-                    "message", "文件不能为空"
+                        "success", false,
+                        "message", "文件不能为空"
                 );
             }
 
-            // 检查文件类型
             String contentType = file.getContentType().map(ct -> ct.toString()).orElse("application/octet-stream");
             String fileName = file.getFilename();
             log.info("上传文件: ragId={}, fileName={}, contentType={}, size={}", ragId, fileName, contentType, file.getSize());
-
-            // 读取文件内容
             byte[] fileBytes = file.getBytes();
             String fileContent = new String(fileBytes, StandardCharsets.UTF_8);
-            
-            // 构建元数据
             Map<String, Object> metadata = new HashMap<>();
             metadata.put("fileName", fileName);
             metadata.put("contentType", contentType);
@@ -88,54 +83,48 @@ public class RagController {
 
             // 添加到RAG
             int segmentCount = ragService.addDocument(
-                ragId,
-                fileContent,
-                metadata
+                    ragId,
+                    fileContent,
+                    metadata
             );
 
             return Map.of(
-                "success", true,
-                "ragId", ragId,
-                "fileName", fileName,
-                "segmentCount", segmentCount,
-                "message", "文件导入成功"
+                    "success", true,
+                    "ragId", ragId,
+                    "fileName", fileName,
+                    "segmentCount", segmentCount,
+                    "message", "文件导入成功"
             );
 
         } catch (IOException e) {
             log.error("文件上传处理失败", e);
             return Map.of(
-                "success", false,
-                "message", "文件处理失败: " + e.getMessage()
+                    "success", false,
+                    "message", "文件处理失败: " + e.getMessage()
             );
         } catch (Exception e) {
             log.error("文件导入失败", e);
             return Map.of(
-                "success", false,
-                "message", "文件导入失败: " + e.getMessage()
+                    "success", false,
+                    "message", "文件导入失败: " + e.getMessage()
             );
         }
     }
 
-    /**
-     * 搜索相似文档
-     *
-     * @param request 搜索请求
-     * @return 相似文档列表
-     */
     @Post("/search")
     public Map<String, Object> search(@Body RagSearchRequest request) {
         List<VectorDocumentEntity> results = ragService.search(
-            request.getRagId(),
-            request.getQueryText(),
-            request.getLimit() != null ? request.getLimit() : 10,
-            request.getSimilarityThreshold() != null ? request.getSimilarityThreshold() : 0.6
+                request.getRagId(),
+                request.getQueryText(),
+                request.getLimit() != null ? request.getLimit() : 10,
+                request.getSimilarityThreshold() != null ? request.getSimilarityThreshold() : 0.6
         );
         return Map.of(
-            "success", true,
-            "ragId", request.getRagId() != null ? request.getRagId() : 1L,
-            "queryText", request.getQueryText(),
-            "results", results,
-            "count", results.size()
+                "success", true,
+                "ragId", request.getRagId() != null ? request.getRagId() : 1L,
+                "queryText", request.getQueryText(),
+                "results", results,
+                "count", results.size()
         );
     }
 
@@ -150,10 +139,10 @@ public class RagController {
     public Map<String, Object> deleteAllDocuments(@PathVariable Long ragId) {
         int deletedCount = ragService.deleteAllDocuments(ragId);
         return Map.of(
-            "success", true,
-            "ragId", ragId,
-            "deletedCount", deletedCount,
-            "message", "文档删除成功"
+                "success", true,
+                "ragId", ragId,
+                "deletedCount", deletedCount,
+                "message", "文档删除成功"
         );
     }
 
@@ -167,10 +156,10 @@ public class RagController {
     public Map<String, Object> queryDocuments(@PathVariable Long ragId) {
         List<VectorDocumentEntity> documents = ragService.queryDocuments(ragId);
         return Map.of(
-            "success", true,
-            "ragId", ragId,
-            "documents", documents,
-            "count", documents.size()
+                "success", true,
+                "ragId", ragId,
+                "documents", documents,
+                "count", documents.size()
         );
     }
 
@@ -185,10 +174,10 @@ public class RagController {
     public Map<String, Object> deleteDocument(@PathVariable Long docId) {
         int deletedCount = ragService.deleteDocument(docId);
         return Map.of(
-            "success", true,
-            "docId", docId,
-            "deletedCount", deletedCount,
-            "message", "文档删除成功"
+                "success", true,
+                "docId", docId,
+                "deletedCount", deletedCount,
+                "message", "文档删除成功"
         );
     }
 
@@ -200,9 +189,9 @@ public class RagController {
     @Get("/health")
     public Map<String, Object> health() {
         return Map.of(
-            "status", "UP",
-            "service", "RAG Service",
-            "message", "RAG服务运行正常"
+                "status", "UP",
+                "service", "RAG Service",
+                "message", "RAG服务运行正常"
         );
     }
 }

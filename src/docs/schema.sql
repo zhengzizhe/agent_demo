@@ -306,7 +306,7 @@ VALUES (
       "order": 执行顺序（整数，从1开始）,
       "inputs": {
         "fromUser": true/false（是否来自用户输入）,
-        "fromTask": "依赖的任务ID（字符串，如果依赖其他任务）",
+        "fromTask": ["依赖的任务ID列表（字符串数组，如果依赖其他任务）"],
         "fields": ["字段名列表"]
       },
       "outputs": ["输出字段名列表"],
@@ -326,7 +326,7 @@ VALUES (
   - order: 执行顺序，数字越小越先执行
   - inputs: 输入配置
     - fromUser: 如果任务需要用户输入，设为true
-    - fromTask: 如果任务依赖其他任务的输出，填写依赖的任务id
+    - fromTask: 如果任务依赖其他任务的输出，填写依赖的任务id列表（数组）
     - fields: 需要的字段名列表
   - outputs: 任务产生的输出字段名列表
   - executionStrategy: 执行策略
@@ -335,7 +335,7 @@ VALUES (
     - BATCH: 批量输出，执行完成后一次性返回（用于最终结果）
 
 注意事项：
-如果任务有依赖关系，使用inputs.fromTask指定依赖的任务id
+如果任务有依赖关系，使用inputs.fromTask指定依赖的任务id列表（数组），支持多个依赖任务
 返回的JSON必须是有效的，可以直接解析',
     'ACTIVE',
     EXTRACT(EPOCH FROM CURRENT_TIMESTAMP)::BIGINT,

@@ -46,9 +46,9 @@ public class RagNode extends AbstractArmorySupport {
                 .forEach(ragEntity -> {
                     log.info("多agent构建中 构建RAG: ragName={}, orchestratorId={}", ragEntity.getName(), agentId);
                     PgVectorEmbeddingStore embeddingStore = getEmbeddingStore(ragEntity);
-                    beanUtil.registerEmbeddingStore(ragEntity.getId(), embeddingStore);
+                    beanUtil.registerEmbeddingStore(agentId, ragEntity.getId(), embeddingStore);
                     EmbeddingModel embeddingModel = createEmbeddingModel(ragEntity);
-                    beanUtil.registerEmbeddingModel(ragEntity.getId(), embeddingModel);
+                    beanUtil.registerEmbeddingModel(agentId, ragEntity.getId(), embeddingModel);
                 });
 
         return router(armoryCommandEntity, dynamicContext);

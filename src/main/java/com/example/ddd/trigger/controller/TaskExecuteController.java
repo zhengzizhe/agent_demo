@@ -50,20 +50,22 @@ public class TaskExecuteController {
             }
             UserContext userContext = new UserContext();
             userContext.startEventDispatcher(emitter);
-            try {
-                orchestrator.execute(request.getMessage(), userContext);
-                userContext.complete();
-            } catch (GraphStateException e) {
-                log.error("执行任务失败: {}", e.getMessage(), e);
-                userContext.error("执行任务失败: " + e.getMessage());
-                userContext.stopEventDispatcher();
-                emitter.error(e);
-            } catch (Exception e) {
-                log.error("执行任务异常: {}", e.getMessage(), e);
-                userContext.error("执行任务异常: " + e.getMessage());
-                userContext.stopEventDispatcher();
-                emitter.error(e);
-            }
+            new Thread(() -> {
+                try {
+                    orchestrator.execute(request.getMessage(), userContext);
+                    userContext.complete();
+                } catch (GraphStateException e) {
+                    log.error("执行任务失败: {}", e.getMessage(), e);
+                    userContext.error("执行任务失败: " + e.getMessage());
+                    userContext.stopEventDispatcher();
+                    emitter.error(e);
+                } catch (Exception e) {
+                    log.error("执行任务异常: {}", e.getMessage(), e);
+                    userContext.error("执行任务异常: " + e.getMessage());
+                    userContext.stopEventDispatcher();
+                    emitter.error(e);
+                }
+            }, "UserContext-EventDispatcher-Wait").start();
         });
     }
 
