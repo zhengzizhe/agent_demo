@@ -1,0 +1,30 @@
+<div class="card-item" style="gap: 8px;">
+    <div class="doc-title">
+        <mat-icon class="icon-doc" svgIcon="bc_wendang0102"></mat-icon>
+        <span>{{ docDetail?.name || '未命名文档' }}</span>
+    </div>
+
+<!--    <div class="op-group">-->
+<!--        <div class="op-item dl-btn-hover" (click)="onFavorite()">-->
+<!--            <dl-favorite-icon [active]="docDetail?.localUser.behavior?.favorite"></dl-favorite-icon>-->
+<!--            <span>{{ docDetail?.localUser.behavior?.favorite ? '已收藏' : '收藏' }}</span>-->
+<!--        </div>-->
+<!--        <span class="divider"></span>-->
+<!--        <div class="op-item dl-btn-hover disabled">-->
+<!--            <i class="bc_icon bc_guanzhu"></i>-->
+<!--            <span>关注</span>-->
+<!--        </div>-->
+<!--    </div>-->
+</div>
+
+<div class="card-item" *ngIf="paths?.length">
+    @for (item of paths; track item.id) {
+        <div class="dl-dropdown-menu-item" [style.margin-left.px]="10 * $index"
+             (click)="onNavClick(item)" [class.active]="item.id === docDetail?.id">
+            @if(item.svgIcon) {
+                <mat-icon [svgIcon]="item.svgIcon"></mat-icon>
+            }
+            <span class="dl-dropdown-menu-item__title dl-textoverflow" [title]="item.name">{{ item.name }}</span>
+        </div>
+    }
+</div>

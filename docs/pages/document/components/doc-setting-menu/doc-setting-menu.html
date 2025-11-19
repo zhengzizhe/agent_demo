@@ -1,0 +1,61 @@
+<div class="head-title">文档操作</div>
+
+<ng-container *ngTemplateOutlet="dropdownMenu; context: {$implicit: menuItems}"></ng-container>
+
+<ng-template #dropdownMenu let-items>
+    @for (item of items; track item.id) {
+        @if (item.type === 'dropdown') {
+
+            @if (item.divider) {
+                <div class="dl-dropdown-menu-divider"></div>
+            }
+
+            <div class="dl-dropdown-menu-item setting-item dropdown-type"
+                 nz-popover
+                 [nzPopoverContent]="childrenDopDownMenu"
+                 [nzPopoverPlacement]="['rightTop', 'leftTop', 'rightBottom', 'leftBottom']"
+                 [nzPopoverBackdrop]="false"
+            >
+                @if (item.icon) {
+                    <i [class]="['bc_icon', item.icon]"></i>
+                }
+                @if (item.tooltip) {
+                    <span class="dl-dropdown-menu-item__title" [nz-tooltip]="item.tooltip" nzTooltipPlacement="left">
+                        <span>{{ item.label }}</span>
+                        <i class="bc_icon bc_youjiantou"></i>
+                    </span>
+                } @else {
+                    <span class="dl-dropdown-menu-item__title">
+                        <span>{{ item.label }}</span>
+                        <i class="bc_icon bc_youjiantou"></i>
+                    </span>
+                }
+            </div>
+
+            <ng-template #childrenDopDownMenu>
+                <div class="dl-dropdown-menu">
+                    <ng-container *ngTemplateOutlet="dropdownMenu; context: {$implicit: item.children}"></ng-container>
+                </div>
+            </ng-template>
+        } @else {
+            @if (item.divider) {
+                <div class="dl-dropdown-menu-divider"></div>
+            }
+
+            <div class="dl-dropdown-menu-item setting-item" (click)="itemClick(item)"
+                 [class.active]="configs[item.name] === item.value">
+                @if (item.icon) {
+                    <i [class]="['bc_icon', item.icon]"></i>
+                }
+                @if (item.tooltip) {
+                    <span class="dl-dropdown-menu-item__title" [nz-tooltip]="item.tooltip"
+                          nzTooltipPlacement="left">{{ item.label }}</span>
+                } @else {
+                    <span class="dl-dropdown-menu-item__title">{{ item.label }}</span>
+                }
+            </div>
+        }
+    }
+</ng-template>
+
+

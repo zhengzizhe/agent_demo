@@ -1,0 +1,36 @@
+<ng-template let-folders="folders" #folderTree>
+    <ul class="folder-list">
+        @for (folder of folders; track folder.id) {
+            <li class="folder-item">
+
+                <div class="folder-item-info" [style.padding-left.px]="folder.depth * 12"
+                     [class.active]="folder.id === activeFolderId"
+                     (click)="navToFolder(folder, $event)">
+
+                    @if(folder.origin.subFolderCount) {
+                        <button class="btn-toggle" [class.active]="folder.expanded" (click)="toggleFolder(folder, $event)">
+                            <i [class]="['bc_icon', folder.loading ? 'bc_jiazai' : 'bc_xiajaintou']"></i>
+                        </button>
+                    } @else {
+                        <span style="min-width: 20px;"></span>
+                    }
+
+                    <div class="folder-item-name">
+                        <span class="icon-folder bc_icon bc_folder-open"></span>
+                        <span class="folder-item-name-text">{{ folder.origin.name }}</span>
+                    </div>
+
+<!--                    <span class="btn-more dl-btn-hover" (click)="onContextMenuToggle($event, folder)">-->
+<!--                        <i class="bc_icon bc_gengduo"></i>-->
+<!--                    </span>-->
+                </div>
+
+                @if (folder.children && folder.expanded) {
+                    <ng-container *ngTemplateOutlet="folderTree; context: {folders: folder.children}"></ng-container>
+                }
+            </li>
+        }
+    </ul>
+</ng-template>
+
+<ng-container *ngTemplateOutlet="folderTree; context: {folders: folderList}"></ng-container>

@@ -1,0 +1,63 @@
+@use "../../../../../styles/mixin" as *;
+
+:host {
+    h2 {
+        font-size: 18px;
+        cursor: pointer;
+        margin-bottom: 12px;
+
+        &.active {
+            color: var(--cs-primary-color);
+        }
+
+        &:hover {
+            color: var(--cs-primary-color);
+        }
+    }
+}
+
+.outline-item {
+    position: relative;
+    margin-bottom: 10px;
+    cursor: pointer;
+    padding-left: 16px;
+    color: var(--cs-font-color-2);
+    font-size: 14px;
+    line-height: 20px;
+    transition: all .3s ease;
+
+    &[data-depth="0"] {
+        font-weight: bold;
+    }
+
+    &.active {
+        color: var(--cs-primary-color);
+    }
+
+    &:hover {
+        color: var(--cs-primary-color);
+    }
+
+    .icon-expand {
+        position: absolute;
+        left: 0;
+        top: 5px;
+        width: 12px;
+        height: 12px;
+        @include flex-center;
+        color: var(--cs-font-color-3);
+        font-size: 8px;
+        transition: all .3s ease;
+        transform-origin: center center;
+
+        &.expanded {
+            transform: rotate(90deg);
+        }
+    }
+
+    > span {
+        color: inherit;
+        @include text-ellipsis(2);
+    }
+
+}

@@ -1,0 +1,20 @@
+<dl-spin-mask [dlSpinning]="isLoading" text="正在创建文档...">
+    <div class="dialog">
+        <div class="dialog-header">
+            <span class="dialog-title">新建文档</span>
+            <i class="bc_icon bc_guanbi dialog-close-btn" (click)="onClose.emit()"></i>
+        </div>
+
+        <div class="dialog-content">
+
+            <div class="card-list">
+                <div class="card empty" (click)="select()">
+                    <i class="bc_icon bc_tianjia"></i>
+                    <p>新建空白文档</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</dl-spin-mask>
+

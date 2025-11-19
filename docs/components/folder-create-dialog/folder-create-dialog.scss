@@ -1,0 +1,21 @@
+@use "../../styles/mixin" as *;;
+
+:host {
+
+  .dialog {
+    width: 518px;
+    @include dl-dialog;
+  }
+
+  .dl-form-item {
+    input {
+      height: 32px;
+    }
+
+    textarea {
+      height: 56px;
+    }
+  }
+}
+
+

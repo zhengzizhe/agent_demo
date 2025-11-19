@@ -1,0 +1,16 @@
+@for (item of items_show; track item.id) {
+    <div class="dl-tab-item" [class.active]="active_tab_idx === $index + item._skipIndex" [class.disable]="item.disable"
+         [style.width.px]="tabItemWidth"
+         (click)="onItemClick($index)">
+        @if (item.icon) {
+            <i [class]="['icon', 'bc_icon', item.icon]"></i>
+        }
+        {{ item.label }}
+    </div>
+}
+
+@if (items_show.length < items.length) {
+    <i class="drop-btn bc_icon bc_bianjiwendangzhongdianjijiahao_shuju_shujubiaoge"></i>
+}
+
+<span class="slider-block" [style.width.px]="tabItemWidth" [style.left.px]="active_tab_idx * tabItemWidth + 4"></span>

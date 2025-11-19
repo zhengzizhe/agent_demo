@@ -1,0 +1,53 @@
+@use '../../../../styles/mixin' as *;
+
+:host {
+    .head-title {
+        font-size: 14px;
+        font-weight: 600;
+        height: 28px;
+        border-bottom: 1px solid var(--cs-border-color);
+        padding: 4px 8px;
+        line-height: 20px;
+    }
+}
+
+.setting-item {
+    display: flex;
+    align-items: center;
+
+    &.dropdown-type {
+        min-width: 160px;
+    }
+
+    .setting-label {
+        font-size: 14px;
+        font-weight: 500;
+        margin-right: 10px;
+    }
+
+    .setting-value {
+        font-size: 14px;
+        font-weight: 400;
+        color: #666666;
+    }
+
+    .dl-dropdown-menu-item__title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        > span:first-child {
+            flex: 1;
+            min-width: 0;
+            @include text-ellipsis(1);
+        }
+
+        > i {
+            color: var(--cs-font-color-3);
+        }
+    }
+}
+
+:host .dl-dropdown-menu {
+    max-height: clamp(300px, 70vh, 800px);
+}

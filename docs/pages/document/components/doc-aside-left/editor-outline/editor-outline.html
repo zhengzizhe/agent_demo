@@ -1,0 +1,14 @@
+<h2 (click)="onTitleNavClick()">{{ docTitle || '未命名文档' }}</h2>
+<ul class="outline-list">
+    @for (item of outline; track item.id) {
+        <li class="outline-item" [style.margin-left.px]="item.depth * 12"
+            [class.active]="item.active" [attr.data-depth]="item.depth"
+            [hidden]="item.hidden" (click)="onItemClick($event, item)">
+            <i class="bc_icon bc_a-sanjiao-jinru6 icon-expand dl-btn-hover"
+               [class.expanded]="item.expand"
+               (click)="onExpandBtnClick($event, item.id)"
+               *ngIf="outline[$index + 1]?.depth > item.depth"></i>
+            <span>{{ item.name }}</span>
+        </li>
+    }
+</ul>

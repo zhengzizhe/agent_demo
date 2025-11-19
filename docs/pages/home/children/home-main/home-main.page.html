@@ -1,0 +1,37 @@
+<div class="page-main-top">
+    <div class="content">
+        <h2>首页</h2>
+    </div>
+    <div class="tools">
+        <dl-global-searcher></dl-global-searcher>
+        <button dl-button icon="bc_huanyige" (click)="onRefresh()">刷新</button>
+    </div>
+</div>
+
+<div class="control-group">
+    <dl-tab [items]="tabs" (onTabChange)="onTabChange($event)"></dl-tab>
+
+    <dl-page-btn-group [(listMode)]="listMode"></dl-page-btn-group>
+</div>
+
+@switch (activeTab.id) {
+    @case('recent') {
+        <file-table style="margin-top: 16px; flex: 1; overflow: hidden;"
+                    [singleMode]="listMode === 'list-simple'"
+                    (onNavigate)="onNavToDoc($event)"
+                    [headItems]="recentFileTableHead" [requester]="recentRequester" [extraButtonGroup]="recentFileTableOpButtons"
+                    #fileTable></file-table>
+    }
+    @case('favorite') {
+        <folder-card-list [requester]="favoriteFoldersRequester" [queryParams]="favoriteFolderListQueryParams" [navigator]="onNavToFolder"
+                          [disableOps]="favoriteListDisableOps" (onItemsChange)="onFavoriteFoldersChange($event)"
+                          #folderCardList></folder-card-list>
+
+        <file-table style="margin-top: 16px; flex: 1; overflow: hidden;"
+                    [singleMode]="listMode === 'list-simple'" [disabledOps]="favoriteListDisableOps"
+                    (onNavigate)="onNavToDoc($event)" (onItemsChange)="onFavoriteTableChange($event)"
+                    [requester]="favoriteDocsRequester"  [headItems]="favoriteFileTableHead"
+                    #fileTable></file-table>
+    }
+}
+

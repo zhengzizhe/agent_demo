@@ -1,0 +1,24 @@
+<div class="page-main-top">
+    <div class="content">
+        <h2>共享</h2>
+    </div>
+    <div class="tools">
+        <dl-global-searcher></dl-global-searcher>
+        <button dl-button icon="bc_huanyige" (click)="onRefresh()">刷新</button>
+    </div>
+</div>
+
+<div class="control-group">
+    <dl-tab [items]="tabs" (onTabChange)="onTabChange($event)"></dl-tab>
+
+    <dl-page-btn-group [(listMode)]="listMode" [useDropMenuBtn]="false"></dl-page-btn-group>
+</div>
+
+<folder-card-list [requester]="folderListRequester" [queryParams]="folderListQueryParams" [navigator]="onNavToFolder"
+                  #folderCardList></folder-card-list>
+
+<file-table style="margin-top: 16px; flex: 1; overflow: hidden;"
+            [singleMode]="listMode === 'list-simple'"
+            (onNavigate)="onNavToDoc($event)"
+            [requester]="fileTableRequester" [queryParams]="fileTableQueryParams" [headItems]="fileTableHeadItems"
+            #fileTable></file-table>

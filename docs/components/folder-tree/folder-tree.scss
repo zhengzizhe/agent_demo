@@ -1,0 +1,102 @@
+@use "../../styles/mixin" as *;;
+
+:host {
+    display: block;
+    overflow-y: auto;
+    overflow-x: auto;
+    @include scrollbar(4px);
+
+    .folder-list {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        width: 100%;
+
+        .folder-item {
+            width: 100%;
+
+            &-info {
+                margin-bottom: 4px;
+                padding: 8px 5px;
+                display: flex;
+                align-items: flex-start;
+                gap: 8px;
+                min-height: 36px;
+                cursor: pointer;
+                border-radius: var(--cs-border-radius);
+                transition: all ease .2s;
+
+                &:hover {
+                    background: var(--cs-bg-color-2);
+                }
+
+                &.active {
+                    background: var(--cs-bg-color-3);
+                    color: var(--cs-primary-color);
+                }
+            }
+
+            .btn-toggle {
+                min-width: 20px;
+                width: 20px;
+                height: 20px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 4px;
+                transition: all 0.2s ease-in-out;
+                cursor: pointer;
+
+                &:hover {
+                    background: var(--cs-bg-color-3);
+                }
+
+                > i {
+                    font-size: 12px;
+                    transform: rotate(-90deg);
+                    transition: transform 0.2s ease-in-out;
+
+                    &.bc_jiazai {
+                        color: var(--cs-primary-color);
+                        animation: antRotate 1.2s infinite linear;
+                        transition: none;
+                    }
+                }
+
+                &.active {
+                    > i {
+                        transform: rotate(0deg);
+                    }
+                }
+            }
+
+            .folder-item-name {
+                display: flex;
+                align-items: flex-start;
+                gap: 4px;
+                overflow: hidden;
+                line-height: 20px;
+
+                .icon-folder {
+                    line-height: 20px;
+                    color: $icon-folder-color;
+                    font-size: large;
+                }
+
+                &-text {
+                    flex: 1;
+                    @include text-ellipsis(2);
+                }
+            }
+
+            .btn-more {
+                width: 20px;
+                height: 20px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+        }
+    }
+}
+

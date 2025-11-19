@@ -29,12 +29,12 @@ public class RagController {
      *
      * @param ragId   RAG ID（路径参数）
      * @param request 添加文档请求
-     * @return 添加的文档块数量
+     * @return 添加结果
      */
     @Post("/{ragId}/documents")
     @Status(HttpStatus.CREATED)
     public Map<String, Object> addDocument(@PathVariable Long ragId, @Body RagAddDocumentRequest request) {
-        int segmentCount = ragService.addDocument(
+        int documentCount = ragService.addDocument(
                 ragId,
                 request.getText(),
                 request.getMetadata()
@@ -42,7 +42,7 @@ public class RagController {
         return Map.of(
                 "success", true,
                 "ragId", ragId,
-                "segmentCount", segmentCount,
+                "documentCount", documentCount,
                 "message", "文档添加成功"
         );
     }
@@ -80,7 +80,7 @@ public class RagController {
             metadata.put("source", "file_upload");
 
             // 添加到RAG
-            int segmentCount = ragService.addDocument(
+            int documentCount = ragService.addDocument(
                     ragId,
                     fileContent,
                     metadata
@@ -90,7 +90,7 @@ public class RagController {
                     "success", true,
                     "ragId", ragId,
                     "fileName", fileName,
-                    "segmentCount", segmentCount,
+                    "documentCount", documentCount,
                     "message", "文件导入成功"
             );
 
@@ -164,16 +164,16 @@ public class RagController {
     /**
      * 根据ID删除文档
      *
-     * @param docId 文档ID
+     * @param embeddingId 文档embeddingId（UUID字符串）
      * @return 删除结果
      */
-    @Delete("/documents/doc/{docId}")
+    @Delete("/documents/doc/{embeddingId}")
     @Status(HttpStatus.OK)
-    public Map<String, Object> deleteDocument(@PathVariable Long docId) {
-        int deletedCount = ragService.deleteDocument(docId);
+    public Map<String, Object> deleteDocument(@PathVariable String embeddingId) {
+        int deletedCount = ragService.deleteDocument(embeddingId);
         return Map.of(
                 "success", true,
-                "docId", docId,
+                "embeddingId", embeddingId,
                 "deletedCount", deletedCount,
                 "message", "文档删除成功"
         );

@@ -1,0 +1,26 @@
+appId: com.agentdemo.app
+productName: Agent任务执行面板
+directories:
+  output: release
+files:
+  - dist/**/*
+  - electron/**/*
+  - package.json
+mac:
+  category: public.app-category.productivity
+  target:
+    - dmg
+    - zip
+win:
+  target:
+    - nsis
+    - portable
+linux:
+  target:
+    - AppImage
+    - deb
+  category: Utility
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+

@@ -1,0 +1,65 @@
+@use "../../styles/mixin" as *;
+
+;
+
+.icon-folder {
+    color: $icon-folder-color;
+    font-size: large;
+}
+
+:host {
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    color: var(--cs-font-color-3);
+    line-height: 20px;
+
+    dl-back-btn {
+        color: var(--cs-font-color);
+    }
+
+    nav {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        height: 28px;
+        padding: 0 8px;
+        cursor: pointer;
+
+        > i {
+            color: var(--cs-font-color-3);
+        }
+
+        &:last-of-type {
+            color: var(--cs-font-color);
+
+            .nav-name {
+                font-weight: 600;
+            }
+        }
+
+        &:hover {
+            .nav-name {
+                color: var(--cs-font-color-2);
+            }
+        }
+
+        > i {
+            width: 14px;
+            height: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    }
+
+    .divider {
+        width: 16px;
+        font-size: 14px;
+        text-align: center;
+
+        &:last-of-type {
+            display: none;
+        }
+    }
+}

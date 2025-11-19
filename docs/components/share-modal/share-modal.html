@@ -1,0 +1,157 @@
+@switch ((tabRoute$ | async)![0]) {
+    @case ('main') {
+        <div class="dialog-header">
+            <h3 class="dialog-title">分享</h3>
+
+            <i class="CSES cses-guanbi2 dialog-close-btn" (click)="onClose.emit()"></i>
+        </div>
+
+        <div class="dialog-divider-line"></div>
+
+        <div class="dialog-body">
+            <div class="modal-body__row">
+                <div style="display: flex; align-items: center; ">
+                    <h4 style="flex: 1; ">查看/邀请协作者</h4>
+                    <span class="btn-dropdown" (click)="onTabRoute('manage')">
+                        <img [src]="owner.id | avatar"
+                             style="border-radius: 50%; overflow: hidden; width: 24px; height: 24px;" />
+                        <i class="bf_icon bf_youjiantou"></i>
+                    </span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 16px; margin-top: 10px;" *ngIf="localUserRole >= PermissionRole.manager">
+                    <div class="collaborators-inputer">
+                        <input class="dl-input" type="text" placeholder="可搜索用户、部门及公司"
+                               (focus)="onSearchInputFocus()" />
+                        <!--                <span><i class="bf_icon bf_tianjiarenyuan"></i></span>-->
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-body__row">
+                <h4>链接分享</h4>
+
+                <div style="display: flex; align-items: center; gap: 8px; margin-top: 16px;">
+                    <span class="bf_icon bf_duorenxiezuo"
+                          style="width: 36px;height: 36px; display: flex; align-items: center;
+                          justify-content: center; font-size: 20px; color: #fff; background: #4857E2; border-radius: 50%;">
+                    </span>
+                    <div style="flex: 1;">
+                        <span nz-dropdown nzTrigger="click" [nzDropdownMenu]="shareRangeMenu" nzOverlayClassName="dl-overlay-z-high"
+                              [(nzVisible)]="dropdownMenuVisible.visibility"
+                              [nzDisabled]="localUserRole < PermissionRole.manager"
+                              class="btn-dropdown" [class.active]="dropdownMenuVisible.visibility">
+                            <span>{{ activeVisibilityRange.label }}</span>
+                            <i class="bf_icon bf_xiajaintou" *ngIf="localUserRole >= PermissionRole.manager"></i>
+                        </span>
+                        <p style="padding: 0 4px; margin-top: 4px; color: var(--cs-font-color-3);">
+                            {{ activeVisibilityRange.value === VISIBILITY_RANGE_LIST.COLLABORATOR ?
+                                '仅协作者可访问' :
+                                (activeVisibilityRange.label + (activeVisibilityRange.value === VISIBILITY_RANGE_LIST.EVERYONE ? '' : '可访问')) }}
+                        </p>
+                    </div>
+
+                    <span class="btn-dropdown" [class.active]="dropdownMenuVisible.visibilityRole"
+                          *ngIf="activeVisibilityRange.value > VISIBILITY_RANGE_LIST.COLLABORATOR"
+                          nz-dropdown nzTrigger="click" [nzDropdownMenu]="editableOptionMenu" nzOverlayClassName="dl-overlay-z-high"
+                          [(nzVisible)]="dropdownMenuVisible.visibilityRole"
+                          [nzDisabled]="localUserRole < PermissionRole.manager">
+                        <span>{{ accessConfig.visibilityRole === PermissionRole.editor ? '可编辑' : '可查看' }}</span>
+                        <i class="bf_icon bf_xiajaintou" *ngIf="localUserRole >= PermissionRole.manager"></i>
+                    </span>
+
+                    <nz-dropdown-menu #editableOptionMenu>
+                        <ul class="dl-dropdown-menu">
+                            <p class="dl-dropdown-menu-title">分享权限</p>
+                            <li class="dl-dropdown-menu-item" (click)="onVisibilityRoleRangeChange(PermissionRole.reader)"
+                                [class.active]="accessConfig.visibilityRole === PermissionRole.reader">
+                                可查看
+                            </li>
+                            <li class="dl-dropdown-menu-item" (click)="onVisibilityRoleRangeChange(PermissionRole.editor)"
+                                [class.active]="accessConfig.visibilityRole === PermissionRole.editor">
+                                可编辑
+                            </li>
+                        </ul>
+                    </nz-dropdown-menu>
+                </div>
+
+                <nz-dropdown-menu #shareRangeMenu="nzDropdownMenu">
+                    <ul class="dl-dropdown-menu">
+                        <p class="dl-dropdown-menu-title">分享范围</p>
+                        <li class="dl-dropdown-menu-item" *ngFor="let option of visibilityRangeList"
+                            [class.active]="accessConfig.visibility === option.value"
+                            (click)="onVisibilityRangeChange(option)">{{ option.label }}
+                        </li>
+                    </ul>
+                </nz-dropdown-menu>
+            </div>
+
+            <div class="modal-body__row"
+                 *ngIf="activeVisibilityRange.value >= VISIBILITY_RANGE_LIST.EVERYONE && localUserRole >= PermissionRole.manager">
+                <div style="display: flex; gap: 8px">
+                    <h4>密码访问</h4>
+                    <nz-switch nzSize="small" [ngModel]="passwordData.isOpen"
+                               [nzControl]="true" (click)="onSwitchPassword(!passwordData.isOpen)"></nz-switch>
+                </div>
+                <div *ngIf="passwordData.isOpen" style="margin-top: 8px;">
+                    <div style="display: flex; align-items: center; gap: 16px; ">
+                        <input class="dl-input" type="text" placeholder="输入密码" [(ngModel)]="passwordData.value"
+                               (ngModelChange)="onCheckPassword($event)" style="height: 36px;"
+                               minlength="6" maxlength="18"
+                               [class.error]="passwordData.isError">
+                        <button class="btn-confirm" [disabled]="passwordData.isError || !passwordData.isUpdated"
+                                (click)="onPasswordConfirm()">确定
+                        </button>
+                    </div>
+                    <div
+                        style="margin-top: 8px; border-radius: 4px; background: #f5f6f7; padding: 4px; font-size: 12px;">
+                        <span [style.color]="passwordData.isError ? '#f54a45' : '#999'">密码长度为6-18位，区分大小写, 不允许使用中文和空格</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <div class="button" style="width: 106px; gap: 4px" (click)="copyLink()">
+                <i class="bf_icon bf_lianjie-2"></i>复制链接
+            </div>
+            <div class="button" title="发送至聊天"><i class="CSES cses-pinglun"></i></div>
+        </div>
+    }
+    @case ('search') {
+        <div class="dialog-header">
+            <i class="bf_icon bf_youjiantou btn-close dl-btn-hover" style="transform: rotate(180deg);" (click)="onBackRoute()"></i>
+            <h3>添加协作者</h3>
+            <i class="CSES cses-guanbi2 dialog-close-btn" (click)="onClose.emit()"></i>
+        </div>
+        <div class="dialog-divider-line"></div>
+        <div class="dialog-body">
+            <share-search-modal [maxRole]="localUserRole" (cancel)="onBackRoute()" [collaborators]="collaboratorsList"
+                                (confirm)="onInviteCollaboratorsSure($event)" />
+        </div>
+    }
+    @case ('manage') {
+        <div class="dialog-header">
+            <i class="bf_icon bf_youjiantou btn-close dl-btn-hover" style="transform: rotate(180deg);" (click)="onBackRoute()"></i>
+            <h3>管理协作者</h3>
+            <i class="CSES cses-guanbi2 dialog-close-btn" (click)="onClose.emit()"></i>
+        </div>
+
+        <div class="dialog-divider-line"></div>
+
+        <div class="dialog-body">
+            <share-collaborators-manage [entityId]="entity.id" [collaborators]="collaboratorsList"
+                                        [maxRole]="localUserRole" />
+
+<!--            未来需要根据权限设置-->
+            <div *ngIf="localUserRole >= PermissionRole.manager">
+                <span (click)="onTabRoute('search')" class="btn-dropdown"
+                      style="color: #4857E2;">
+                    <i class="bf_icon bf_tianjiarenyuan" style="color: #4857E2; "></i>添加协作者
+                </span>
+            </div>
+        </div>
+    }
+
+
+}
+

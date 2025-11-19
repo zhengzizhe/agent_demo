@@ -1,0 +1,28 @@
+<ng-content select=".dialog-top"></ng-content>
+<nz-empty *ngIf="!searchResult.length" style="padding: 16px 0;"></nz-empty>
+<ul class="list" scrollBottomListen="scrollBottomListen" (onScrollBottom)="scrolledBottom.emit()">
+    <li *ngFor='let item of searchResult; index as idx; trackBy: trackByFn' class="item dl-btn-hover"
+        [class.active]="activeIndex === idx" (mouseenter)="activeIndex = idx"
+        (mousedown)="$event.preventDefault(); selectItem(item)">
+        <mat-icon [svgIcon]="item.nodeType === EntityType.Folder ? 'bc_folder-open' : 'bc_wendang0102'"></mat-icon>
+        <div class="info dl-textoverflow">
+            <p class="title" [innerHtml]="item.highlight || '未命名文档'"></p>
+            @if (item.block) {
+                <p class="desc" [innerHTML]="item.block.text"></p>
+            } @else {
+                <p class="desc">
+                    {{ item.spaceName }} ·
+                    所有者：{{ item.owner?.name }}
+                    @if (item.openedAt) {
+                        · <i class="bc_icon bc_chakan"></i> {{ item.openedAt | date2 }} 打开过
+                    }
+                    @if (item.updater) {
+                        · <i
+                            class="bc_icon bc_bianjimoshi"></i> {{ item.updater.name }} 在 {{ item.updatedAt | date2 }} 修改过
+                    }
+                </p>
+            }
+        </div>
+    </li>
+</ul>
+<ng-content select=".dialog-bottom"></ng-content>

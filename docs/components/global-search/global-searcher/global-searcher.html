@@ -1,0 +1,29 @@
+<div class="searcher" #searcher>
+    <input type="text" placeholder="搜索或输入链接" [ngModel]="searchText" (ngModelChange)="onSearchTextChange($event)"
+           (focus)="onFocus()" (blur)="onBlur()" (keydown.arrowUp)="searchDialogComponent.selectUp()"
+           (keydown.arrowDown)="searchDialogComponent.selectDown()"
+           (keydown.enter)="onSubmit()" />
+    <i class="bc_icon bc_search"></i>
+</div>
+
+<ng-template cdkConnectedOverlay [cdkConnectedOverlayOrigin]="searcher" [cdkConnectedOverlayOffsetY]="4"
+             [cdkConnectedOverlayOpen]="showSearchDialog">
+    <dl-global-search-dialog #searchDialogComponent [searchResult]="searchResult"
+                             (scrolledBottom)="onLoadMore()" (itemClick)="onSearchItemClick($event)">
+        <div class="dialog-top">
+            <!--            <button dl-button *ngIf="isDocLink" (click)="navByLink(searchText)">打开链接</button>-->
+
+            <div class="top-text dl-textoverflow">
+                <span class="pre-icon"><i class="bc_icon bc_search"></i></span>
+                <span class="text dl-textoverflow">
+                    @if(isDocLink) {
+                        {{ 'Enter键打开链接：“' + this.searchText + '”' }}
+                    } @else {
+                        {{ this.searchText ? '在搜索中查看“' + this.searchText + '”' : '您近期打开的文档' }}
+                    }
+                </span>
+            </div>
+
+        </div>
+    </dl-global-search-dialog>
+</ng-template>

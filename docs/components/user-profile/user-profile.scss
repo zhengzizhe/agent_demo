@@ -1,0 +1,26 @@
+:host {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 20px;
+  border-radius: 4px;
+
+  .info {
+    display: flex;
+    gap: 4px;
+
+    > span {
+      line-height: 20px;
+    }
+  }
+
+  .name {
+    font-size: 14px;
+    color: #333;
+  }
+
+  .desc, .num {
+    font-size: 10px;
+    color: #999;
+  }
+}

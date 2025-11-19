@@ -1,0 +1,17 @@
+<div class="container" [hidden]="hide" #container>
+    <button class="dl-btn-hover btn-toggle" (click)="hideChange.emit(hide = true)">
+        <i class="bc_icon bc_daohangshouqi"></i>
+    </button>
+
+    <ng-content></ng-content>
+</div>
+
+<div class="resize-handler" (mousedown)="onResizeHandlerMousedown($event)">
+    <span></span>
+</div>
+
+@if (hide) {
+    <span class="btn-expand" (click)="hide = false">
+    <i class="bc_icon bc_daohangzhankai"></i>
+  </span>
+}

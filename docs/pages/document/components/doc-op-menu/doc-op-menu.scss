@@ -1,0 +1,97 @@
+@use "../../../../styles/mixin" as *;;
+
+:host {
+    padding: 8px;
+    border-radius: var(--cs-border-radius);
+    border: 1px solid var(--cs-border-color, #e6e6e6);
+    background: var(--cs-bg-color-2);
+    box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.10);
+    backdrop-filter: blur(2px);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 14px;
+    width: clamp(230px, 100%, 400px);
+    color: var(--cs-font-color);
+
+    .card-item {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        padding: 12px;
+        border-radius: var(--cs-border-radius);
+        background: var(--cs-bg-color);
+    }
+
+    .doc-title {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        height: 28px;
+
+        > span {
+            flex: 1;
+            @include text-ellipsis(1);
+        }
+    }
+
+    .op-group {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+
+        .op-item {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            cursor: pointer;
+            padding: 0 4px;
+            height: 28px;
+
+            &.disabled {
+                cursor: not-allowed;
+                color: var(--cs-font-color-3);
+            }
+        }
+
+        .divider {
+            height: 10px;
+            width: 1px;
+            background: var(--cs-border-color, #e6e6e6);
+        }
+    }
+
+    .op-btn {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        cursor: pointer;
+        padding: 0 4px;
+        height: 28px;
+        color: var(--cs-primary-color);
+    }
+
+    mat-icon {
+        width: 16px;
+        height: 16px;
+    }
+
+    .icon-space {
+        color: $icon-space-color;
+        font-size: 14px;
+    }
+
+    .icon-folder {
+        color: $icon-folder-color;
+        font-size: 16px;
+    }
+
+    .icon-doc {
+        height: 18px;
+        width: 18px;
+    }
+
+}

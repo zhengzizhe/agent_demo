@@ -192,12 +192,12 @@ public class IVectorDocumentDao {
     /**
      * 根据ID删除向量文档
      */
-    public int deleteById(DSLContext dslContext, Long id) {
+    public int deleteById(DSLContext dslContext, String embeddingId) {
         String sql = "DELETE FROM vector_document WHERE embedding_id = ?::uuid";
         
         try (Connection connection = dslContext.configuration().connectionProvider().acquire()) {
             PreparedStatement ps = connection.prepareStatement(sql);
-            ps.setString(1, id.toString());
+            ps.setString(1, embeddingId);
             return ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("根据ID删除向量文档失败", e);
@@ -254,7 +254,7 @@ public class IVectorDocumentDao {
         if (uuidStr != null) {
             // 使用UUID字符串的hashCode作为Long ID（临时方案）
             // 更好的方案是将VectorDocumentPO.id改为String类型
-            po.setId((long) uuidStr.hashCode());
+            po.setEmbeddingId(uuidStr);
         }
         po.setRagId(rs.getLong("rag_id"));
         po.setContent(rs.getString("text"));

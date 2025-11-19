@@ -1,0 +1,38 @@
+<div class="dialog-header">
+    <h2 class="dialog-title">空间设置</h2>
+    <i class="bc_icon bc_guanbi dialog-close-btn" (click)="onClose.emit()"></i>
+</div>
+
+<div class="dialog-divider-line"></div>
+
+<div class="dialog-body dl-overlay-z-high">
+    <div class="left">
+        @for (item of tabs; track item.id) {
+            <div class="dl-btn-hover tab-item" (click)="onSwitchTab(item)"
+                 [class.active]="item.id === activeTab">{{ item.name }}
+            </div>
+        }
+    </div>
+
+    <div class="right">
+        @switch (activeTab) {
+            @case ('base') {
+                <div class="base-form">
+                    <div class="form-item">
+                        <label>空间名称</label>
+                        <input class="dl-input" [value]="baseForm.name" disabled />
+                    </div>
+                    <div class="form-item">
+                        <label>空间描述</label>
+                        <textarea class="dl-textarea" [value]="baseForm.description" placeholder="暂无描述"
+                                  maxlength="30" rows="1" [disabled]="true"></textarea>
+                    </div>
+                </div>
+            }
+            @case ('tags') {
+                <dl-tag-tree [sourceId]="spaceDetail.id"
+                             [readonly]="spaceDetail.localUser.role < PermissionRole.manager"></dl-tag-tree>
+            }
+        }
+    </div>
+</div>

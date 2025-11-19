@@ -1,0 +1,20 @@
+@use "../../styles/mixin" as *;
+
+:host {
+    @include dl-dialog;
+
+    .tag-list {
+        display: flex;
+        gap: 4px;
+        align-items: center;
+    }
+
+    .tag-tree-wrapper {
+        margin-top: 16px;
+    }
+
+    .tag-tree-wrapper {
+        width: clamp(620px, 70vw, 860px);
+        height: clamp(400px, 60vh, 520px);
+    }
+}

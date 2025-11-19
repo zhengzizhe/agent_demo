@@ -1,0 +1,48 @@
+<div class="folder-card-list" [class.is-show-all]="showAll"
+     scrollBottomListen (onScrollBottom)="requestNextPage()"
+     #listElement>
+
+    @for (folder of showFolders; track folder.id) {
+        <div class="folder-card" (click)="onNavTo(folder)" [title]="folder.name">
+
+            <div class="icon">
+                <i class="bc_icon bc_folder-open icon-folder"></i>
+            </div>
+
+            <div class="info">
+                <p class="title">
+                    <span>{{ folder.name }}</span>
+                    @if (folder.localUser?.behavior?.favorite) {
+                        <dl-favorite-icon [active]="true"></dl-favorite-icon>
+                    }
+                </p>
+                @if (withTags) {
+                    <div class="tags-row">
+                        <dl-tag-row [tags]="folder.tags" [maxShowCount]="showMaxTagCount"></dl-tag-row>
+                    </div>
+                } @else {
+                    <p class="desc">{{ folder.subCount }}个项目</p>
+                }
+            </div>
+
+            <button class="btn-more dl-btn-hover"
+                    (click)="onCardMenuDropdownClick(folder, $event)">
+                <i class="bc_icon bc_gengduo"></i>
+            </button>
+
+        </div>
+    }
+</div>
+
+<div class="show-more-toggle" *ngIf="showAll || (pageData.totalCount && showFolders.length < pageData.totalCount)">
+    <span class="line"></span>
+    <span class="text dl-btn-hover" (click)="onToggleMoreFolders()">
+    @if (showAll) {
+        收起
+    } @else {
+        更多
+    }<i class="bc_icon bc_xiajaintou" [class.is-expand]="showAll"></i>
+  </span>
+    <span class="line"></span>
+</div>
+

@@ -1,0 +1,27 @@
+:host {
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    width: 100%;
+
+    .tag-list {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        flex-wrap: nowrap;
+        overflow: hidden;
+    }
+
+    .btn-more {
+        min-width: fit-content;
+        flex-shrink: 0;
+        color: var(--cs-font-color-3);
+        cursor: pointer;
+        background: var(--cs-bg-color-disabled);
+
+        &:hover {
+            background-color: var(--cs-bg-color-3);
+        }
+    }
+}

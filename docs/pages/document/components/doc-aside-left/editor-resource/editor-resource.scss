@@ -1,0 +1,133 @@
+@use "../../../../../styles/mixin" as *;
+
+:host {
+    display: block;
+    padding: 0 8px 0 0;
+
+    .card {
+        border-radius: 8px;
+        border: 1px solid var(--cs-border-color);
+        overflow: hidden;
+        transition: all .2s ease-in-out;
+
+        &:hover {
+            box-shadow: 0 0 8px 0 rgba(0, 0, 0, 0.1);
+        }
+    }
+
+    .resource-part {
+        margin-bottom: 16px;
+
+        dl-toggle-head {
+        }
+
+        &-content {
+            display: none;
+
+            &.is-show {
+                display: block;
+            }
+        }
+    }
+
+    .img-list {
+        display: block;
+        margin-top: 8px;
+
+        .img-item {
+            width: calc(50% - 8px);
+            max-height: 260px;
+            margin-bottom: 8px;
+            cursor: zoom-in;
+
+            img {
+                width: 100%;
+                height: auto;
+                display: block;
+            }
+        }
+    }
+
+    .bookmark-item {
+        margin-top: 8px;
+        padding: 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+
+        .url {
+            font-size: 14px;
+            line-height: 20px;
+            color: var(--cs-font-color-3);
+            @include text-ellipsis(1);
+            cursor: pointer;
+
+            &:hover {
+                text-decoration-line: underline;
+            }
+
+            &:active {
+                color: var(--cs-primary-color);
+            }
+        }
+    }
+
+    .attachment-list {
+        .attachment-item {
+            margin-top: 8px;
+            display: flex;
+            padding: 8px;
+            align-items: center;
+            gap: 8px;
+            align-self: stretch;
+            background: #FFF;
+
+            mat-icon {
+                width: 40px;
+                height: 40px;
+            }
+
+            .center {
+                flex: 1;
+                overflow: hidden;
+
+                .name {
+                    display: flex;
+                    font-size: 12px;
+                    font-weight: bold;
+                    line-height: 18px;
+
+                    .text {
+                        flex-shrink: 1;
+                        @include text-ellipsis(1);
+                    }
+                }
+
+                .size {
+                    font-size: 10px;
+                    line-height: 16px;
+                    color: var(--cs-font-color-3);
+                }
+            }
+
+            &:hover {
+                .right {
+                    display: flex;
+                }
+            }
+
+            .right {
+                display: none;
+                align-items: center;
+                gap: 8px;
+
+                > i {
+                    width: 20px;
+                    height: 20px;
+                    cursor: pointer;
+                    text-align: center;
+                }
+            }
+        }
+    }
+}

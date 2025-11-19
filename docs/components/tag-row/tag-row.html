@@ -1,0 +1,8 @@
+<div class="tag-list">
+    @for (tag of tagsToShow; track tag.id) {
+        <dl-tag [text]="tag.name" [color]="tag.color" [backColor]="tag.backColor"></dl-tag>
+    }
+</div>
+@if (tagsToShow.length < tags.length) {
+    <dl-tag class="btn-more" [text]="'+' + (tags.length - tagsToShow.length)" (click)="onShowMore($event)"></dl-tag>
+}

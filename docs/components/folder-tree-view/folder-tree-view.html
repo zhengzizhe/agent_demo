@@ -1,0 +1,18 @@
+<ng-template let-node="node" let-parent="parent" #nodeRender>
+    <dl-folder-tree-view-node [useCheckBtn]="useCheckBtn" [active]="node.isSelected"
+                              [isExpanded]="node.isExpanded" [name]="node.origin?.name" [isLoading]="node.isLoading"
+                              [depth]="node.depth" [dlDisabled]="node.isDisabled"
+                              [hasChild]="node.hasChild" (toggleExpand)="onToggleExpand(node)"
+                              (nodeClick)="onNodeClick(node)">
+    </dl-folder-tree-view-node>
+
+    @if (node.children?.length && node.isExpanded) {
+        @for (childNode of node.children; track childNode.id) {
+            <ng-container *ngTemplateOutlet="nodeRender; context: {node: childNode, parent: node}"></ng-container>
+        }
+    }
+</ng-template>
+
+@for (node of nodes; track node.id) {
+    <ng-container *ngTemplateOutlet="nodeRender; context: {node, parent: null}"></ng-container>
+}

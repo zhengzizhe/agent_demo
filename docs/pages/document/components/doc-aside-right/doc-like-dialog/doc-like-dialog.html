@@ -1,0 +1,39 @@
+<div class="dialog">
+    <div class="dialog-header">
+        <span class="dialog-title">点赞</span>
+        <i class="bc_icon bc_guanbi dialog-close-btn" (click)="onClose.emit()"></i>
+    </div>
+
+    <div class="dialog-divider-line"></div>
+
+    <div class="dialog-body">
+
+        <div class="like-btn" [attr.data-is-like]="liked" (click)="onClick($event)">
+            <i [class]="['bf_icon', 'bf_dianzan']"></i>
+        </div>
+
+        <div class="text" [class.active]="liked">
+            <div class="line left"></div>
+            <span>
+                @if(liked) {
+                    {{ likedTotal === 1 ? '你已赞' : '你和其他' + (likedTotal - 1) + '人已赞' }}
+                } @else {
+                    不吝啬你的赞美，让创造发生
+                }
+            </span>
+            <div class="line right"></div>
+        </div>
+
+        <div class="users-list">
+            @for (user of likedUserList; track user.userId) {
+                <img class="dl-avatar-20" [src]="user.userId | avatar" [nz-tooltip]="user.userName" />
+            }
+            @if(likedTotal > this.likedUserList.length) {
+                <div class="dl-avatar-20 dl-icon" style="color: var(--cs-font-color-3);">
+                    <i class="bc_icon bc_gengduo-2"></i>
+                </div>
+            }
+        </div>
+
+    </div>
+</div>

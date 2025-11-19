@@ -1,0 +1,22 @@
+<div class="dialog">
+    <img src="assets/logo.png" class="logo">
+    <h2 class="title">
+        {{ code === EntityAccessCode.NEED_PASSWORD ? '请输入密码' : '您没有访问权限' }}
+    </h2>
+    <p>
+        当前登录账号为 <strong>{{ currentUser?.companyName }}</strong> 的 <strong>{{ currentUser?.name }}</strong>, 你可以向
+        <strong class="owner">{{ ownerName }}</strong> 申请权限
+    </p>
+
+    <div class="card">
+        @if (code === EntityAccessCode.NEED_PASSWORD) {
+            <input [(ngModel)]="pwd" class="dl-input" placeholder="请输入密码" (keydown.enter)="onPwdConfirm()" />
+            <div style="display:flex; align-items: center; justify-content: center; width: 100%; gap: 16px;">
+                <button dl-button type="primary" (click)="onPwdConfirm()">确定</button>
+                <button dl-button type="simple" (click)="backHomePage()">返回主页</button>
+            </div>
+        } @else {
+            <button dl-button style="width: 100%" type="primary" (click)="backHomePage()">返回主页</button>
+        }
+    </div>
+</div>

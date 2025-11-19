@@ -1,0 +1,50 @@
+@use "../../../../styles/mixin" as *;
+
+:host {
+    @include dl-dialog;
+
+    .dialog-body {
+        width: clamp(620px, 70vw, 960px);
+        height: 560px;
+        display: flex;
+        padding: 12px;
+
+        .left {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            width: 120px;
+            height: 100%;
+            padding: 12px;
+            border-right: 1px solid var(--cs-border-color);
+
+            .tab-item {
+                height: 32px;
+                line-height: 32px;
+                text-align: center;
+            }
+        }
+
+        .right {
+            flex: 1;
+            overflow: auto;
+            min-width: 0;
+            height: 100%;
+            padding: 6px;
+        }
+    }
+
+    .base-form {
+        padding: 8px 32px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+
+        label {
+            margin-bottom: 4px;
+            display: block;
+            color: var(--cs-font-color-3);
+        }
+
+    }
+}

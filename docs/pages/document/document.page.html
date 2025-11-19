@@ -1,0 +1,105 @@
+<header class="top-bar">
+
+    <div class="top-bar__left">
+        <i class="bc_icon bc_shouye btn-back dl-btn-hover" (click)="navBack()"></i>
+        <span class="divider-line"></span>
+        <span class="top-bar__title dl-textoverflow">{{ docDetail?.name || '未命名文档' }}</span>
+        <dl-favorite-icon [active]="docDetail?.localUser?.behavior?.favorite" (click)="onFavorite()" nz-tooltip="收藏"
+                          style="cursor:pointer;"></dl-favorite-icon>
+        <i class="bc_icon bc_xiajaintou icon-dropdown dl-btn-hover" [class.active]="dropMenuVisibleMap.opMenu"
+           nz-dropdown nzTrigger="click"
+           [nzDropdownMenu]="docOpMenu" [(nzVisible)]="dropMenuVisibleMap.opMenu"></i>
+        <span class="top-bar__sec_tit">{{ syncStatusCode | syncStatus }}</span>
+    </div>
+
+    <div class="btn-group">
+        <button dl-button hoverType="primary" icon="bc_fenxiang"
+                cdk-overlay-origin #shareBtn="cdkOverlayOrigin"
+                (click)="onShare()"> 分享
+        </button>
+
+        <button dl-button nz-dropdown [icon]="currentEditMode.icon"
+                (click)="onShowEditModeMenu($event)" >
+            {{ currentEditMode.label }}
+            @if (isEditAllow) {
+                <span class="bc_icon bc_xiajaintou icon-dropdown" [class.active]="dropMenuVisibleMap.editMode"></span>
+            }
+        </button>
+
+        <!--        <button dl-button (click)="onDemonstrate()">-->
+        <!--            <i class="CSES cses-jixu"></i> 演示-->
+        <!--        </button>-->
+
+        <span class="btn-more dl-btn-hover" style="padding: 0 4px;" [class.active]="dropMenuVisibleMap.settings"
+              [(nzVisible)]="dropMenuVisibleMap.settings"
+              nz-dropdown nzTrigger="click" [nzDropdownMenu]="settingMenu">
+            <i class="bc_icon bc_gengduo"></i>
+        </span>
+    </div>
+</header>
+
+<main>
+    <doc-aside-left *ngIf="editor?.doc" [docDetail]="docDetail" [doc]="editor?.doc"
+                    [scrollToBlock]="editor?.scrollToBlock"
+                    [(isShowAside)]="showLeftAside" [(activeAsideTabIdx)]="activeAsideTabIdx"></doc-aside-left>
+
+    <div class="page-main" #pageMain appScrollRestore [restoreReady]="viewReady">
+        <div class="document-page" [attr.data-width]="docConfigs.pageWidth">
+            <doc-water-mark [text]="watermarkText" *ngIf="docDetail && isReadonly"></doc-water-mark>
+
+            <div class="doc-header">
+                <div class="doc-header__title-wrapper" >
+                    <input [(ngModel)]="docName" class="doc-header__title" placeholder="输入标题"
+                           (blur)="onTitleBlur()" #titleInput (keydown.enter)="onTitleEnter($event)"
+                           (compositionstart)="isTitleInputComposing = true"
+                           (compositionend)="isTitleInputComposing = false"
+                           [disabled]="isReadonly || docDetail.localUser?.role < PermissionRole.owner" />
+                </div>
+
+                <div class="doc-header__info" *ngIf="docDetail">
+                    <dl-user-profile [user]="docDetail.editor || docDetail.owner"></dl-user-profile>
+                    <span class="divider-line"></span>
+                    <div class="doc-header__info__time">
+                        <span>{{ docDetail.editedAt ? '修改于' : '创建于' }} {{ (docDetail.editedAt || docDetail.createdAt) | date2 }}</span>
+                    </div>
+                </div>
+
+            </div>
+
+            <blockcraft-editor [docDetail]="docDetail" *ngIf="docDetail" [isEditAllow]="isEditAllow"
+                               (syncStatusChange)="onSyncStatusChange($event)"
+                               (afterInit)="onEditorInit()"
+                               #editor></blockcraft-editor>
+        </div>
+    </div>
+
+    <doc-aside-right *ngIf="docDetail" [docDetail]="docDetail"></doc-aside-right>
+</main>
+
+<nz-back-top [nzTarget]="pageMain"></nz-back-top>
+
+<nz-dropdown-menu #docOpMenu='nzDropdownMenu'>
+    <doc-op-menu [docDetail]="docDetail" [spaceId]="docDetail.spaceId" (close)="dropMenuVisibleMap.opMenu = false"
+                 *ngIf="docDetail && dropMenuVisibleMap.opMenu"></doc-op-menu>
+</nz-dropdown-menu>
+
+<nz-dropdown-menu #settingMenu='nzDropdownMenu'>
+    <doc-setting-menu *ngIf="docDetail && dropMenuVisibleMap.settings"
+                      [role]="docDetail.localUser?.role"
+                      [docDetail]="docDetail" [configs]="docConfigs"
+                      (menuClick)="onSettingMenuClick($event)"></doc-setting-menu>
+</nz-dropdown-menu>
+
+<ng-template cdkConnectedOverlay [cdkConnectedOverlayOrigin]="shareBtn"
+             [cdkConnectedOverlayOpen]="dropMenuVisibleMap.shareDialog"
+             [cdkConnectedOverlayHasBackdrop]="true" (backdropClick)="dropMenuVisibleMap.shareDialog = false"
+             cdkConnectedOverlayBackdropClass="cdk-overlay-transparent-backdrop"
+             [cdkConnectedOverlayOffsetY]="6"
+>
+    <share-modal class="dl-ani-dropdown" *ngIf="docDetail && accessConfig && dropMenuVisibleMap.shareDialog"
+                 [accessConfig]="accessConfig"
+                 [owner]="docDetail?.owner" [entity]="docDetail" [entityType]="EntityType.Document"
+                 [localUserRole]="docDetail.localUser.role"
+                 (onClose)="dropMenuVisibleMap.shareDialog = false"
+    ></share-modal>
+</ng-template>

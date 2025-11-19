@@ -1,0 +1,29 @@
+<dl-spin-mask [dlSpinning]="isLoading" text="正在创建文件夹...">
+    <div class="dialog">
+        <div class="dialog-header">
+            <span class="dialog-title">新建文件夹</span>
+            <i class="bc_icon bc_guanbi dialog-close-btn" (click)="onClose.emit()"></i>
+        </div>
+
+        <div class="dialog-divider-line"></div>
+
+        <div class="dialog-body">
+
+            <div class="dl-form-item">
+                <label>文件夹名称</label>
+                <input class="dl-input" placeholder="请输入文件夹名称" maxlength="100" [(ngModel)]="name" [class.error]="nameError" />
+            </div>
+
+            <div class="dl-form-item">
+                <label>描述</label>
+                <textarea class="dl-textarea" placeholder="请输入详细的内容描述" [(ngModel)]="description"></textarea>
+            </div>
+
+        </div>
+
+        <div class="dialog-footer">
+            <button dl-button (click)="onClose.emit()">取消</button>
+            <button dl-button type="primary" (click)="onSubmit()">确定</button>
+        </div>
+    </div>
+</dl-spin-mask>

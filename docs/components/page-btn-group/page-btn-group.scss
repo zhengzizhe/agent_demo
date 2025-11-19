@@ -1,0 +1,30 @@
+@use "../../styles/mixin" as *;;
+
+:host {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    [dl-button] {
+        width: 92px;
+    }
+
+    .divider {
+        height: 12px;
+        width: 1px;
+        background: var(--cs-border-color);
+    }
+
+    > i {
+        width: 26px;
+        text-align: center;
+        line-height: 18px;
+        color: var(--cs-font-color-3);
+        @include dl-btn-hover;
+
+        &.active {
+            color: var(--cs-primary-color);
+            background: var(--cs-bg-color-3);
+        }
+    }
+}

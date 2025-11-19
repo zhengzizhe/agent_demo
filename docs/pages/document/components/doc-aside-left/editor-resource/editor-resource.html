@@ -1,0 +1,69 @@
+<div class="resource-part">
+    <dl-toggle-head [(expand)]="isShowImages">图片</dl-toggle-head>
+    <div class="resource-part-content" [class.is-show]="isShowImages">
+        <ngx-masonry class="img-list" [options]="masonryOptions" #imgList>
+            @for (item of (imagesMap | keyvalue: keepOrder); track item.key) {
+                <div class="img-item card" ngxMasonryItem>
+                    <img src="{{item.value.url}}">
+                </div>
+            }
+        </ngx-masonry>
+    </div>
+</div>
+
+<div class="resource-part">
+    <dl-toggle-head [(expand)]="isShowBookmarks">书签</dl-toggle-head>
+    <div class="bookmark-list resource-part-content" [class.is-show]="isShowBookmarks">
+        @for (item of (bookmarksMap | keyvalue: keepOrder); track item.key) {
+            <div class="bookmark-item card">
+                <!--                <div class="bookmark-title">-->
+                <!--                    <div class="bookmark-icon">-->
+                <!--                        @if (item.value.icon) {-->
+                <!--                            <object draggable="false" type="image/png" [data]="item.value.icon">-->
+                <!--                                <i class="bc_icon bc_wangluo"></i>-->
+                <!--                            </object>-->
+                <!--                        } @else {-->
+                <!--                            <i class="bc_icon bc_wangluo"></i>-->
+                <!--                        }-->
+                <!--                    </div>-->
+
+                <!--                    <h3 class="title" spellcheck="false">{{ item.value.title }}</h3>-->
+                <!--                </div>-->
+
+                @if (item.value.image) {
+                    <img loading="lazy" [src]="item.value.image">
+                } @else {
+                    <div class="dl-skeleton" style="height: 84px"></div>
+                }
+
+                <a target="_blank" [href]="item.value.url" class="url" [title]="item.value.url">{{ item.value.url }}</a>
+            </div>
+        }
+    </div>
+</div>
+
+<div class="resource-part">
+    <dl-toggle-head [(expand)]="isShowAttachments">附件</dl-toggle-head>
+    <div class="attachment-list resource-part-content" [class.is-show]="isShowAttachments">
+        @for (item of (attachmentsMap | keyvalue: keepOrder); track item.key) {
+            <div class="attachment-item card">
+                <div class="left">
+                    <mat-icon [svgIcon]="item.value.icon"></mat-icon>
+                </div>
+                <div class="center">
+                    <p class="name" [title]="item.value.name">
+                        <span class="text">{{ item.value.name }}</span>
+                        <span class="suffix">.{{ item.value.type }}</span>
+                    </p>
+                    <p class="size">{{ item.value.size | fileSize }}</p>
+                </div>
+                <div class="right">
+                    @if(item.value.type === 'pdf') {
+                        <i class="bc_icon bc_chakan dl-btn-hover" (click)="onPreviewFile($event, item.value)"></i>
+                    }
+                    <i class="bc_icon bc_xiazai dl-btn-hover" (click)="onDownloadFile($event, item.value)"></i>
+                </div>
+            </div>
+        }
+    </div>
+</div>

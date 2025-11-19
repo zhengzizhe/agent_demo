@@ -1,89 +1,78 @@
 <template>
-  <div class="app">
-    <!-- 导航栏 -->
-    <nav class="app-nav">
-      <div class="nav-content">
-        <div class="nav-logo">
-          <span class="logo-icon">AI</span>
-          <span class="logo-text">Agent 系统</span>
-        </div>
-        <div class="nav-tabs">
-          <button
-            class="nav-tab"
-            :class="{ active: currentView === 'chat' }"
-            @click="currentView = 'chat'"
-          >
-            <span class="tab-icon">💬</span>
-            <span class="tab-text">对话</span>
-          </button>
-          <button
-            class="nav-tab"
-            :class="{ active: currentView === 'rag' }"
-            @click="currentView = 'rag'"
-          >
-            <span class="tab-icon">📚</span>
-            <span class="tab-text">RAG知识库</span>
-          </button>
-          <!-- 调试按钮 -->
-          <button
-            class="nav-tab debug-tab"
-            :class="{ active: showDebugPanel }"
-            @click="showDebugPanel = !showDebugPanel"
-            title="调试面板"
-          >
-            <span class="tab-icon">🔧</span>
-            <span class="tab-text">调试</span>
-          </button>
-        </div>
-      </div>
-    </nav>
+  <div class="app" :class="{ 'electron-app': isElectron }">
+    <!-- Electron 自定义标题栏 -->
+    <TitleBar v-if="isElectron" />
+    
+    <!-- 主布局容器 -->
+    <div class="app-layout">
+      <!-- 左侧边栏 -->
+      <Sidebar 
+        :current-view="currentView"
+        :show-debug-panel="showDebugPanel"
+        @view-change="handleViewChange"
+        @debug-toggle="showDebugPanel = !showDebugPanel"
+      />
 
-    <!-- 调试面板 -->
-    <transition name="debug-panel">
-      <div v-if="showDebugPanel" class="debug-panel">
-        <div class="debug-panel-header">
-          <h3>调试面板</h3>
-          <button class="debug-close" @click="showDebugPanel = false">×</button>
-        </div>
-        <div class="debug-panel-content">
-          <div class="debug-field">
-            <label>用户ID (userId)</label>
-            <div class="debug-input-group">
-              <input
-                v-model="debugUserId"
-                type="text"
-                placeholder="输入用户ID"
-                class="debug-input"
-                @blur="handleUserIdChange"
-              />
-              <button class="debug-btn" @click="generateNewUserId">生成新ID</button>
-            </div>
-            <div class="debug-value">当前: {{ session.userId?.value || debugUserId }}</div>
-          </div>
-          <div class="debug-field">
-            <label>会话ID (sessionId)</label>
-            <div class="debug-input-group">
-              <input
-                v-model="debugSessionId"
-                type="text"
-                placeholder="输入会话ID"
-                class="debug-input"
-                @blur="handleSessionIdChange"
-              />
-              <button class="debug-btn" @click="generateNewSessionId">生成新ID</button>
-            </div>
-            <div class="debug-value">当前: {{ session.sessionId?.value || debugSessionId }}</div>
-          </div>
-          <div class="debug-actions">
-            <button class="debug-btn-primary" @click="applyDebugSettings">应用设置</button>
-            <button class="debug-btn-secondary" @click="resetDebugSettings">重置</button>
-          </div>
-        </div>
-      </div>
-    </transition>
+      <!-- 主内容区域 -->
+      <div class="main-content">
+        <!-- 顶部工具栏 -->
+        <TopBar 
+          :page-title="pageTitle"
+          :breadcrumbs="breadcrumbs"
+          @breadcrumb-click="handleBreadcrumbClick"
+        />
+        
+        <!-- 内容区域 -->
+        <div class="content-area">
+          <!-- 对话视图 -->
+          <transition name="view-transition" mode="out-in">
+            <div v-if="currentView === 'chat'" key="chat" class="view-container chat-view">
+            <!-- 调试面板 -->
+            <transition name="debug-panel">
+              <div v-if="showDebugPanel" class="debug-panel">
+                <div class="debug-panel-header">
+                  <h3>调试面板</h3>
+                  <button class="debug-close" @click="showDebugPanel = false">×</button>
+                </div>
+                <div class="debug-panel-content">
+                  <div class="debug-field">
+                    <label>用户ID (userId)</label>
+                    <div class="debug-input-group">
+                      <input
+                        v-model="debugUserId"
+                        type="text"
+                        placeholder="输入用户ID"
+                        class="debug-input"
+                        @blur="handleUserIdChange"
+                      />
+                      <button class="debug-btn" @click="generateNewUserId">生成新ID</button>
+                    </div>
+                    <div class="debug-value">当前: {{ session.userId?.value || debugUserId }}</div>
+                  </div>
+                  <div class="debug-field">
+                    <label>会话ID (sessionId)</label>
+                    <div class="debug-input-group">
+                      <input
+                        v-model="debugSessionId"
+                        type="text"
+                        placeholder="输入会话ID"
+                        class="debug-input"
+                        @blur="handleSessionIdChange"
+                      />
+                      <button class="debug-btn" @click="generateNewSessionId">生成新ID</button>
+                    </div>
+                    <div class="debug-value">当前: {{ session.sessionId?.value || debugSessionId }}</div>
+                  </div>
+                  <div class="debug-actions">
+                    <button class="debug-btn-primary" @click="applyDebugSettings">应用设置</button>
+                    <button class="debug-btn-secondary" @click="resetDebugSettings">重置</button>
+                  </div>
+                </div>
+              </div>
+            </transition>
 
-    <!-- 对话视图 -->
-    <div v-if="currentView === 'chat'" class="dialog-container">
+            <!-- 对话容器 -->
+            <div class="dialog-container">
       <!-- 对话框消息区域 -->
       <div class="dialog-messages" ref="messagesContainerRef">
         <!-- 欢迎消息 -->
@@ -179,11 +168,21 @@
         :can-send="canSend"
         @send="executeTask"
       />
+            </div>
+            </div>
+
+            <!-- RAG知识库管理视图 -->
+            <div v-else-if="currentView === 'rag'" key="rag" class="view-container rag-view">
+              <RagManagement />
+            </div>
+
+            <!-- 文档库视图 -->
+            <div v-else-if="currentView === 'docs'" key="docs" class="view-container docs-view">
+              <DocumentLibrary />
+            </div>
+          </transition>
         </div>
-        
-    <!-- RAG知识库管理视图 -->
-    <div v-if="currentView === 'rag'" class="rag-container">
-      <RagManagement />
+      </div>
     </div>
   </div>
 </template>
@@ -194,13 +193,48 @@ import TaskList from './components/TaskList.vue'
 import MessageItem from './components/MessageItem.vue'
 import InputArea from './components/InputArea.vue'
 import RagManagement from './components/RagManagement.vue'
+import DocumentLibrary from './components/DocumentLibrary.vue'
+import TitleBar from './components/TitleBar.vue'
+import Sidebar from './components/Sidebar.vue'
+import TopBar from './components/TopBar.vue'
 import { useMessages } from './composables/useMessages.js'
 import { useEventHandlers } from './composables/useEventHandlers.js'
 import { useTaskExecution } from './composables/useTaskExecution.js'
 import { useSession } from './composables/useSession.js'
 
+// 检测是否在 Electron 环境中
+const isElectron = ref(typeof window !== 'undefined' && window.electronAPI !== undefined)
+
 // 当前视图
 const currentView = ref('chat')
+
+// 页面标题和面包屑
+const pageTitle = computed(() => {
+  const titles = {
+    chat: '对话',
+    rag: 'RAG知识库',
+    docs: '文档库'
+  }
+  return titles[currentView.value] || 'Agent 系统'
+})
+
+const breadcrumbs = computed(() => {
+  return ['首页', pageTitle.value]
+})
+
+// 处理视图切换
+const handleViewChange = (view) => {
+  currentView.value = view
+}
+
+// 处理面包屑点击
+const handleBreadcrumbClick = ({ crumb, index }) => {
+  if (index === 0) {
+    // 点击首页，切换到对话视图
+    currentView.value = 'chat'
+  }
+  // 其他情况可以根据需要扩展
+}
 
 // 调试面板
 const showDebugPanel = ref(false)
@@ -302,185 +336,97 @@ const canSend = computed(() => {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background: 
-    radial-gradient(circle at 20% 50%, rgba(33, 150, 243, 0.03) 0%, transparent 50%),
-    radial-gradient(circle at 80% 80%, rgba(66, 165, 245, 0.03) 0%, transparent 50%),
-    linear-gradient(to bottom, #ffffff 0%, #f7f7f8 100%);
-  color: #353740;
+  background: #ffffff;
+  color: #111827;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   position: relative;
   overflow: hidden;
 }
 
-/* 导航栏样式 */
-.app-nav {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(33, 150, 243, 0.1);
-  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.05);
+/* Electron 应用样式 - 无边框窗口 */
+.app.electron-app {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
 }
 
-.nav-content {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 0 48px;
+/* 主布局容器 */
+.app-layout {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 72px;
-}
-
-.nav-logo {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.logo-icon {
-  width: 52px;
-  height: 52px;
-  border-radius: 14px;
-  background: linear-gradient(135deg, #2196f3 0%, #42a5f5 50%, #1976d2 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-  font-weight: 800;
-  color: white;
-  box-shadow: 
-    0 6px 20px rgba(33, 150, 243, 0.3),
-    0 3px 8px rgba(33, 150, 243, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3);
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  position: relative;
-  overflow: visible;
-  transition: all 0.3s ease;
-}
-
-.logo-icon::before {
-  content: '';
-  position: absolute;
-  inset: -4px;
-  border-radius: 18px;
-  background: linear-gradient(135deg, #2196f3, #42a5f5);
-  opacity: 0.2;
-  filter: blur(10px);
-  z-index: -1;
-}
-
-.logo-icon:hover {
-  transform: scale(1.05) rotate(5deg);
-  box-shadow: 
-    0 8px 24px rgba(33, 150, 243, 0.4),
-    0 4px 10px rgba(33, 150, 243, 0.25);
-}
-
-.logo-text {
-  font-size: 22px;
-  font-weight: 700;
-  color: #202123;
-  letter-spacing: -0.02em;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  background: linear-gradient(135deg, #2196f3, #42a5f5);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.nav-tabs {
-  display: flex;
-  gap: 8px;
-}
-
-.nav-tab {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 14px 28px;
-  font-size: 15px;
-  font-weight: 600;
-  color: #565869;
-  background: transparent;
-  border: 2px solid transparent;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
+  height: 100vh;
   overflow: hidden;
 }
 
-.nav-tab::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, rgba(33, 150, 243, 0.1), rgba(66, 165, 245, 0.1));
-  opacity: 0;
-  transition: opacity 0.3s;
-  border-radius: 12px;
+/* 主内容区域 */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #fafbfc;
 }
 
-.nav-tab:hover {
-  color: #2196f3;
-  transform: translateY(-2px);
-}
-
-.nav-tab:hover::before {
-  opacity: 1;
-}
-
-.nav-tab.active {
-  background: linear-gradient(135deg, rgba(33, 150, 243, 0.15) 0%, rgba(66, 165, 245, 0.12) 100%);
-  color: #2196f3;
-  font-weight: 700;
-  border-color: rgba(33, 150, 243, 0.2);
-  box-shadow: 
-    0 4px 12px rgba(33, 150, 243, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.5);
-}
-
-.nav-tab.active::before {
-  opacity: 1;
-}
-
-.tab-icon {
-  font-size: 18px;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
-  transition: transform 0.3s ease;
-}
-
-.nav-tab:hover .tab-icon {
-  transform: scale(1.1) rotate(5deg);
-}
-
-.nav-tab.active .tab-icon {
-  transform: scale(1.15);
-  filter: drop-shadow(0 2px 4px rgba(33, 150, 243, 0.3));
-}
-
-.nav-tab.debug-tab.active {
-  background: linear-gradient(135deg, rgba(255, 152, 0, 0.15) 0%, rgba(255, 152, 0, 0.12) 100%);
-  color: #ff9800;
-  border-color: rgba(255, 152, 0, 0.2);
-}
-
-.nav-tab.debug-tab.active::before {
-  background: linear-gradient(135deg, rgba(255, 152, 0, 0.1), rgba(255, 152, 0, 0.1));
-}
-
-.tab-text {
-  font-size: 15px;
-  letter-spacing: -0.01em;
-}
-
-
-.rag-container {
+/* 内容区域 */
+.content-area {
   flex: 1;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+}
+
+/* 视图容器 */
+.view-container {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* 页面切换动画 - Notion/飞书风格 */
+.view-transition-enter-active {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.view-transition-leave-active {
+  transition: all 0.25s cubic-bezier(0.4, 0, 1, 1);
+}
+
+.view-transition-enter-from {
+  opacity: 0;
+  transform: translateX(20px) scale(0.98);
+}
+
+.view-transition-leave-to {
+  opacity: 0;
+  transform: translateX(-20px) scale(0.98);
+}
+
+.tab-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-tab.debug-tab.active {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+.tab-text {
+  font-size: 14px;
+}
+
+
+/* 视图特定样式 */
+.chat-view,
+.rag-view,
+.docs-view {
+  width: 100%;
+  height: 100%;
 }
 
 .app::before {
@@ -598,60 +544,37 @@ const canSend = computed(() => {
 }
 
 .welcome-icon {
-  width: 100px;
-  height: 100px;
-  border-radius: 24px;
-  background: linear-gradient(135deg, #2196f3 0%, #42a5f5 100%);
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+  background: #2563eb;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 40px;
-  font-weight: 700;
+  font-size: 24px;
+  font-weight: 600;
   color: white;
-  margin-bottom: 32px;
-  position: relative;
-  animation: welcomeIconFloat 3s ease-in-out infinite;
-  box-shadow: 
-    0 8px 24px rgba(33, 150, 243, 0.2),
-    0 4px 8px rgba(33, 150, 243, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3);
-}
-
-.welcome-icon::before {
-  content: '';
-  position: absolute;
-  inset: -6px;
-  border-radius: 26px;
-  background: linear-gradient(135deg, rgba(33, 150, 243, 0.2), rgba(66, 165, 245, 0.15));
-  opacity: 0;
-  animation: welcomeIconGlow 3s ease-in-out infinite;
-  z-index: -1;
-  filter: blur(8px);
+  margin-bottom: 24px;
 }
 
 .welcome-icon-inner {
-  animation: welcomeIconPulse 2s ease-in-out infinite;
   position: relative;
   z-index: 1;
 }
 
 .welcome-message h2 {
-  margin: 0 0 16px 0;
-  color: #202123;
-  font-size: 40px;
-  font-weight: 700;
-  background: linear-gradient(135deg, #2196f3 0%, #42a5f5 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  letter-spacing: -0.02em;
+  margin: 0 0 12px 0;
+  color: #111827;
+  font-size: 32px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
 }
 
 .welcome-message p {
   margin: 0;
-  font-size: 18px;
-  color: #565869;
-  line-height: 1.7;
+  font-size: 16px;
+  color: #6b7280;
+  line-height: 1.6;
   max-width: 600px;
 }
 
@@ -705,8 +628,6 @@ const canSend = computed(() => {
   max-width: 85%;
   margin-top: 8px;
   margin-left: 52px; /* 与消息内容对齐 */
-  animation: messageSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
-  will-change: transform, opacity;
 }
 
 .execution-error-icon {
@@ -775,41 +696,15 @@ const canSend = computed(() => {
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(10px) scale(0.98);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
 
 
-@keyframes welcomeIconFloat {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
-}
-
-@keyframes welcomeIconGlow {
-  0%, 100% {
-    opacity: 0;
-  }
-  50% {
-    opacity: 1;
-  }
-}
-
-@keyframes welcomeIconPulse {
-  0%, 100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.1);
-  }
-}
 
 @keyframes typing {
   0%, 60%, 100% {
@@ -825,49 +720,51 @@ const canSend = computed(() => {
 /* Vue Transition 动画 */
 .planning-fade-enter-active,
 .planning-fade-leave-active {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: opacity 0.2s ease;
 }
 
 .planning-fade-enter-from {
   opacity: 0;
-  transform: translateY(-10px) scale(0.95);
 }
 
 .planning-fade-leave-to {
   opacity: 0;
-  transform: translateY(-5px) scale(0.98);
 }
 
 .error-slide-enter-active {
-  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .error-slide-leave-active {
-  transition: all 0.3s ease-in;
+  transition: all 0.2s cubic-bezier(0.4, 0, 1, 1);
 }
 
 .error-slide-enter-from {
   opacity: 0;
-  transform: translateX(-20px) scale(0.9);
+  transform: translateX(-20px) scale(0.95);
 }
 
 .error-slide-leave-to {
   opacity: 0;
-  transform: translateX(20px) scale(0.9);
+  transform: translateX(20px) scale(0.98);
 }
 
 .welcome-fade-enter-active {
-  transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .welcome-fade-enter-from {
   opacity: 0;
-  transform: translateY(30px) scale(0.9);
+  transform: translateY(20px) scale(0.95);
 }
 
-.welcome-fade-enter-to {
-  opacity: 1;
-  transform: translateY(0) scale(1);
+.welcome-fade-leave-active {
+  transition: all 0.2s cubic-bezier(0.4, 0, 1, 1);
+}
+
+.welcome-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-10px) scale(0.98);
 }
 
 /* 加载动画样式 */
@@ -890,14 +787,12 @@ const canSend = computed(() => {
 }
 
 .loading-dot {
-  width: 12px;
-  height: 12px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #2196f3 0%, #42a5f5 100%);
-  animation: dotBounce 1.4s ease-in-out infinite;
-  box-shadow: 
-    0 2px 8px rgba(33, 150, 243, 0.3),
-    0 1px 3px rgba(33, 150, 243, 0.2);
+  background: #2563eb;
+  animation: dotFade 1.2s ease-in-out infinite;
+  opacity: 0.4;
 }
 
 .loading-dot:nth-child(1) {
@@ -917,23 +812,11 @@ const canSend = computed(() => {
   font-size: 14px;
   color: #565869;
   font-weight: 500;
-  animation: textFade 2s ease-in-out infinite;
 }
 
-@keyframes dotBounce {
-  0%, 80%, 100% {
-    transform: translateY(0) scale(1);
-    opacity: 0.5;
-  }
-  40% {
-    transform: translateY(-20px) scale(1.2);
-    opacity: 1;
-  }
-}
-
-@keyframes textFade {
+@keyframes dotFade {
   0%, 100% {
-    opacity: 0.6;
+    opacity: 0.4;
   }
   50% {
     opacity: 1;
@@ -941,21 +824,21 @@ const canSend = computed(() => {
 }
 
 .loading-fade-enter-active {
-  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .loading-fade-leave-active {
-  transition: all 0.3s ease-in;
+  transition: all 0.2s cubic-bezier(0.4, 0, 1, 1);
 }
 
 .loading-fade-enter-from {
   opacity: 0;
-  transform: translateY(20px) scale(0.9);
+  transform: scale(0.9);
 }
 
 .loading-fade-leave-to {
   opacity: 0;
-  transform: translateY(-10px) scale(0.95);
+  transform: scale(0.95);
 }
 
 /* 用户消息后的等待动画（三个点跳动） */
@@ -964,8 +847,6 @@ const canSend = computed(() => {
   gap: 12px;
   align-self: flex-start;
   max-width: 85%;
-  animation: typingSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
-  will-change: transform, opacity;
   margin-top: 8px;
 }
 
@@ -1007,14 +888,12 @@ const canSend = computed(() => {
 }
 
 .typing-dot-item {
-  width: 10px;
-  height: 10px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #2196f3 0%, #42a5f5 100%);
-  animation: typingDotBounce 1.4s ease-in-out infinite;
-  box-shadow: 
-    0 2px 6px rgba(33, 150, 243, 0.3),
-    0 1px 2px rgba(33, 150, 243, 0.2);
+  background: #2563eb;
+  animation: typingDotFade 1.2s ease-in-out infinite;
+  opacity: 0.4;
 }
 
 .typing-dot-item:nth-child(1) {
@@ -1029,44 +908,31 @@ const canSend = computed(() => {
   animation-delay: 0.4s;
 }
 
-@keyframes typingSlideIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px) scale(0.95);
+@keyframes typingDotFade {
+  0%, 100% {
+    opacity: 0.4;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-@keyframes typingDotBounce {
-  0%, 80%, 100% {
-    transform: translateY(0) scale(1);
-    opacity: 0.5;
-  }
-  40% {
-    transform: translateY(-12px) scale(1.15);
+  50% {
     opacity: 1;
   }
 }
 
 .typing-fade-enter-active {
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .typing-fade-leave-active {
-  transition: all 0.3s ease-in;
+  transition: all 0.2s cubic-bezier(0.4, 0, 1, 1);
 }
 
 .typing-fade-enter-from {
   opacity: 0;
-  transform: translateY(10px) scale(0.95);
+  transform: translateY(10px);
 }
 
 .typing-fade-leave-to {
   opacity: 0;
-  transform: translateY(-5px) scale(0.98);
+  transform: translateY(-5px);
 }
 
 /* 调试面板样式 */
@@ -1086,6 +952,26 @@ const canSend = computed(() => {
   z-index: 200;
   overflow: hidden;
   backdrop-filter: blur(10px);
+  transform-origin: top right;
+}
+
+/* 调试面板动画 */
+.debug-panel-enter-active {
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.debug-panel-leave-active {
+  transition: all 0.2s cubic-bezier(0.4, 0, 1, 1);
+}
+
+.debug-panel-enter-from {
+  opacity: 0;
+  transform: translateX(100%) scale(0.9);
+}
+
+.debug-panel-leave-to {
+  opacity: 0;
+  transform: translateX(100%) scale(0.95);
 }
 
 .debug-panel-header {
@@ -1125,7 +1011,6 @@ const canSend = computed(() => {
 .debug-close:hover {
   background: rgba(255, 152, 0, 0.1);
   color: #ff9800;
-  transform: scale(1.1);
 }
 
 .debug-panel-content {

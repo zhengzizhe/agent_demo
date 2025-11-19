@@ -1,0 +1,13 @@
+<dl-mix-entity-table [requester]="tableRequester" [headItems]="tableHead" [opButtonGroup]="fileTableOpMenus"
+                     [contextMenus]="tableItemDropDownMenu" (onContextMenuClick)="onContextMenuClick($event)"
+                     (onOpButtonClick)="onOpButtonClick($event)"
+                     [colItem2Template]="col2Tpl" [colItem3Template]="col3Tpl"
+                     #mixEntityTable></dl-mix-entity-table>
+
+<ng-template #col2Tpl let-item>
+    <span class="table-col-span">{{ item.owner?.name }}</span>
+</ng-template>
+
+<ng-template #col3Tpl let-item>
+    <span class="table-col-span">{{ item.deletedRemain }}天</span>
+</ng-template>

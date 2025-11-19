@@ -90,12 +90,9 @@ watch(() => props.form.message, () => {
 <style scoped>
 /* 输入区域 */
 .input-container {
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
-  background: linear-gradient(to top, #ffffff 0%, #fafafa 100%);
-  padding: 28px 64px;
-  box-shadow: 
-    0 -4px 16px rgba(0, 0, 0, 0.04),
-    0 -1px 2px rgba(0, 0, 0, 0.06);
+  border-top: 1px solid #e5e7eb;
+  background: #ffffff;
+  padding: 20px 32px;
   position: relative;
   z-index: 10;
 }
@@ -114,25 +111,20 @@ watch(() => props.form.message, () => {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 16px;
-  background: linear-gradient(135deg, rgba(33, 150, 243, 0.1) 0%, rgba(33, 150, 243, 0.05) 100%);
-  border: 1px solid rgba(33, 150, 243, 0.2);
-  border-radius: 20px;
+  padding: 6px 12px;
+  background: #eff6ff;
+  border: 1px solid #dbeafe;
+  border-radius: 6px;
   font-size: 13px;
   font-weight: 500;
-  color: #2196f3;
-  letter-spacing: 0.02em;
-  box-shadow: 
-    0 2px 8px rgba(33, 150, 243, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6);
-  animation: planningBlink 1.5s ease-in-out infinite;
+  color: #2563eb;
 }
 
 .planning-dot {
   display: inline-block;
   width: 6px;
   height: 6px;
-  background: #2196f3;
+  background: #2563eb;
   border-radius: 50%;
   animation: planningDot 1.5s ease-in-out infinite;
   flex-shrink: 0;
@@ -155,45 +147,15 @@ watch(() => props.form.message, () => {
   max-width: 1200px;
   margin: 0 auto;
   background: #ffffff;
-  border: 2px solid rgba(0, 0, 0, 0.1);
-  border-radius: 28px;
-  padding: 14px 18px;
-  box-shadow: 
-    0 4px 16px rgba(0, 0, 0, 0.08),
-    0 2px 4px rgba(0, 0, 0, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  backdrop-filter: blur(10px);
-}
-
-.input-wrapper::before {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  border-radius: 26px;
-  padding: 2px;
-  background: linear-gradient(135deg, #42a5f5, #1976d2);
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  opacity: 0;
-  transition: opacity 0.3s;
-  pointer-events: none;
-  z-index: -1;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px 16px;
+  transition: all 0.15s ease-out;
 }
 
 .input-wrapper:focus-within {
-  border-color: transparent;
-  box-shadow: 
-    0 6px 20px rgba(66, 165, 245, 0.2),
-    0 2px 6px rgba(66, 165, 245, 0.15);
-  transform: translateY(-2px) scale(1.002);
-  animation: inputFocusPulse 2s ease-in-out infinite;
-}
-
-.input-wrapper:focus-within::before {
-  opacity: 1;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
 .orchestrator-input {
@@ -201,34 +163,30 @@ watch(() => props.form.message, () => {
   padding: 8px 12px;
   background: transparent;
   border: none;
-  border-radius: 16px;
-  color: #353740;
+  border-radius: 6px;
+  color: #111827;
   font-size: 13px;
   font-weight: 500;
-  position: relative;
-  z-index: 1;
 }
 
 .orchestrator-input:focus {
   outline: none;
-  background: #f7f7f8;
+  background: #f3f4f6;
 }
 
 .message-input {
   flex: 1;
-  padding: 12px 16px;
+  padding: 8px 12px;
   background: transparent;
   border: none;
-  border-radius: 18px;
-  color: #353740;
-  font-size: 16px;
+  border-radius: 6px;
+  color: #111827;
+  font-size: 15px;
   font-family: inherit;
   resize: none;
   max-height: 200px;
   overflow-y: auto;
-  line-height: 1.6;
-  position: relative;
-  z-index: 1;
+  line-height: 1.5;
 }
 
 .message-input:focus {
@@ -236,7 +194,7 @@ watch(() => props.form.message, () => {
 }
 
 .message-input::placeholder {
-  color: #8e8ea0;
+  color: #9ca3af;
 }
 
 .message-input:disabled {
@@ -245,64 +203,27 @@ watch(() => props.form.message, () => {
 }
 
 .send-button {
-  padding: 12px 24px;
-  background: linear-gradient(135deg, #19c37d 0%, #16a570 100%);
+  padding: 10px 20px;
+  background: #2563eb;
   color: white;
   border: none;
-  border-radius: 20px;
-  font-size: 15px;
-  font-weight: 600;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: background-color 0.15s ease-out;
   white-space: nowrap;
   min-width: 80px;
-  box-shadow: 
-    0 2px 8px rgba(66, 165, 245, 0.25),
-    0 1px 2px rgba(66, 165, 245, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  position: relative;
-  overflow: hidden;
-  transform-origin: center;
-}
-
-.send-button::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-  transition: left 0.5s;
-}
-
-.send-button:hover:not(:disabled)::before {
-  left: 100%;
 }
 
 .send-button:hover:not(:disabled) {
-  background: linear-gradient(135deg, #16a570 0%, #138d5f 100%);
-  transform: translateY(-2px);
-  box-shadow: 
-    0 4px 12px rgba(66, 165, 245, 0.35),
-    0 2px 4px rgba(66, 165, 245, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
-}
-
-.send-button:active:not(:disabled) {
-  transform: translateY(0) scale(0.95);
-  box-shadow: 
-    0 2px 6px rgba(66, 165, 245, 0.3),
-    inset 0 1px 2px rgba(0, 0, 0, 0.1);
-  animation: buttonClick 0.2s ease-out;
+  background-color: #1d4ed8;
 }
 
 .send-button:disabled {
-  background: linear-gradient(135deg, #d1d1d6 0%, #b5b5b9 100%);
+  background-color: #d1d5db;
   cursor: not-allowed;
-  opacity: 0.5;
-  transform: none;
-  box-shadow: none;
+  opacity: 0.6;
 }
 
 @keyframes fadeInDown {

@@ -14,7 +14,7 @@ import org.jooq.JSONB;
 @Setter
 @Serdeable
 public class VectorDocumentPO {
-    private Long id;
+    private String embeddingId;
     private Long ragId;
     private String content;
     private float[] embedding; // 向量数组

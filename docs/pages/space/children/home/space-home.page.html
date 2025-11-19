@@ -1,0 +1,38 @@
+<div class="page-main-top">
+    <div class="content">
+        <h2>空间首页</h2>
+    </div>
+    <div class="tools">
+        <dl-global-searcher></dl-global-searcher>
+        <button dl-button icon="bc_huanyige" (click)="onRefresh()">刷新</button>
+    </div>
+</div>
+
+<div class="control-group">
+    <span></span>
+    <!--    <dl-tab [items]="tabs" (onTabChange)="onTabChange($event)"></dl-tab>-->
+
+    <dl-page-btn-group [(listMode)]="listMode" [useCreateBtn]="permissionMap.createAble" [useDropMenuBtn]="true"
+                       (onCreateDoc)="onCreateDoc()" (onCreateFolder)="onCreateFolder()">
+        <div class="dl-dropdown-menu dropdownMenu">
+            @for (item of opsList; track item.id) {
+                <div [class]="['dl-dropdown-menu-item', item.className]" (click)="onMenuClick(item)">
+                    <i [class]="['bc_icon', item.icon]"></i>
+                    <span class="dl-dropdown-menu-item__title">{{ item.label }}</span>
+                </div>
+
+                <!--            @if (item.divide) {-->
+                    <!--                <div class="dl-dropdown-menu-divider"></div>-->
+                    <!--            }-->
+            }
+        </div>
+    </dl-page-btn-group>
+</div>
+
+<folder-card-list [entityId]="spaceId" [queryParams]="folderListQueryParams"
+                  *ngIf="spaceId" #folderCardList></folder-card-list>
+
+<file-table style="margin-top: 16px; flex: 1; overflow: hidden;" *ngIf="spaceId" [singleMode]="listMode === 'list-simple'" (onNavigate)="onNavToDoc($event)"
+            [queryParams]="fileTableQueryParams" (onItemsChange)="onFileTableItemsChange($event)"
+            #fileTable>
+</file-table>

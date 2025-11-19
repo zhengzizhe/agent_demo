@@ -1,0 +1,30 @@
+@use "../../../../styles/mixin" as *;;
+
+:host {
+
+    .dialog {
+        width: 518px;
+        @include dl-dialog;
+    }
+
+    .dialog-body {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .form-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .tip {
+        padding: 4px;
+        background: var(--cs-bg-color-3);
+        border-radius: 4px;
+        font-size: 10px;
+        color: var(--cs-font-color-2);
+    }
+}

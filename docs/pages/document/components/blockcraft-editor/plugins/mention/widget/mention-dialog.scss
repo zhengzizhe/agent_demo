@@ -1,0 +1,134 @@
+:host {
+    display: block;
+    width: 400px;
+    border-radius: 4px;
+    border: 1px solid #E6E6E6;
+    background: #FFF;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.10);
+    max-height: 50vh;
+    overflow-y: auto;
+
+    .mention-dialog {
+
+        &__header {
+            border-bottom: 1px solid #E6E6E6;
+
+            .tab-btn-list {
+                display: flex;
+                padding: 0 8px 0;
+                font-size: 14px;
+                color: #999;
+                list-style: none;
+                margin: 0;
+
+                &__item {
+                    padding: 0 12px;
+                    cursor: pointer;
+                    margin: 0;
+
+                    > span {
+                        display: inline-block;
+                        height: 40px;
+                        line-height: 40px;
+                    }
+
+                    &:hover {
+                        color: #4857E2;
+                    }
+
+                    &.active {
+                        font-weight: bold;
+                        color: #4857E2;
+
+                        > span {
+                            position: relative;
+
+                            &::before {
+                                position: absolute;
+                                content: '';
+                                width: 100%;
+                                height: 3px;
+                                background: #4857E2;
+                                bottom: -2px;
+                                left: 0;
+                                border-radius: 10px;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        &__content {
+            padding: 8px;
+            max-height: 360px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            width: 100%;
+
+            &__item {
+                width: 100%;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 8px;
+                height: 48px;
+
+                .icon-wrapper {
+                    width: 32px;
+                    height: 32px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border-radius: 50%;
+                    background: #EEF8FF;
+                    font-size: 20px;
+                    cursor: pointer;
+                }
+
+                .user-avatar {
+                    width: 32px;
+                    height: 32px;
+                    border-radius: 50%;
+                    overflow: hidden;
+                }
+
+                .mention-info {
+                    display: flex;
+                    flex-direction: column;
+                    //gap: 4px;
+
+                    .mention-name {
+                        display: flex;
+                        height: 20px;
+                        align-items: center;
+                        gap: 4px;
+                        font-size: 14px;
+                    }
+
+                    .mention-dept {
+                        font-size: 12px;
+                        color: #999;
+                        line-height: 16px;
+                    }
+
+                    ::ng-deep mark {
+                        background: var(--cs-mark-color);
+                    }
+                }
+            }
+        }
+
+        &__footer {
+            margin-top: 8px;
+            border-top: 1px solid #E6E6E6;
+
+            button {
+                width: 100%;
+            }
+        }
+    }
+}

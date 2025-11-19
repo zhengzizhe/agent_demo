@@ -1,0 +1,22 @@
+:host {
+    display: block;
+    height: 100%;
+
+    .version-brand {
+        padding: 4px 8px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+}
+
+.dl-dropdown-menu-item {
+    height: fit-content;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    max-width: 240px;
+
+    > div {
+        width: 100%;
+    }
+}

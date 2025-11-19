@@ -1,0 +1,247 @@
+import {
+    BlockCraftError,
+    characterAtDelta, DeltaInsert,
+    DocPlugin, ErrorCode,
+    EventListen, getPositionWithOffset,
+    IBlockTextRange, nextTick,
+    ORIGIN_SKIP_SYNC,
+    UIEventStateContext
+} from '@ccc/blockcraft';
+import { debounceTime, fromEventPattern, skip, Subject, takeUntil } from 'rxjs';
+import { MentionType, IMentionRequest } from './types';
+import { MentionDialog } from './widget/mention-dialog';
+import { DocService, RouterService } from '@/pages/docs/services';
+import { MENTION_EMBED_CONVERTER } from '@/pages/doc-library/pages/editor-page/blockcraft-editor/const';
+
+export class MentionPlugin extends DocPlugin {
+    override name = 'mention';
+
+    private _closeDialog$ = new Subject();
+
+    docService: DocService;
+
+    constructor(private request: IMentionRequest) {
+        super();
+    }
+
+    init() {
+        this.docService = this.doc.injector.get(DocService);
+    }
+
+    @EventListen('beforeInput', { flavour: 'root' })
+    onBindingInput(ctx: UIEventStateContext) {
+        const e = ctx.getDefaultEvent<InputEvent>();
+        const curSel = this.doc.selection.value!;
+        if (e.data !== '@' || e.isComposing || !curSel.collapsed || curSel.from.type !== 'text' || curSel.from.block.plainTextOnly) return;
+
+        const from = curSel.from;
+        // @前字符为 空格 时触发
+        if (from.index > 0 && characterAtDelta(from.block.textDeltas(), from.index) !== ' ') return;
+
+        e.preventDefault();
+        this.openMention(from);
+        return true;
+    }
+
+    @EventListen('mouseDown', { flavour: 'root' })
+    onMouseDown(ctx: UIEventStateContext) {
+        const e = ctx.getDefaultEvent() as MouseEvent;
+        if (e.button !== 0) return;
+        const target = e.target;
+        if (!(target instanceof HTMLElement) || !target.getAttribute('data-mention-id')) return;
+        const delta = MENTION_EMBED_CONVERTER.toDelta(target);
+        this.onMentionClick(delta, e);
+        return true;
+    }
+
+    openMention(selection: IBlockTextRange) {
+        let { index, block } = selection;
+
+        this.doc.crud.transact(() => {
+            // 伪造mention-placeholder输入
+            this.doc.inlineManager.applyDeltaToView([
+                { retain: index },
+                { insert: '@', attributes: { 'a:mention-placeholder': true } }
+            ], block.containerElement);
+            block.yText.insert(index, '@');
+        }, ORIGIN_SKIP_SYNC);
+
+        const target = block.containerElement.querySelector(`[mention-placeholder]`);
+        if (!target || !(target instanceof HTMLElement)) return;
+        const textNode = target.firstElementChild?.firstChild;
+        if (!textNode || !(textNode instanceof Text)) return;
+
+        this.doc.selection.setCursorAt(block, index + 1);
+
+        const calcPos = () => {
+            const range = window.document.createRange();
+            range.setStart(textNode, 0);
+            range.collapse();
+            const sel = this.doc.selection.normalizeRange(range);
+            if (sel.to || sel.from.type !== 'text') {
+                throw new BlockCraftError(ErrorCode.SelectionError, 'UnExcepted selection');
+            }
+            sel.from.length = textNode.length;
+            return sel.from;
+        };
+
+        // 键盘绑定
+        const tempBindings = [
+            // !!!!!!!!! 阻止默认输入法关闭事件
+            this.doc.event.add('compositionEnd', ctx => {
+                const ev = ctx.getDefaultEvent<CompositionEvent>();
+                ev.preventDefault();
+
+                const { value: sel, next } = this.doc.selection.recalculate(false, { isComposing: true });
+                if (!sel || sel.from.type !== 'text') {
+                    throw new BlockCraftError(ErrorCode.InlineEditorError, `Invalid inputRange`);
+                }
+                const text = ev.data;
+                // 实时更新光标位置, 同时解决协同时位置不符的问题
+                index = sel.from.index;
+                this.doc.crud.transact(() => {
+                    block.yText.insert(index === 0 ? 0 : index - text.length, text);
+                }, ORIGIN_SKIP_SYNC);
+                next?.();
+                return true;
+            }, { blockId: block.id }),
+            this.doc.event.bindHotkey({ key: 'Escape' }, ctx => {
+                ctx.preventDefault();
+                if (this.doc.event.status.isComposing) return;
+                this._closeDialog$.next(true);
+                return true;
+            }, { blockId: block.id }),
+            this.doc.event.bindHotkey({ key: 'ArrowUp' }, ctx => {
+                ctx.preventDefault();
+                dialog.instance.moveSelect('up');
+                return true;
+            }, { blockId: block.id }),
+            this.doc.event.bindHotkey({ key: 'ArrowDown' }, ctx => {
+                ctx.preventDefault();
+                dialog.instance.moveSelect('down');
+                return true;
+            }, { blockId: block.id }),
+            this.doc.event.bindHotkey({ key: 'Tab' }, ctx => {
+                ctx.preventDefault();
+                dialog.instance.switchTab();
+                return true;
+            }, { blockId: block.id }),
+            this.doc.event.bindHotkey({ key: 'Enter' }, ctx => {
+                ctx.preventDefault();
+                if (this.doc.event.status.isComposing) return;
+                dialog.instance.onSure();
+                return true;
+            }, { blockId: block.id })
+        ];
+
+        const { componentRef: dialog } = this.doc.overlayService.createConnectedOverlay<MentionDialog>({
+            target,
+            component: MentionDialog,
+            positions: [getPositionWithOffset('bottom-left'), getPositionWithOffset('top-left'),
+                getPositionWithOffset('bottom-right'), getPositionWithOffset('top-right')]
+        }, this._closeDialog$, () => {
+            tempBindings.forEach(v => v());
+            if (!textNode || !textNode.isConnected) return;
+            const { block, index, length } = calcPos();
+            block.formatText(index, length, { 'a:mention-placeholder': null });
+        });
+
+        let _tab: MentionType = 'user';
+
+        const searchList = () => {
+            if (this.doc.event.status.isComposing) return;
+            if (!textNode.textContent) return this._closeDialog$.next(true);
+            const keyword = textNode.textContent?.trim().slice(1) || '';
+            this.request(keyword, _tab).then(res => {
+                dialog.setInput('list', res.list);
+            });
+        };
+
+        // 监听tab change
+        dialog.instance.tabChange.pipe(takeUntil(this._closeDialog$)).subscribe(type => {
+            _tab = type;
+            searchList();
+        });
+
+        // 监听输入变化 搜索
+        let mutationObserver: MutationObserver;
+        fromEventPattern(
+            handler => {
+                mutationObserver = new MutationObserver(handler);
+                mutationObserver.observe(textNode, { characterData: true });
+            },
+            () => mutationObserver?.disconnect()
+        ).pipe(debounceTime(300), takeUntil(this._closeDialog$)).subscribe(searchList);
+
+        // target失焦关闭时机
+        this.doc.selection.changeObserve().pipe(skip(1), takeUntil(this._closeDialog$)).subscribe(v => {
+            if (!v || !v.collapsed) return this._closeDialog$.next(true);
+            const { startContainer, endContainer } = v?.raw;
+            if (startContainer !== endContainer || !target.contains(startContainer)) {
+                this._closeDialog$.next(true);
+            }
+        });
+
+        // 确定输入
+        dialog.instance.confirm.pipe(takeUntil(this._closeDialog$)).subscribe(({ id, name }) => {
+            const { block, index, length } = calcPos();
+            block.applyDeltaOperations([
+                { retain: index },
+                { delete: length },
+                {
+                    insert: { mention: name },
+                    attributes: {
+                        'd:mentionId': id,
+                        'd:mentionType': _tab
+                    }
+                },
+                { insert: ' ' }
+            ]);
+            nextTick().then(() => {
+                this.doc.selection.setCursorAt(block, index + 2);
+            });
+            this._closeDialog$.next(true);
+        });
+
+    }
+
+    onMentionClick(delta: DeltaInsert, e: MouseEvent) {
+        const id = delta.attributes['d:mentionId'] as string;
+        const type = delta.attributes['d:mentionType'] as MentionType;
+        const text = delta.insert['mention'] as string;
+        switch (type) {
+            case 'user':
+                this.docService.showUserCard(id, e.target as HTMLElement, [
+                    {
+                        title: '复制文本',
+                        onClick: () => {
+                            const target = e.target as HTMLElement;
+                            const delta = MENTION_EMBED_CONVERTER.toDelta(target);
+                            // @ts-ignore
+                            const p = this.doc.schemas.createSnapshot('paragraph', [[delta]]);
+                            this.doc.clipboard.copyBlocksModel([p]).then(() => {
+                                this.doc.messageService.success('复制成功');
+                            });
+                        }
+                    },
+                    {
+                        title: '复制用户ID',
+                        onClick: () => {
+                            this.doc.clipboard.copyText(id).then(() => {
+                                this.doc.messageService.success('复制成功');
+                            });
+                        }
+                    }
+                ]);
+                break;
+            case 'doc':
+                this.doc.injector.get(RouterService).navigateToDoc(id, text, { page: 'home' });
+                break;
+        }
+    }
+
+    destroy(): void {
+        this._closeDialog$.next(true);
+    }
+
+}

@@ -1,0 +1,77 @@
+@if (isLoading) {
+    <dl-spin></dl-spin>
+}
+
+<ngx-graph *ngIf="nodes.length"
+           [links]="links"
+           [nodes]="nodes"
+           [curve]="curve"
+           [layout]="layout"
+           [nodeHeight]="34"
+           [layoutSettings]="layoutSettings"
+           [enableZoom]="true"
+           [autoZoom]="false"
+           [draggingEnabled]="false" #graphComponent
+>
+    <ng-template #nodeTemplate let-node>
+        <svg:g class="custom-node" style="pointer-events: all;">
+            <svg:foreignObject [attr.width]="node.data.width" height="26">
+                <div class="cardContainer" [style.background-color]="node.data.backgroundColor"
+                     [class.active]="selectedTagSet.has(node.id)">
+                    <span class="name" [style.color]="node.data.c" (click)="onNodeTagClick($event, node)">
+                        {{ node.label }}
+                    </span>
+                    <div class="adder" (click)="onNodeAdderClick($event, node)" *ngIf="!readonly">
+                        <i class="bc_icon bc_add-circle"></i>
+                    </div>
+                    <i class="bc_icon bc_youjiantou expand-toggle" [class.active]="node.data.expanded" (click)="onToggleExpand(node)"
+                       *ngIf="node.data.hasChild && node.data.parentId"></i>
+                </div>
+            </svg:foreignObject>
+        </svg:g>
+    </ng-template>
+
+    <ng-template #linkTemplate let-link>
+        <svg:g class="edge">
+            <svg:path class="line" stroke-width="1"
+            ></svg:path>
+        </svg:g>
+    </ng-template>
+
+    <!--    <ng-template #linkTemplate let-link>-->
+    <!--        <svg:g class="edge" >-->
+    <!--            <svg:path class="line" stroke-width="2" [attr.marker-end]="'url(#arrow-' + link.id + ')'"-->
+    <!--                      style="cursor: pointer; pointer-events: stroke; z-index: 2;" (click)="onLinkClick(link, $event)"-->
+    <!--            ></svg:path>-->
+    <!--        </svg:g>-->
+    <!--    </ng-template>-->
+
+    <!--    <ng-template #defsTemplate>-->
+    <!--        <svg:defs>-->
+    <!--            <ng-container *ngFor="let link of links">-->
+    <!--                <svg:marker-->
+    <!--                    [attr.id]="'arrow-' + link.id"-->
+    <!--                    viewBox="0 0 10 10"-->
+    <!--                    refX="4"-->
+    <!--                    refY="4"-->
+    <!--                    markerWidth="16"-->
+    <!--                    markerHeight="8"-->
+    <!--                    orient="auto"-->
+    <!--                >-->
+    <!--                    <svg:g class="arrow" [attr.transform]="'translate(6) rotate(' + (link.data.expanded ? 270 : 180) + ' 4 4)'">-->
+    <!--                        <svg:circle cx="4" cy="4" r="4" fill="white"></svg:circle>-->
+    <!--                        <svg:path-->
+    <!--                            d="M4 0C1.7857 0 0 1.7857 0 4C0 6.2143 1.7857 8 4 8C6.2143 8 8 6.2143 8 4C7.9857 1.7857 6.2 0 4 0ZM4 7.4286C2.1 7.4286 0.5714 5.8857 0.5714 4C0.5714 2.1143 2.1 0.5714 4 0.5714C5.9 0.5714 7.4286 2.1143 7.4286 4C7.4286 5.8857 5.8857 7.4286 4 7.4286Z"-->
+    <!--                            fill="#4857E2"-->
+    <!--                        ></svg:path>-->
+    <!--                        <svg:path-->
+    <!--                            d="M5.34135 2.9934L3.993 4.4151L2.6447 2.9934C2.53575 2.8808 2.3723 2.8808 2.26335 2.9934C2.1544 3.106 2.1544 3.2749 2.26335 3.3875L3.81596 5.0063C3.87044 5.0626 3.93853 5.0907 4.00663 5.0907C4.07473 5.0907 4.14283 5.0626 4.19731 5.0063L5.7363 3.3875C5.84525 3.2749 5.84525 3.0919 5.7363 2.9934C5.6137 2.8808 5.43665 2.8949 5.34135 2.9934Z"-->
+    <!--                            fill="#4857E2"-->
+    <!--                        ></svg:path>-->
+    <!--                    </svg:g>-->
+    <!--                </svg:marker>-->
+    <!--            </ng-container>-->
+    <!--        </svg:defs>-->
+    <!--    </ng-template>-->
+</ngx-graph>
+

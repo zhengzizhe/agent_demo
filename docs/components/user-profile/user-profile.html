@@ -1,0 +1,5 @@
+<img class="avatar dl-avatar-24" [src]="user?.id | avatar" [style.width.px]="avatarSize" [style.height.px]="avatarSize" />
+<div class="info">
+    <span class="name">{{ user?.userName }}</span>
+    <span class="desc" *ngIf="user?.deptName">{{ user?.deptName }}/{{ user?.orgName }}</span>
+</div>

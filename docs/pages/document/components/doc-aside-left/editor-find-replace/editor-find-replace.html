@@ -1,0 +1,57 @@
+<div class="wrapper">
+    <div class="input dl-input">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="12" viewBox="0 0 14 12" fill="none">
+            <path
+                d="M5.80273 0C9.00641 0 11.6053 2.50001 11.6055 5.58203C11.6055 7.08057 10.9883 8.43742 9.99121 9.44043L11.9395 11.3164C12.0542 11.4268 12.0028 11.657 11.8262 11.8301C11.7115 11.9405 11.5717 11.9999 11.457 12C11.3919 12 11.3339 11.9807 11.292 11.9404L9.30566 10.0273C8.33031 10.7392 7.12073 11.166 5.80273 11.166C2.59903 11.1659 0 8.66563 0 5.58203C0.000172876 2.50006 2.59758 8.88247e-05 5.80273 0ZM5.80176 0.881836C3.10687 0.881976 0.914298 2.99022 0.914062 5.58105C0.914062 8.17357 3.10673 10.2831 5.80176 10.2832C8.49691 10.2832 10.6895 8.17366 10.6895 5.58105C10.6892 2.99014 8.49676 0.881836 5.80176 0.881836Z"
+                fill="#999999" />
+        </svg>
+        <input type="text" placeholder="页面中的文本" [(ngModel)]="findText" (ngModelChange)="onFindTextChange()"
+               (keydown.shift.enter)="findPrev()" (keydown.enter)="findNext()" #findInput />
+
+        <span class="flag-group">
+            <span>/</span>
+            @for (item of regFlagList; track item.value) {
+                <span class="flag dl-btn-hover" [class.active]="item.checked" nz-tooltip [nzTooltipTitle]="item.title"
+                      (click)="onFlagChange(item)">{{ item.name }}</span>
+            }
+        </span>
+    </div>
+
+    @if (!(doc.readonlySwitch$ | async)) {
+        <div class="input dl-input">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="12" viewBox="0 0 14 12" fill="none">
+                <path d="M8 1.5L13 6M13 6L8 10.5M13 6L1 6" stroke="#999999" stroke-linecap="round"
+                      stroke-linejoin="round" />
+            </svg>
+            <input type="text" placeholder="用于替换的文本" [(ngModel)]="replaceText" />
+        </div>
+    }
+
+    <div class="row" [hidden]="!matchedList.length">
+        <div class="count">
+            <span>{{ matchIndex + 1 }} / {{ matchedList.length }}</span>
+            个在页面上
+        </div>
+
+        <span class="dl-btn-hover" (mousedown)="$event.preventDefault(); findPrev()" style="transform: rotate(180deg);">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="15" viewBox="0 0 14 15" fill="none">
+              <path d="M10.6004 8.19981L7.00039 11.6998M7.00039 11.6998L3.40039 8.1998M7.00039 11.6998L7.00039 3.2998"
+                    stroke="#333333" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+        </span>
+        <span class="dl-btn-hover" (mousedown)="$event.preventDefault(); findNext()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="15" viewBox="0 0 14 15" fill="none">
+              <path d="M10.6004 8.19981L7.00039 11.6998M7.00039 11.6998L3.40039 8.1998M7.00039 11.6998L7.00039 3.2998"
+                    stroke="#333333" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+        </span>
+    </div>
+
+    <div class="btn-group" [hidden]="!matchedList.length || !replaceText">
+        <button dl-button type="simple" (click)="replaceOne()">替换</button>
+        <button dl-button type="simple" (click)="replaceAll()">全部替换</button>
+    </div>
+</div>
+
+
+

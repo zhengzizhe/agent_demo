@@ -50,8 +50,9 @@ public interface IVectorDocumentRepository {
     /**
      * 根据ID删除向量文档
      */
-    int deleteById(DSLContext dslContext, Long id);
+    int deleteById(DSLContext dslContext, String embeddingId);
 }
+
 
 
 

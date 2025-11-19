@@ -1,0 +1,41 @@
+<dl-spin-mask [dlSpinning]="isLoading" [text]="'正在移动' + entityList.length + '个文件'">
+    <div class="dl-dialog">
+        <div class="dialog-header">
+            <h3 class="dialog-title">移动到</h3>
+            <i class="bc_icon bc_guanbi dialog-close-btn" (click)="onClose.emit()"></i>
+        </div>
+
+        <div class="dialog-divider-line"></div>
+
+        <div class="dialog-body">
+
+            <div class="left">
+                <p class="left-tit">空间</p>
+                <div class="space-list">
+                    @for (item of spaceList; track item.id) {
+                        <button class="space-item dl-btn-hover" [class.is-disabled]="disabledIds.has(item.id)"
+                                [class.active]="item == activeSpace" (click)="toggleSpace(item)">
+                            <i class="bc_icon bc_kongjian icon-space"></i>
+                            {{ item.name }}
+                        </button>
+                    }
+                </div>
+            </div>
+
+            <div class="right">
+                <dl-folder-tree-view [parentEntity]="activeSpace" [disabledIds]="disabledIds" [lockedChildrenDisabledIds]="lockedDisabledIds"
+                                     *ngIf="activeSpace" (selectedChange)="onSelectedChange($event)" #folderTreeView></dl-folder-tree-view>
+            </div>
+
+        </div>
+
+        <div class="dialog-divider-line"></div>
+
+        <div class="dialog-footer">
+            <button dl-button (click)="onClose.emit()">取消</button>
+            <button dl-button type="primary" [dlDisabled]="!selectedEntity || disabledIds.has(selectedEntity.id)" (click)="onSure()">移动</button>
+        </div>
+    </div>
+</dl-spin-mask>
+
+

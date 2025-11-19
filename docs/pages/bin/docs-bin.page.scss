@@ -1,0 +1,9 @@
+:host {
+    ::ng-deep .table-col-span {
+        padding-left: 4px;
+    }
+
+    dl-mix-entity-table {
+        flex: 1;
+    }
+}

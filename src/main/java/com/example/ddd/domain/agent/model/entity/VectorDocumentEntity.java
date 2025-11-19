@@ -13,15 +13,18 @@ import java.util.Map;
 @Setter
 @Serdeable
 public class VectorDocumentEntity {
-    private Long id;
+    private String embeddingId;
     private Long ragId;
-    private String content;
+    private String text;
     private float[] embedding; // 向量数组
     private Map<String, Object> metadata; // 元数据
     private Integer chunkIndex;
     private Long createdAt;
     private Long updatedAt;
 }
+
+
+
 
 
 

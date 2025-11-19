@@ -1,0 +1,70 @@
+@import "../../styles/mixin";
+
+:host {
+    width: 532px;
+    @include dl-dialog;
+    font-size: 14px;
+    line-height: 24px;
+
+    .dialog-body {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .body-row {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+
+        > label {
+            text-align: start;
+            width: 4em;
+        }
+
+        .body-row-content {
+            flex: 1;
+            overflow: hidden;
+            min-width: 0;
+        }
+
+    }
+
+    .tag-add {
+        width: 40px;
+        background: var(--cs-bg-color-2, #f5f5f5);
+        color: var(--cs-font-color-3);
+        cursor: pointer;
+    }
+
+    .desc-textarea {
+        line-height: 24px;
+    }
+
+    .folder-paths {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        flex-wrap: wrap;
+        word-break: break-all;
+
+        //.path-item {
+        //    transition: all .15s ease-in-out;
+        //    cursor: pointer;
+        //
+        //    &:hover {
+        //        color: var(--cs-font-color-2);
+        //    }
+        //}
+
+        > i {
+            font-size: 8px;
+
+            &:last-child {
+                display: none;
+            }
+        }
+    }
+
+}

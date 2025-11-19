@@ -1,0 +1,60 @@
+:host {
+    display: flex;
+    align-items: center;
+    padding: 4px;
+    border-radius: 8px;
+    background: var(--cs-bg-color-3);
+    color: var(--cs-font-color);
+    position: relative;
+
+    .dl-tab-item {
+        z-index: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 4px;
+        width: 64px;
+        height: 25px;
+        font-size: 12px;
+        cursor: pointer;
+
+        .icon {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 14px;
+            height: 14px;
+            color: inherit;
+        }
+
+        &.active {
+            color: var(--cs-primary-color);
+        }
+
+        &.disable {
+            color: var(--cs-font-color-3);
+            cursor: not-allowed;
+        }
+    }
+
+    .slider-block {
+        position: absolute;
+        top: 4px;
+        width: 64px;
+        height: 25px;
+        border-radius: 8px;
+        transition: all ease .2s;
+        background: var(--cs-bg-color);
+        box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.10);
+    }
+
+    .drop-btn {
+        width: 14px;
+        height: 14px;
+        line-height: 14px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+    }
+}

@@ -1,0 +1,64 @@
+<aside dl-aside-menu>
+
+    <div class="aside-head">
+        <h1 class="page-title">文档库</h1>
+        <h2 class="page-slogan">智能文档，让协同创作更高效</h2>
+    </div>
+
+<!--    <button class="main-add-button" (click)="createDoc()">-->
+<!--        <span class="text">-->
+<!--          <i class="bc_icon bc_tianjia-2"></i>-->
+<!--          新建文档-->
+<!--        </span>-->
+<!--        &lt;!&ndash;    <span class="dropdown-btn">&ndash;&gt;-->
+<!--        &lt;!&ndash;      <i class="bc_icon bc_caidan"></i>&ndash;&gt;-->
+<!--        &lt;!&ndash;    </span>&ndash;&gt;-->
+<!--    </button>-->
+
+<!--    <div class="divider"></div>-->
+
+    @for (menu of menuItems; track menu.route) {
+        <button dl-menu-button [menu]="menu" [class.active]="routerService.currentUrl === menu.route"
+                [routerLink]="menu.route"></button>
+    }
+
+    <div class="divider"></div>
+
+    <div class="space-group">
+
+        <dl-toggle-head class="group-title" [(expand)]="isShowSpaces" (expandChange)="onToggleExpandSpaces($event)">
+            空间
+        </dl-toggle-head>
+
+        <div class="space-group-content" [dlExpandCollapse]="isShowSpaces">
+            @for (space of spaceList; track space.id) {
+                <div class="space-group-item" (click)="navToSpace(space)">
+                    <i class="bc_icon bc_kongjian icon-space"></i>
+                    {{ space.name }}
+                </div>
+            }
+        </div>
+
+    </div>
+
+    <!--  <div class="space-group">-->
+    <!--    <div class="space-group-head group-title">-->
+    <!--      <i class="bc_icon bc_chevron-down-1"></i>-->
+    <!--      知识库-->
+    <!--    </div>-->
+
+    <!--    @for(space of spaceList; track space.id) {-->
+    <!--      <div class="space-group-item">-->
+    <!--        <i class="bc_icon bc_wenjianjia"></i>-->
+    <!--        {{ space.name }}-->
+    <!--      </div>-->
+    <!--    }-->
+
+    <!--  </div>-->
+</aside>
+
+<main>
+    <router-outlet></router-outlet>
+</main>
+
+

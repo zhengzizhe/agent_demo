@@ -1,0 +1,12 @@
+@if (isShowAside) {
+
+} @else {
+    <div class="aside-expand-wrapper right">
+        <span></span>
+        <div class="aside-expand-btn__group">
+                <span class="aside-expand-btn dl-btn-hover btn dl-icon" (click)="onLike($event)">
+                    <dl-like-btn [liked]="docDetail?.localUser?.behavior?.liked" style="font-size: 16px;"></dl-like-btn>
+                </span>
+        </div>
+    </div>
+}

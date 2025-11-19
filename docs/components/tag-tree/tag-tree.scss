@@ -1,0 +1,117 @@
+:host ::ng-deep {
+    display: block;
+    height: inherit;
+    width: inherit;
+
+    //.node foreignObject {
+    //    width: 200px;
+    //}
+
+    .arrow {
+        //z-index: 10;
+        //pointer-events: all !important;
+        //cursor: pointer;
+    }
+
+    .cardContainer {
+        transform: translateY(6px);
+        position: relative;
+        height: 28px;
+        width: fit-content;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 4px;
+        border-radius: 4px;
+        white-space: nowrap;
+        pointer-events: all !important;
+
+        &.active {
+            outline: 2px solid var(--cs-primary-color);
+
+            &::after {
+                position: absolute;
+                content: '✓';
+                right: -18px;
+                top: 50%;
+                transform: translateY(-50%);
+                font-size: 14px;
+                color: var(--cs-primary-color);
+            }
+        }
+
+        &:hover, &.active {
+            .adder {
+                display: block;
+            }
+        }
+
+        .name {
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .adder {
+            display: none;
+            position: absolute;
+            right: 0;
+            transform: translateX(100%);
+            padding-left: 6px;
+            background: #fff;
+
+            i {
+                cursor: pointer;
+                font-size: 14px;
+                color: var(--cs-font-color-2);
+
+                &:hover {
+                    color: var(--cs-primary-color);
+                }
+            }
+        }
+
+        .expand-toggle {
+            bottom: 0;
+            left: 50%;
+            position: absolute;
+            transform: translate(-50%, 11px);
+            width: 12px;
+            height: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 8px;
+            border: 1px solid var(--cs-primary-color);
+            border-radius: 50%;
+            color: var(--cs-primary-color);
+            transition: all .2s ease-in-out;
+            background: #fff;
+            line-height: 12.5px;
+
+            &.active {
+                transform: translate(-50%, 11px) rotate(90deg);
+            }
+        }
+
+    }
+
+    .line {
+        stroke: var(--cs-primary-color); /* 蓝色 */
+    }
+
+    .linkMidpoint {
+        & ellipse {
+            fill: white;
+            stroke: black;
+            stroke-width: 1;
+        }
+
+        & text {
+            stroke: transparent;
+            fill: black;
+            text-anchor: middle;
+            font-size: 10px;
+        }
+    }
+}

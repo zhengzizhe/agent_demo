@@ -1,0 +1,53 @@
+<div class="dialog">
+    <div class="dialog-header">
+        <span class="dialog-title">导出设置</span>
+        <i class="bc_icon bc_guanbi dialog-close-btn" (click)="onClose.emit()"></i>
+    </div>
+
+    <div class="dialog-divider-line"></div>
+
+    <div class="dialog-body">
+<!--        <div class="form-item">-->
+<!--            <label>页边距</label>-->
+<!--            <cses-selector [(value)]="config.pageSize">-->
+<!--                @for (item of pageSizeList; track item.value) {-->
+<!--                    <cses-selector-item [label]="item.label" [value]="item.value"></cses-selector-item>-->
+<!--                }-->
+<!--            </cses-selector>-->
+<!--        </div>-->
+
+        <div class="form-item">
+            <label>页面尺寸</label>
+            <cses-selector [(value)]="config.pageSize" [dataSource]="pageSizeList">
+                @for (item of pageSizeList; track item.value) {
+                    <cses-selector-item [label]="item.label" [value]="item.value"></cses-selector-item>
+                }
+            </cses-selector>
+        </div>
+
+        <div class="form-item">
+            <label>排版</label>
+            <cses-selector [(value)]="config.layout" [dataSource]="layoutList">
+                @for (item of layoutList; track item.value) {
+                    <cses-selector-item [label]="item.label" [value]="item.value"></cses-selector-item>
+                }
+            </cses-selector>
+        </div>
+
+        <div class="form-item">
+            <label>缩放比例</label>
+            <cses-selector [(value)]="config.scale" [dataSource]="scaleList">
+                @for (item of scaleList; track item.value) {
+                    <cses-selector-item [label]="item.label" [value]="item.value"></cses-selector-item>
+                }
+            </cses-selector>
+        </div>
+
+        <div class="tip">若有超宽表格，导出时将进行自适应调整</div>
+    </div>
+
+    <div class="dialog-footer">
+        <button dl-button (click)="onClose.emit()">取消</button>
+        <button dl-button type="primary" (click)="onSubmit()">确定</button>
+    </div>
+</div>

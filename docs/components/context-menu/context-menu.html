@@ -1,0 +1,10 @@
+@for (item of menus; track item.id) {
+    <div [class]="['dl-dropdown-menu-item', item.className]" [class.active]="item.active" (click)="onItemClick(item)">
+        <i [class]="['bc_icon', item.icon]" *ngIf="item.icon"></i>
+        <span class="dl-dropdown-menu-item__title">{{ item.label }}</span>
+    </div>
+
+    @if (item.divide) {
+        <div class="dl-dropdown-menu-divider"></div>
+    }
+}

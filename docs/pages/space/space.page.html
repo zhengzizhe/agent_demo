@@ -1,0 +1,32 @@
+<aside dl-aside-menu>
+    <div class="aside-head">
+        <div class="title">
+            <dl-back-btn (click)="goBack()" />
+            <span class="divider"></span>
+            <span class="bc_icon bc_kongjian" style="color: var(--cs-primary-color)"></span>
+            <span class="name dl-textoverflow" [title]="pageInfo.title">
+                {{ pageInfo.title }}
+            </span>
+        </div>
+        <!--        <p class="slogan">{{ pageInfo.slogan }}</p>-->
+    </div>
+
+    @for (menu of spaceRoutes; track menu.route) {
+        <button dl-menu-button [menu]="menu"
+                [class.active]="routerService.currentUrl === menu.route"
+                [routerLink]="menu.route"></button>
+    }
+
+    <div class="divider"></div>
+
+    <div class="group-title">
+        <span style="flex: 1;">文件夹</span>
+        <i class="bc_icon bc_add-circle" style="cursor: pointer;" (click)="onNewFolder()" *ngIf="spaceDetail.localUser.role >= PermissionRole.manager"></i>
+    </div>
+
+    <folder-tree [spaceId]="spaceId" [activeFolderId]="activeFolderId"></folder-tree>
+</aside>
+
+<main>
+    <router-outlet></router-outlet>
+</main>

@@ -1,0 +1,62 @@
+<div class="page-main-top">
+    <div class="content">
+        <h2>标签</h2>
+    </div>
+    <div class="tools">
+        <button dl-button icon="bc_biaoqianguanli" (click)="onManageTags()" *ngIf="showManageTagsBtn">标签管理</button>
+        <button dl-button icon="bc_huanyige" (click)="onRefresh()">刷新</button>
+    </div>
+</div>
+
+<div class="control-group">
+    <dl-tab [items]="tabItems" (onTabChange)="onFilterTabChange($event)"></dl-tab>
+
+    <dl-page-btn-group [(listMode)]="listMode" [useCreateBtn]="false" [useDropMenuBtn]="false">
+    </dl-page-btn-group>
+</div>
+
+<div class="tags-filter-wrapper">
+    <div class="row">
+        <label>筛选：</label>
+        <button dl-button type="simple"
+                nz-dropdown nzTrigger="click"
+                [nzDropdownMenu]="tagSelectorDialog" [(nzVisible)]="isShowTagFilter">
+            <span>{{ spaceDetail.name }}标签</span>
+            <i class="bc_icon bc_xiajaintou btn-expand" [class.active]="isShowTagFilter"></i>
+        </button>
+    </div>
+    <div class="row" *ngIf="selectedTags.length">
+        <label>已选标签：</label>
+        <div class="tag-group">
+            @for (tag of selectedTags; track tag.id) {
+                <dl-tag [text]="tag.name" [color]="tag.color" [backColor]="tag.backColor"
+                        [withDelete]="true" (onDelete)="onDeleteSelectedTag(tag)"></dl-tag>
+            }
+        </div>
+        <span class="btn-reset" (click)="clearSelectedTags()">重置</span>
+    </div>
+</div>
+
+@if (activeFilterTab !== 'file') {
+    <folder-card-list [entityId]="spaceId" [queryParams]="folderListQueryParams" [requester]="tagFolderRequester"
+                      [withTags]="true"
+                      *ngIf="spaceId" #folderCardList></folder-card-list>
+}
+
+<file-table style="margin-top: 16px; flex: 1; overflow: hidden;" *ngIf="spaceId"
+            [requester]="tagFileRequester"
+            [singleMode]="listMode === 'list-simple'" [colItem2Template]="tableCol2Tpl"
+            (onNavigate)="onNavToDoc($event)" [headItems]="tagsFileTableHead"
+            [queryParams]="fileTableQueryParams" (onItemsChange)="onFileTableItemsChange($event)"
+            #fileTable>
+</file-table>
+
+<ng-template #tableCol2Tpl let-item>
+    <dl-tag-row [tags]="item.tags" [maxShowCount]="2"></dl-tag-row>
+</ng-template>
+
+<nz-dropdown-menu #tagSelectorDialog='nzDropdownMenu'>
+    <dl-tags-selector *ngIf="isShowTagFilter" [spaceId]="spaceDetail.id" [selectedTags]="selectedTags"
+                      (selectedChange)="onTagsSelectedChange($event)"
+                      (close)="isShowTagFilter = false"></dl-tags-selector>
+</nz-dropdown-menu>

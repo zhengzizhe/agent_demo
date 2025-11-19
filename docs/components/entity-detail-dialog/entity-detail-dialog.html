@@ -1,0 +1,82 @@
+<div class="dialog-header">
+    <h3 class="dialog-title">简介</h3>
+    <i class="bc_icon bc_guanbi dialog-close-btn" (click)="onClose.emit()"></i>
+</div>
+
+<div class="dialog-divider-line"></div>
+
+<div class="dialog-body">
+    <input type="text" class="dl-input dialog-title" style="margin-bottom: 8px;"
+           [(ngModel)]="entityName" [placeholder]="'未命名' + EntityTypeName[entityType]"
+           [disabled]="localUserRole < PermissionRole.owner" (blur)="onNameInputBlur()" />
+
+    <div class="body-row">
+        <label>所有者</label>
+        <div class="body-row-content">
+            <dl-user-profile [user]="entityDetail?.owner" [avatarSize]="18"></dl-user-profile>
+        </div>
+    </div>
+
+    <div class="body-row" style="align-items: flex-start;" >
+        <label>标签</label>
+        <div class="body-row-content" >
+            @if(tags.length) {
+                <div class="tags" style="display: flex; gap: 4px; align-items: center; flex-wrap: wrap; padding-top: 4px;">
+                    @for (tag of tags; track tag.id) {
+                        <dl-tag [text]="tag.name" [color]="tag.color" [backColor]="tag.backColor"></dl-tag>
+                    }
+                </div>
+            } @else {
+                <div style="color: var(--cs-font-color-3);">暂无标签</div>
+            }
+        </div>
+    </div>
+
+    @if (entityType === 'folder') {
+        <div class="body-row" style="align-items: flex-start;">
+            <label>描述</label>
+            <div class="body-row-content">
+                @if (localUserRole < PermissionRole.manager) {
+                    <div>{{ entityDesc || '暂无描述' }}</div>
+                } @else {
+                    <textarea class="dl-textarea desc-textarea" placeholder="修改描述"
+                              rows="2" [(ngModel)]="entityDesc" (blur)="onDescInputBlur()">
+                    </textarea>
+                }
+            </div>
+        </div>
+    }
+
+    <div class="body-row" style="align-items: flex-start;">
+        <label>位置</label>
+        <div class="body-row-content folder-paths">
+            @for (path of paths; track path.id) {
+                <span class="path-item">{{ path.name || ('未命名' + EntityTypeName[entityType]) }}</span>
+                <i class="bc_icon bc_a-sanjiao-jinru6"></i>
+            }
+        </div>
+    </div>
+
+    <div class="body-row" *ngIf="entityDetail.updatedAt">
+        <label>修改时间</label>
+        <div class="body-row-content">
+            {{ entityDetail.updatedAt | date2 }}
+        </div>
+    </div>
+
+    <div class="body-row">
+        <label>创建时间</label>
+        <div class="body-row-content">
+            {{ entityDetail.createdAt | date2 }}
+        </div>
+    </div>
+
+    <!--    @if (entityType === 'folder') {-->
+    <!--        <div class="body-row">-->
+    <!--            <label>-->
+    <!--                <check-btn [disabled]="false" style="color:var(&#45;&#45;cs-font-color-2);" [checked]="isLocked"></check-btn>-->
+    <!--            </label>-->
+    <!--            <div class="body-row-content">锁定文件夹</div>-->
+    <!--        </div>-->
+    <!--    }-->
+</div>

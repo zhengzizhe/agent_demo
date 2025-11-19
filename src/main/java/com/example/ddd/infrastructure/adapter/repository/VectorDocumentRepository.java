@@ -69,17 +69,17 @@ public class VectorDocumentRepository implements IVectorDocumentRepository {
     }
 
     @Override
-    public int deleteById(DSLContext dslContext, Long id) {
-        return vectorDocumentDao.deleteById(dslContext, id);
+    public int deleteById(DSLContext dslContext, String embeddingId) {
+        return vectorDocumentDao.deleteById(dslContext, embeddingId);
     }
 
     // 转换方法
     private VectorDocumentPO convertToPO(VectorDocumentEntity entity) {
         if (entity == null) return null;
         VectorDocumentPO po = new VectorDocumentPO();
-        po.setId(entity.getId());
+        po.setEmbeddingId(entity.getEmbeddingId());
         po.setRagId(entity.getRagId());
-        po.setContent(entity.getContent());
+        po.setContent(entity.getText());
         po.setEmbedding(entity.getEmbedding());
         
         // 转换metadata Map到JSONB
@@ -99,9 +99,9 @@ public class VectorDocumentRepository implements IVectorDocumentRepository {
     private VectorDocumentEntity convertToEntity(VectorDocumentPO po) {
         if (po == null) return null;
         VectorDocumentEntity entity = new VectorDocumentEntity();
-        entity.setId(po.getId());
+        entity.setEmbeddingId(po.getEmbeddingId());
         entity.setRagId(po.getRagId());
-        entity.setContent(po.getContent());
+        entity.setText(po.getContent());
         entity.setEmbedding(po.getEmbedding());
         
         // 转换JSONB到Map

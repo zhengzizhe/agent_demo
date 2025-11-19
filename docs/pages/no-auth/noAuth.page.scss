@@ -1,0 +1,62 @@
+:host {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 24px;
+    height: 100%;
+    background: var(--cs-page-bg-color);
+    background-size: cover;
+
+    .dialog {
+        display: flex;
+        width: clamp(400px, 50vw, 587px);
+        flex-direction: column;
+        align-items: center;
+
+        .logo {
+            width: 115px;
+            height: 117px;
+        }
+
+        .title {
+            margin: 24px 0 8px;
+            color: #333;
+            font-size: 24px;
+            font-weight: 600;
+            line-height: 34px;
+        }
+
+        p {
+            font-size: 16px;
+            line-height: 22px;
+            color: #999;
+            white-space: nowrap;
+
+            strong {
+                color: #666;
+                font-weight: bold;
+            }
+
+            .owner {
+                color: var(--cs-primary-color);
+            }
+        }
+
+        .card {
+            width: 100%;
+            margin-top: 24px;
+            display: flex;
+            padding: 24px;
+            flex-direction: column;
+            align-items: center;
+            gap: 32px;
+            border-radius: 8px;
+            background: #F3F4F6;
+        }
+
+        [dl-button] {
+            min-height: 46px;
+            flex: 1;
+        }
+    }
+}

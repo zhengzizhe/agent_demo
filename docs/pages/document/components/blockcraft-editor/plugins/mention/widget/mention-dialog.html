@@ -1,0 +1,47 @@
+<div class="mention-dialog__header">
+    <ul class="tab-btn-list">
+        <li class="tab-btn-list__item" [class.active]="activeTabIndex === idx"
+            *ngFor="let item of MENTION_TABS; index as idx" (mousedown)="onTabChange(idx)">
+            <span>{{ item.label }}</span>
+        </li>
+    </ul>
+</div>
+
+<div class="mention-dialog__content" (mousedown)="onItemClick($event)">
+    @if (!list.length) {
+        <nz-empty nzNotFoundImage="simple"></nz-empty>
+    } @else {
+
+        @if (activeTabIndex === 0) {
+
+            @for (item of list; track item.id; let idx = $index) {
+                <div class="mention-dialog__content__item dl-btn-hover" [attr.data-id]="item.id"
+                     [class.active]="selectIndex === idx">
+                    <img class="user-avatar" [src]="item.id | avatar" />
+                    <div class="mention-info dl-textoverflow">
+                        <span class="mention-name">{{ item.name }}</span>
+                        <span class="mention-dept">{{ item.deptName }} / {{ item.orgName }}</span>
+                    </div>
+                </div>
+            }
+
+        } @else if (activeTabIndex === 1) {
+
+            @for (item of list; track item.id; let idx = $index) {
+                <div class="mention-dialog__content__item dl-btn-hover" [attr.data-id]="item.id"
+                     [class.active]="selectIndex === idx">
+                    <mat-icon svgIcon="bc_wendang0102"></mat-icon>
+                    <div class="mention-info dl-textoverflow">
+                        <span class="mention-name" [innerHTML]="item.highlight || '未命名文档'"></span>
+                    </div>
+                </div>
+            }
+        }
+
+    }
+</div>
+<div class="mention-dialog__footer">
+    <button dl-button [borderless]="true" [dlDisabled]="!this.list.length" (click)="onSure()">确定</button>
+</div>
+
+

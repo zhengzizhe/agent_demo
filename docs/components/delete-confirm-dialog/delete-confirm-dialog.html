@@ -1,0 +1,26 @@
+<dl-spin-mask [dlSpinning]="isLoading">
+    <div class="dl-dialog">
+        <div class="dialog-header">
+            <h2 class="dialog-title">{{ title }}</h2>
+            <i class="bc_icon bc_guanbi dialog-close-btn" (click)="onClose.emit()"></i>
+        </div>
+
+        <div class="dialog-divider-line"></div>
+
+        <div class="dialog-body">
+            <div class="msg">
+                {{ message }}
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px; color: var(--cs-font-color-2);" (click)="recycleChecked = !recycleChecked">
+                <dl-check-btn [checked]="recycleChecked"></dl-check-btn>
+                <span>放入回收站，30 天后自动彻底删除</span>
+            </div>
+        </div>
+        <div class="dialog-footer" >
+            <button dl-button (click)="onClose.emit()">取消</button>
+            <button dl-button type="danger" (click)="onConfirmClick()">确认删除</button>
+        </div>
+    </div>
+</dl-spin-mask>
+
+

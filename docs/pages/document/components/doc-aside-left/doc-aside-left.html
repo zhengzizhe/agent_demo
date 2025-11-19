@@ -1,0 +1,33 @@
+@if (isShowAside) {
+    <aside>
+        <div class="aside-top">
+            <span class="tab-name">{{ asideTabs[activeAsideTabIdx].name }}</span>
+            <i class="bc_icon bc_daohangshouqi dl-btn-hover btn-toggle" (click)="onExpandAsideChange(false)"></i>
+        </div>
+        <dl-tab [items]="asideTabs" overflow="visible" [tabItemWidth]="60"
+                [(activeIndex)]="activeAsideTabIdx" (activeIndexChange)="activeAsideTabIdxChange.emit($event)"></dl-tab>
+        <div class="aside-content">
+            @switch (activeAsideTabIdx) {
+                @case (0) {
+                    <dl-editor-outline [docTitle]="docDetail.name" [doc]="doc" [scrollToBlock]="scrollToBlock"
+                                       *ngIf="doc"></dl-editor-outline>
+                }
+                @case (1) {
+                }
+                @case (2) {
+                    <dl-editor-resource [doc]="doc" *ngIf="doc"></dl-editor-resource>
+                }
+                @case (3) {
+                    <dl-editor-find-replace [doc]="doc" *ngIf="doc"></dl-editor-find-replace>
+                }
+            }
+        </div>
+    </aside>
+} @else {
+    <div class="aside-expand-wrapper left">
+        <div class="aside-expand-btn__group">
+                <span class="bc_icon bc_daohangzhankai aside-expand-btn dl-btn-hover btn dl-icon"
+                      (click)="onExpandAsideChange(true)"></span>
+        </div>
+    </div>
+}

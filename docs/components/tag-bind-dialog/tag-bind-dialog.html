@@ -1,0 +1,24 @@
+<div class="dialog-header">
+    <span class="dialog-title">绑定标签</span>
+    <i class="bc_icon bc_guanbi dialog-close-btn" (click)="onClose.emit()"></i>
+</div>
+
+<div class="dialog-divider-line"></div>
+
+<dl-spin-mask [dlSpinning]="isLoading">
+    <div class="dialog-body">
+        <div class="tag-list" *ngIf="tags.length">
+            <span>已绑定标签：</span>
+            @for (tag of tags; track tag.id) {
+                <dl-tag [text]="tag.name" [color]="tag.color" [backColor]="tag.backColor" [withDelete]="true" (onDelete)="unbind(tag)"></dl-tag>
+            }
+        </div>
+
+        <div class="tag-tree-wrapper">
+            <dl-tag-tree [sourceId]="entity.spaceId" (tagClick)="onTagClick($event)" [selectedTagSet]="selectedTagSet"
+                         [readonly]="true"></dl-tag-tree>
+        </div>
+
+    </div>
+</dl-spin-mask>
+

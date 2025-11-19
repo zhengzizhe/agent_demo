@@ -1,0 +1,115 @@
+:host {
+    display: block;
+    height: 100%;
+    position: relative;
+    max-width: calc(100% - 690px);
+
+    .container {
+        z-index: 10;
+        position: relative;
+        background: var(--cs-bg-color);
+        height: 100%;
+        width: 234px;
+        padding: var(--cs-card-padding, 16px);
+        border-right: 1px solid var(--cs-border-color);
+        color: var(--cs-font-color);
+        display: flex;
+        flex-direction: column;
+
+        .btn-toggle {
+            position: absolute;
+            right: 16px;
+            top: 13px;
+            height: 28px;
+            width: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        ::ng-deep {
+            .divider {
+                height: 1px;
+                background: var(--cs-border-color);
+                margin: 8px 0;
+            }
+
+            button[dl-menu-button] {
+                margin-bottom: 4px;
+            }
+
+            .group-title {
+                margin-top: 4px;
+                display: flex;
+                align-items: center;
+                gap: 4px;
+                height: 33px;
+                color: var(--cs-font-color-3);
+                font-size: 12px;
+                cursor: pointer;
+            }
+        }
+    }
+
+    &:hover {
+        .resize-handler {
+            visibility: visible;
+        }
+    }
+
+    .resize-handler {
+        visibility: hidden;
+        z-index: 10;
+        height: 100%;
+        width: 6px;
+        position: absolute;
+        top: 0;
+        right: -2px;
+        cursor: ew-resize;
+
+        &:hover {
+            > span {
+                opacity: 1;
+            }
+        }
+
+        > span {
+            opacity: 0;
+            width: 2px;
+            height: 100%;
+            background: var(--cs-primary-color);
+            position: absolute;
+            top: 0;
+            left: 2px;
+        }
+    }
+
+    .btn-expand {
+        z-index: 10;
+        position: absolute;
+        top: 28px;
+        left: -10px;
+        transform: translateY(-50%);
+        border-radius: 0 50% 50% 0;
+        box-shadow: var(--cs-box-shadow-3);
+        background: var(--cs-bg-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        cursor: pointer;
+        transition: all 0.2s ease-in-out;
+
+        &:hover {
+            left: 0;
+            background: var(--cs-bg-color-2);
+            box-shadow: var(--cs-box-shadow-2);
+        }
+    }
+
+}
+
+
+

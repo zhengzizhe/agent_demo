@@ -1,0 +1,81 @@
+<header class="top-bar">
+    <div class="top-bar__left">
+        <div class="top-bar__title" style="display: flex; align-items: center;">
+            当前版本：
+            <span class="dl-btn-hover version-brand" nz-dropdown nzTrigger="click" [nzDropdownMenu]="docVersionsMenu"
+                  [(nzVisible)]="dropMenuVisibleMap.versionList"
+                  (nzVisibleChange)="getVersionList()"
+                  [class.active]="dropMenuVisibleMap.versionList">
+                 {{ versionInfo?.name }}
+                <i class="bc_icon bc_xiajaintou icon-dropdown" [class.active]="dropMenuVisibleMap.versionList"></i>
+             </span>
+        </div>
+    </div>
+
+    <div class="btn-group">
+        <button dl-button (click)="backOriginDoc()" icon="bc_huidaoyuanwendang">
+            回到源文档
+        </button>
+        <button dl-button (click)="copyVersionLink()" icon="bc_fuzhilianjie" hoverType="primary"
+                nz-tooltip="拥有该文档阅读权限的用户可以直接通过链接查看当前版本文档" nzTooltipPlacement="bottom">
+            复制版本链接
+        </button>
+        <span class="btn-more dl-btn-hover" style="padding: 0 4px;" [class.active]="dropMenuVisibleMap.settings"
+              [(nzVisible)]="dropMenuVisibleMap.settings"
+              nz-dropdown nzTrigger="click" [nzDropdownMenu]="settingMenu">
+            <i class="bc_icon bc_gengduo"></i>
+        </span>
+    </div>
+</header>
+
+<main>
+    <doc-aside-left *ngIf="editor?.doc" [docDetail]="docDetail" [doc]="editor?.doc"
+                    [scrollToBlock]="editor?.scrollToBlock"
+                    [(isShowAside)]="showLeftAside" [(activeAsideTabIdx)]="activeAsideTabIdx"></doc-aside-left>
+
+    <div class="page-main" #pageMain appScrollRestore [delay]="100">
+        <div class="document-page" [attr.data-width]="docConfigs.pageWidth">
+            <doc-water-mark [text]="watermarkText" *ngIf="docDetail"></doc-water-mark>
+
+            <div class="doc-header" *ngIf="docDetail">
+                <div class="doc-header__title-wrapper">
+                    <input [ngModel]="docName" class="doc-header__title" placeholder="未命名文档" disabled="disabled" />
+                </div>
+
+                <div class="doc-header__info">
+                    <dl-user-profile [user]="versionInfo?.publisher"></dl-user-profile>
+                    <span class="divider-line"></span>
+                    <div class="doc-header__info__time">
+                        <span>保存于 {{ versionInfo.publishedAt | date2 }}</span>
+                    </div>
+                </div>
+
+            </div>
+
+            <doc-version-reader *ngIf="docDetail && versionInfo" [docDetail]="docDetail"
+                                [versionSnapshot]="versionInfo.data" #editor></doc-version-reader>
+        </div>
+    </div>
+</main>
+
+<nz-dropdown-menu #docVersionsMenu='nzDropdownMenu'>
+    <ul class="dl-dropdown-menu">
+        @for (item of versionList; track item.id) {
+            <li class="dl-dropdown-menu-item version-item" (click)="checkoutVersion(item)"
+                [nz-tooltip]="item.description"
+                nzTooltipPlacement="right" [class.active]="version === item.version">
+                <div>
+                    <p class="dl-dropdown-menu-item__title">{{ item.name }}</p>
+                    <p class="dl-dropdown-menu-item__desc">{{ item.publisher.name }}
+                        保存于{{ item.publishedAt | date2 }}</p>
+                </div>
+            </li>
+        }
+    </ul>
+</nz-dropdown-menu>
+
+<nz-dropdown-menu #settingMenu='nzDropdownMenu'>
+    <doc-setting-menu *ngIf="docDetail && dropMenuVisibleMap.settings" [docDetail]="docDetail" [configs]="docConfigs"
+                      [role]="PermissionRole.reader"
+                      (menuClick)="onSettingMenuClick($event)"></doc-setting-menu>
+</nz-dropdown-menu>
