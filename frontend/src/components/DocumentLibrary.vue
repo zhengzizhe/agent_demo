@@ -797,14 +797,14 @@ onUnmounted(() => {
 .document-library-page {
   display: flex;
   height: 100vh;
-  background: #f5f5f7;
+  background: var(--theme-background, #ffffff);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
 
 /* 左侧边栏 */
 .dl-sidebar {
   width: 240px;
-  background: #ffffff;
+  background: var(--theme-background, #ffffff);
   border-right: 1px solid #e5e7eb;
   display: flex;
   flex-direction: column;
@@ -823,7 +823,7 @@ onUnmounted(() => {
   width: 40px;
   height: 40px;
   border-radius: 8px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--theme-accent, #165dff);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -881,8 +881,8 @@ onUnmounted(() => {
 }
 
 .nav-item.active {
-  color: #2563eb;
-  background: #eff6ff;
+  color: var(--theme-accent, #165dff);
+  background: color-mix(in srgb, var(--theme-accent, #165dff) 10%, transparent);
 }
 
 .nav-item.active::before {
@@ -892,7 +892,7 @@ onUnmounted(() => {
   top: 0;
   bottom: 0;
   width: 3px;
-  background: #2563eb;
+  background: var(--theme-accent, #165dff);
 }
 
 .nav-icon {
@@ -938,8 +938,8 @@ onUnmounted(() => {
 }
 
 .nav-subitem.active {
-  color: #2563eb;
-  background: #eff6ff;
+  color: var(--theme-accent, #165dff);
+  background: color-mix(in srgb, var(--theme-accent, #165dff) 10%, transparent);
 }
 
 /* 主内容区 */
@@ -951,7 +951,7 @@ onUnmounted(() => {
 }
 
 .dl-header {
-  background: #ffffff;
+  background: var(--theme-background, #ffffff);
   border-bottom: 1px solid #e5e7eb;
   padding: 16px 24px;
   display: flex;
@@ -1016,19 +1016,24 @@ onUnmounted(() => {
 }
 
 .doc-card {
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  background: var(--theme-background, #ffffff);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
   padding: 16px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.06),
+    0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
 .doc-card:hover {
-  border-color: #2563eb;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+  border-color: color-mix(in srgb, var(--theme-accent, #165dff) 30%, transparent);
+  box-shadow: 
+    0 8px 16px rgba(0, 0, 0, 0.12),
+    0 4px 8px color-mix(in srgb, var(--theme-accent, #165dff) 15%, transparent);
   transform: translateY(-2px);
 }
 
@@ -1043,7 +1048,7 @@ onUnmounted(() => {
   width: 48px;
   height: 48px;
   border-radius: 6px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--theme-accent, #165dff);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1295,8 +1300,8 @@ onUnmounted(() => {
 }
 
 .create-option:hover {
-  border-color: #2563eb;
-  background: #eff6ff;
+  border-color: var(--theme-accent, #165dff);
+  background: color-mix(in srgb, var(--theme-accent, #165dff) 10%, transparent);
 }
 
 .option-icon {
@@ -1304,7 +1309,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #2563eb;
+  color: var(--theme-accent, #165dff);
 }
 
 .create-option h4 {
@@ -1331,8 +1336,8 @@ onUnmounted(() => {
 
 .rename-input:focus {
   outline: none;
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  border-color: var(--theme-accent, #165dff);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--theme-accent, #165dff) 15%, transparent);
 }
 
 /* 对话框footer和按钮样式已移至 common.css */
@@ -1340,7 +1345,7 @@ onUnmounted(() => {
 /* 右键菜单 */
 .context-menu {
   position: fixed;
-  background: #ffffff;
+  background: var(--theme-background, #ffffff);
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);

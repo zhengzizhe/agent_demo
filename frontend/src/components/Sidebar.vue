@@ -130,17 +130,19 @@ const toggleCollapse = () => {
 .sidebar {
   width: 240px;
   height: 100vh;
-  background: rgba(247, 248, 250, 0.75); /* 半透明背景 */
-  backdrop-filter: blur(24px) saturate(180%); /* 毛玻璃效果 */
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  background: rgba(255, 255, 255, 0.6); /* 更透明的白色背景 */
+  backdrop-filter: blur(60px) saturate(200%); /* 更强的毛玻璃效果 */
+  -webkit-backdrop-filter: blur(60px) saturate(200%);
   display: flex;
   flex-direction: column;
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   z-index: 10;
   will-change: width;
-  border-right: 1px solid rgba(229, 231, 235, 0.6); /* 半透明边框 */
-  box-shadow: 2px 0 20px rgba(0, 0, 0, 0.1);
+  border-right: 1px solid rgba(229, 231, 235, 0.4); /* 半透明边框 */
+  box-shadow: 
+    2px 0 32px rgba(0, 0, 0, 0.12),
+    inset -1px 0 0 rgba(255, 255, 255, 0.6); /* 内阴影增强毛玻璃感 */
 }
 
 .sidebar.collapsed {
@@ -154,9 +156,9 @@ const toggleCollapse = () => {
   align-items: center;
   justify-content: center;
   background: rgba(255, 255, 255, 0.3);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(229, 231, 235, 0.5);
+  backdrop-filter: blur(30px) saturate(200%);
+  -webkit-backdrop-filter: blur(30px) saturate(200%);
+  border-bottom: 1px solid rgba(229, 231, 235, 0.3);
   position: relative;
   z-index: 1;
 }
@@ -262,19 +264,21 @@ const toggleCollapse = () => {
 }
 
 .nav-item:hover {
-  background: rgba(0, 0, 0, 0.06); /* 深色悬停背景，毛玻璃效果 */
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.4); /* 白色悬停背景，毛玻璃效果 */
+  backdrop-filter: blur(30px) saturate(200%);
+  -webkit-backdrop-filter: blur(30px) saturate(200%);
   color: #1d2129; /* 悬停时文字更深 */
   transform: translateX(2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 .nav-item.active {
-  background: color-mix(in srgb, var(--theme-accent, #165dff) 15%, transparent); /* 激活状态背景，毛玻璃效果 */
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: color-mix(in srgb, var(--theme-accent, #165dff) 12%, rgba(255, 255, 255, 0.5)); /* 激活状态背景，毛玻璃效果 */
+  backdrop-filter: blur(30px) saturate(200%);
+  -webkit-backdrop-filter: blur(30px) saturate(200%);
   color: var(--theme-accent, #165dff); /* 强调色文字 */
   font-weight: 500;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--theme-accent, #165dff) 20%, transparent);
 }
 
 .nav-item.active::before {
@@ -315,12 +319,12 @@ const toggleCollapse = () => {
   margin-top: auto;
   display: flex;
   background: rgba(255, 255, 255, 0.3); /* 半透明白色 */
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(30px) saturate(200%);
+  -webkit-backdrop-filter: blur(30px) saturate(200%);
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  border-top: 1px solid rgba(229, 231, 235, 0.5);
+  border-top: 1px solid rgba(229, 231, 235, 0.3);
   position: relative;
   z-index: 1;
 }

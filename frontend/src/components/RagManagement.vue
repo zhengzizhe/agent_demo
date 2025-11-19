@@ -907,14 +907,14 @@ onUnmounted(() => {
   display: flex;
   height: 100%;
   width: 100%;
-  background: #ffffff;
+  background: var(--theme-background, #ffffff);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
 }
 
 /* 左侧边栏 */
 .kb-sidebar {
   width: 240px;
-  background: #ffffff;
+  background: var(--theme-background, #ffffff);
   border-right: 1px solid #e5e7eb;
   display: flex;
   flex-direction: column;
@@ -962,13 +962,13 @@ onUnmounted(() => {
 }
 
 .nav-item:hover {
-  background-color: #f3f4f6;
+  background-color: rgba(0, 0, 0, 0.04);
   color: #111827;
 }
 
 .nav-item.active {
-  background-color: #eff6ff;
-  color: #2563eb;
+  background-color: color-mix(in srgb, var(--theme-accent, #165dff) 10%, transparent);
+  color: var(--theme-accent, #165dff);
   font-weight: 600;
 }
 
@@ -1030,7 +1030,7 @@ onUnmounted(() => {
 }
 
 .nav-subitem:hover {
-  background-color: #f9fafb;
+  background-color: rgba(0, 0, 0, 0.03);
   color: #111827;
 }
 
@@ -1045,7 +1045,7 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: #fafbfc;
+  background: var(--theme-background, #ffffff);
 }
 
 .kb-header {
@@ -1053,7 +1053,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #ffffff;
+  background: var(--theme-background, #ffffff);
   gap: 24px;
   border-bottom: 1px solid #e5e6eb;
 }
@@ -1105,7 +1105,7 @@ onUnmounted(() => {
   font-size: 14px;
   font-weight: 400;
   color: #4e5969;
-  background: #ffffff;
+  background: var(--theme-background, #ffffff);
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -1114,15 +1114,15 @@ onUnmounted(() => {
 }
 
 .action-btn:hover {
-  background-color: #f2f3f5;
+  background-color: rgba(0, 0, 0, 0.04);
   color: #1d2129;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
 }
 
 .action-btn.active {
-  background-color: #165dff;
+  background-color: var(--theme-accent, #165dff);
   color: #ffffff;
-  border-color: #165dff;
+  border-color: var(--theme-accent, #165dff);
 }
 
 .upload-btn {
@@ -1131,7 +1131,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #165dff;
+  background: var(--theme-accent, #165dff);
   color: white;
   border: none;
   border-radius: 8px;
@@ -1153,8 +1153,9 @@ onUnmounted(() => {
 }
 
 .upload-btn:hover {
-  background-color: #0e42d2;
-  box-shadow: 0 2px 8px rgba(22, 93, 255, 0.2);
+  background-color: var(--theme-accent, #165dff);
+  opacity: 0.9;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--theme-accent, #165dff) 30%, transparent);
 }
 
 .upload-btn:active {
@@ -1170,7 +1171,7 @@ onUnmounted(() => {
   flex: 1;
   overflow-y: auto;
   padding: 24px 32px;
-  background: #fafbfc;
+  background: var(--theme-background, #ffffff);
 }
 
 /* 加载状态和空状态样式已移至 common.css */
@@ -1216,20 +1217,25 @@ onUnmounted(() => {
 }
 
 .document-card {
-  background: #ffffff;
-  border: none;
-  border-radius: 8px;
+  background: var(--theme-background, #ffffff);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
   padding: 16px;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   will-change: transform, box-shadow;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.06),
+    0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
 .document-card:hover {
-  background: #ffffff;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  background: var(--theme-background, #ffffff);
+  border-color: color-mix(in srgb, var(--theme-accent, #165dff) 30%, transparent);
+  box-shadow: 
+    0 8px 16px rgba(0, 0, 0, 0.12),
+    0 4px 8px color-mix(in srgb, var(--theme-accent, #165dff) 15%, transparent);
   transform: translateY(-2px);
 }
 
@@ -1325,7 +1331,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #ffffff;
+  background: var(--theme-background, #ffffff);
   border: none;
   border-radius: 4px;
   color: #495057;
@@ -1399,7 +1405,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #fafbfc;
+  background: var(--theme-background, #ffffff);
   border-radius: 8px 8px 0 0;
   border-bottom: 1px solid #e5e6eb;
 }
@@ -1458,9 +1464,9 @@ onUnmounted(() => {
 }
 
 .upload-tab.active {
-  background: #2196f3;
+  background: var(--theme-accent, #165dff);
   color: white;
-  border-color: #2196f3;
+  border-color: var(--theme-accent, #165dff);
 }
 
 .upload-textarea {
@@ -1476,7 +1482,7 @@ onUnmounted(() => {
 
 .upload-textarea:focus {
   outline: none;
-  border-color: #2196f3;
+  border-color: var(--theme-accent, #165dff);
 }
 
 .file-upload-zone {
@@ -1490,7 +1496,7 @@ onUnmounted(() => {
 }
 
 .file-upload-zone:hover {
-  border-color: #2196f3;
+  border-color: var(--theme-accent, #165dff);
 }
 
 .upload-zone-content {
@@ -1552,7 +1558,7 @@ onUnmounted(() => {
   right: 20px;
   width: 400px;
   max-width: calc(100vw - 40px);
-  background: #ffffff;
+  background: var(--theme-background, #ffffff);
   border-radius: 8px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
   display: flex;
@@ -1576,7 +1582,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #fafbfc;
+  background: var(--theme-background, #ffffff);
   border-bottom: 1px solid #e5e6eb;
 }
 
@@ -1592,7 +1598,7 @@ onUnmounted(() => {
 .chat-title svg {
   width: 16px;
   height: 16px;
-  color: #6366f1;
+  color: var(--theme-accent, #165dff);
 }
 
 .chat-actions {
@@ -1648,7 +1654,7 @@ onUnmounted(() => {
 }
 
 .chat-message.user .message-content {
-  background: #2563eb;
+  background: var(--theme-accent, #165dff);
   color: white;
   padding: 10px 14px;
   border-radius: 6px;
@@ -1658,7 +1664,7 @@ onUnmounted(() => {
 }
 
 .chat-message.assistant .message-content {
-  background: #f9fafb;
+  background: rgba(0, 0, 0, 0.03);
   color: #111827;
   padding: 10px 14px;
   border-radius: 6px;
@@ -1683,7 +1689,7 @@ onUnmounted(() => {
 }
 
 .msg-action:hover {
-  color: #2196f3;
+  color: var(--theme-accent, #165dff);
 }
 
 .chat-input-area {
@@ -1691,7 +1697,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #fafbfc;
+  background: var(--theme-background, #ffffff);
   border-radius: 0 0 8px 8px;
   border-top: 1px solid #e5e6eb;
 }
@@ -1703,13 +1709,13 @@ onUnmounted(() => {
   border: none;
   border-radius: 8px;
   outline: none;
-  background: #ffffff;
+  background: var(--theme-background, #ffffff);
   color: #1d2129;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
 .chat-input:focus {
-  box-shadow: 0 0 0 2px rgba(22, 93, 255, 0.1);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--theme-accent, #165dff) 15%, transparent);
 }
 
 .chat-model-selector {
@@ -1739,7 +1745,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #2563eb;
+  background: var(--theme-accent, #165dff);
   color: white;
   border: none;
   border-radius: 6px;
@@ -1748,7 +1754,8 @@ onUnmounted(() => {
 }
 
 .chat-send-btn:hover:not(:disabled) {
-  background-color: #1d4ed8;
+  background-color: var(--theme-accent, #165dff);
+  opacity: 0.9;
 }
 
 .chat-send-btn svg {

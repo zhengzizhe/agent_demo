@@ -111,7 +111,7 @@ watch(() => props.form.message, () => {
 /* 输入区域 */
 .input-container {
   border-top: 1px solid #e5e7eb;
-  background: #ffffff;
+  background: var(--theme-background, #ffffff);
   padding: 20px 32px;
   position: relative;
   z-index: 10;
@@ -152,19 +152,19 @@ watch(() => props.form.message, () => {
   align-items: center;
   gap: 8px;
   padding: 6px 12px;
-  background: #eff6ff;
-  border: 1px solid #dbeafe;
+  background: color-mix(in srgb, var(--theme-accent, #165dff) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--theme-accent, #165dff) 20%, transparent);
   border-radius: 6px;
   font-size: 13px;
   font-weight: 500;
-  color: #2563eb;
+  color: var(--theme-accent, #165dff);
 }
 
 .planning-dot {
   display: inline-block;
   width: 6px;
   height: 6px;
-  background: #2563eb;
+  background: var(--theme-accent, #165dff);
   border-radius: 50%;
   animation: planningDot 1.5s ease-in-out infinite;
   flex-shrink: 0;
@@ -186,12 +186,12 @@ watch(() => props.form.message, () => {
   align-items: flex-start;
   max-width: 800px;
   margin: 0 auto;
-  background: #ffffff;
-  border: 2px solid #2563eb;
+  background: var(--theme-background, #ffffff);
+  border: 2px solid var(--theme-accent, #165dff);
   border-radius: 16px;
   padding: 16px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.1);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--theme-accent, #165dff) 20%, transparent);
 }
 
 /* 居中状态时更宽 */
@@ -201,10 +201,11 @@ watch(() => props.form.message, () => {
 }
 
 .input-wrapper:focus-within {
-  border-color: #2563eb;
+  background: var(--theme-background, #ffffff);
+  border-color: var(--theme-accent, #165dff);
   box-shadow: 
-    0 4px 12px rgba(37, 99, 235, 0.15),
-    0 0 0 3px rgba(37, 99, 235, 0.1);
+    0 4px 12px color-mix(in srgb, var(--theme-accent, #165dff) 25%, transparent),
+    0 0 0 3px color-mix(in srgb, var(--theme-accent, #165dff) 15%, transparent);
 }
 
 .input-content {
@@ -224,7 +225,7 @@ watch(() => props.form.message, () => {
 }
 
 .at-symbol {
-  color: #2563eb;
+  color: var(--theme-accent, #165dff);
   font-weight: 600;
 }
 

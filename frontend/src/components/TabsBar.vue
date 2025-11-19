@@ -81,11 +81,46 @@
         <path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
       </svg>
     </button>
+
+    <!-- Electron 窗口控制按钮 -->
+    <div v-if="isElectron" class="window-controls">
+      <button 
+        class="window-control-btn minimize-btn" 
+        @click="handleMinimize"
+        title="最小化"
+      >
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+          <path d="M2 6h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <button 
+        class="window-control-btn maximize-btn" 
+        @click="handleMaximize"
+        :title="isMaximized ? '还原' : '最大化'"
+      >
+        <svg v-if="!isMaximized" width="12" height="12" viewBox="0 0 12 12" fill="none">
+          <rect x="2" y="2" width="8" height="8" rx="1" stroke="currentColor" stroke-width="1.5" fill="none"/>
+        </svg>
+        <svg v-else width="12" height="12" viewBox="0 0 12 12" fill="none">
+          <path d="M2 4h6v6H2V4z" stroke="currentColor" stroke-width="1.5" fill="none"/>
+          <path d="M4 2h6v6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <button 
+        class="window-control-btn close-btn" 
+        @click="handleClose"
+        title="关闭"
+      >
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+          <path d="M3 3l6 6M9 3l-6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, watch, nextTick, computed } from 'vue'
+import { ref, watch, nextTick, computed, onMounted, onUnmounted } from 'vue'
 
 const props = defineProps({
   tabs: {
@@ -116,6 +151,65 @@ const isLoading = computed(() => {
 
 const scrollContainerRef = ref(null)
 const activeTabRef = ref(null)
+
+// Electron 相关
+const isElectron = ref(typeof window !== 'undefined' && window.electronAPI !== undefined)
+const isMaximized = ref(false)
+
+const checkMaximized = async () => {
+  if (window.electronAPI) {
+    try {
+      isMaximized.value = await window.electronAPI.isMaximized()
+    } catch (error) {
+      console.error('Failed to check window state:', error)
+    }
+  }
+}
+
+const handleMinimize = () => {
+  if (window.electronAPI) {
+    window.electronAPI.minimize()
+  }
+}
+
+const handleMaximize = () => {
+  if (window.electronAPI) {
+    window.electronAPI.maximize()
+    setTimeout(checkMaximized, 100)
+  }
+}
+
+const handleClose = () => {
+  if (window.electronAPI) {
+    window.electronAPI.close()
+  }
+}
+
+if (isElectron.value) {
+  onMounted(() => {
+    checkMaximized()
+    
+    let cleanupWindowStateListener = null
+    
+    if (window.electronAPI && window.electronAPI.onWindowStateChange) {
+      cleanupWindowStateListener = window.electronAPI.onWindowStateChange((maximized) => {
+        isMaximized.value = maximized
+      })
+    }
+    
+    const handleResize = () => {
+      setTimeout(checkMaximized, 100)
+    }
+    window.addEventListener('resize', handleResize)
+    
+    onUnmounted(() => {
+      window.removeEventListener('resize', handleResize)
+      if (cleanupWindowStateListener) {
+        cleanupWindowStateListener()
+      }
+    })
+  })
+}
 
 // 监听活动标签页变化，自动滚动到活动标签
 watch(() => props.activeTabId, () => {
@@ -180,6 +274,11 @@ function scrollToActiveTab() {
   flex-shrink: 0;
   z-index: 10;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  -webkit-app-region: drag;
+}
+
+.tabs-bar > * {
+  -webkit-app-region: no-drag;
 }
 
 /* 后退和前进按钮 */
@@ -463,5 +562,65 @@ function scrollToActiveTab() {
   width: 14px;
   height: 14px;
   stroke-width: 2;
+}
+
+/* Electron 窗口控制按钮 */
+.window-controls {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-left: 4px;
+  flex-shrink: 0;
+}
+
+.window-control-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: #86909c;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border-radius: 0;
+  position: relative;
+}
+
+.window-control-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 4px;
+  background: currentColor;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.window-control-btn:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.04);
+  color: #1d2129;
+}
+
+.window-control-btn:active:not(:disabled) {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.window-control-btn.close-btn:hover {
+  background: rgba(220, 38, 38, 0.1);
+  color: #dc2626;
+}
+
+.window-control-btn.close-btn:active {
+  background: rgba(220, 38, 38, 0.15);
+}
+
+.window-control-btn svg {
+  width: 12px;
+  height: 12px;
+  position: relative;
+  z-index: 1;
 }
 </style>

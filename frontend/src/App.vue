@@ -1,8 +1,5 @@
 <template>
   <div class="app" :class="{ 'electron-app': isElectron }">
-    <!-- Electron 自定义标题栏 -->
-    <TitleBar v-if="isElectron" />
-    
     <!-- 主布局容器 -->
     <div class="app-layout">
       <!-- 左侧边栏 -->
@@ -418,7 +415,7 @@ const canSend = computed(() => {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background: #ffffff;
+  background: var(--theme-background, #ffffff);
   color: #111827;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   position: relative;
@@ -445,7 +442,7 @@ const canSend = computed(() => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: #fafbfc;
+  background: var(--theme-background, #ffffff);
 }
 
 /* 内容区域 */
@@ -454,6 +451,7 @@ const canSend = computed(() => {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  background: var(--theme-background, #ffffff);
 }
 
 /* 视图容器 */
@@ -518,7 +516,7 @@ const canSend = computed(() => {
   flex-direction: column;
   height: 100%;
   padding: 24px;
-  background: #ffffff;
+  background: var(--theme-background, #ffffff);
 }
 
 .dynamic-view-header {
@@ -546,7 +544,7 @@ const canSend = computed(() => {
   flex-direction: column;
   gap: 16px;
   padding: 24px;
-  background: #fafbfc;
+  background: var(--theme-background, #ffffff);
   border-radius: 8px;
   border: 1px solid #e5e7eb;
 }
@@ -589,7 +587,7 @@ const canSend = computed(() => {
   flex-direction: column;
   flex: 1;
   overflow: hidden;
-  background: transparent;
+  background: var(--theme-background, #ffffff);
   position: relative;
   z-index: 1;
 }
@@ -638,12 +636,12 @@ const canSend = computed(() => {
     inset 0 1px 0 rgba(255, 255, 255, 0.9),
     inset 0 -1px 0 rgba(0, 0, 0, 0.02); /* 统一阴影效果，与任务列表一致 */
   margin-top: 0;
-  background: linear-gradient(135deg, #ffffff 0%, #fafafa 50%, #ffffff 100%); /* 统一背景渐变 */
+  background: var(--theme-background, #ffffff); /* 使用主题背景色 */
 }
 
 .dialog-messages > .message-task-box + .message.assistant .message-text {
   border-radius: 0 0 14px 14px; /* 文本区域也使用相同的圆角 */
-  background: #ffffff; /* 确保文本区域背景为纯白 */
+  background: var(--theme-background, #ffffff); /* 使用主题背景色 */
 }
 
 /* 添加连接过渡效果 - 微妙的连接线 */
@@ -807,7 +805,7 @@ const canSend = computed(() => {
 }
 
 .dialog-messages::-webkit-scrollbar-track {
-  background: #ffffff;
+  background: var(--theme-background, #ffffff);
 }
 
 .dialog-messages::-webkit-scrollbar-thumb {
@@ -1005,7 +1003,7 @@ const canSend = computed(() => {
   gap: 6px;
   align-items: center;
   padding: 16px 20px;
-  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  background: var(--theme-background, #ffffff);
   border: 1.5px solid rgba(33, 150, 243, 0.15);
   border-radius: 12px;
   box-shadow: 
@@ -1069,7 +1067,7 @@ const canSend = computed(() => {
   right: 20px;
   width: 420px;
   max-height: calc(100vh - 100px);
-  background: #ffffff;
+  background: var(--theme-background, #ffffff);
   border: 2px solid rgba(255, 152, 0, 0.2);
   border-radius: 16px;
   box-shadow: 
@@ -1177,14 +1175,14 @@ const canSend = computed(() => {
   font-size: 14px;
   font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
   color: #353740;
-  background: #fafafa;
+  background: var(--theme-background, #ffffff);
   transition: all 0.2s ease;
 }
 
 .debug-input:focus {
   outline: none;
   border-color: #ff9800;
-  background: #ffffff;
+  background: var(--theme-background, #ffffff);
   box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.1);
 }
 
