@@ -22,10 +22,8 @@ import java.util.Map;
 @Slf4j
 @Controller("/rag")
 public class RagController {
-
     @Inject
     private RagService ragService;
-
     /**
      * 添加文档到RAG知识库
      *

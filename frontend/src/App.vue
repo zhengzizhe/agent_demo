@@ -24,9 +24,63 @@
             <span class="tab-icon">📚</span>
             <span class="tab-text">RAG知识库</span>
           </button>
+          <!-- 调试按钮 -->
+          <button
+            class="nav-tab debug-tab"
+            :class="{ active: showDebugPanel }"
+            @click="showDebugPanel = !showDebugPanel"
+            title="调试面板"
+          >
+            <span class="tab-icon">🔧</span>
+            <span class="tab-text">调试</span>
+          </button>
         </div>
       </div>
     </nav>
+
+    <!-- 调试面板 -->
+    <transition name="debug-panel">
+      <div v-if="showDebugPanel" class="debug-panel">
+        <div class="debug-panel-header">
+          <h3>调试面板</h3>
+          <button class="debug-close" @click="showDebugPanel = false">×</button>
+        </div>
+        <div class="debug-panel-content">
+          <div class="debug-field">
+            <label>用户ID (userId)</label>
+            <div class="debug-input-group">
+              <input
+                v-model="debugUserId"
+                type="text"
+                placeholder="输入用户ID"
+                class="debug-input"
+                @blur="handleUserIdChange"
+              />
+              <button class="debug-btn" @click="generateNewUserId">生成新ID</button>
+            </div>
+            <div class="debug-value">当前: {{ session.userId?.value || debugUserId }}</div>
+          </div>
+          <div class="debug-field">
+            <label>会话ID (sessionId)</label>
+            <div class="debug-input-group">
+              <input
+                v-model="debugSessionId"
+                type="text"
+                placeholder="输入会话ID"
+                class="debug-input"
+                @blur="handleSessionIdChange"
+              />
+              <button class="debug-btn" @click="generateNewSessionId">生成新ID</button>
+            </div>
+            <div class="debug-value">当前: {{ session.sessionId?.value || debugSessionId }}</div>
+          </div>
+          <div class="debug-actions">
+            <button class="debug-btn-primary" @click="applyDebugSettings">应用设置</button>
+            <button class="debug-btn-secondary" @click="resetDebugSettings">重置</button>
+          </div>
+        </div>
+      </div>
+    </transition>
 
     <!-- 对话视图 -->
     <div v-if="currentView === 'chat'" class="dialog-container">
@@ -38,9 +92,9 @@
             <div class="welcome-icon">
               <div class="welcome-icon-inner">AI</div>
             </div>
-            <h2>Agent 助手</h2>
-            <p>请输入您的任务描述，我将为您生成执行计划并开始执行</p>
-          </div>
+          <h2>Agent 助手</h2>
+          <p>请输入您的任务描述，我将为您生成执行计划并开始执行</p>
+        </div>
         </transition>
 
         <!-- 初始加载动画（3个点轮流跳动） -->
@@ -85,7 +139,7 @@
                   <span class="typing-dot-item"></span>
                   <span class="typing-dot-item"></span>
                   <span class="typing-dot-item"></span>
-                </div>
+            </div>
               </div>
             </div>
           </transition>
@@ -101,19 +155,19 @@
               <div class="execution-error-content">
                 <div class="execution-error-title">执行异常</div>
                 <div class="execution-error-text">{{ msg.executionError }}</div>
-              </div>
             </div>
+              </div>
           </transition>
         </template>
 
         <!-- 错误消息 -->
         <transition name="error-slide">
-          <div v-if="error" class="message error">
-            <div class="message-avatar">⚠️</div>
-            <div class="message-content">
-              <div class="message-text error-text">{{ error }}</div>
-            </div>
+        <div v-if="error" class="message error">
+          <div class="message-avatar">⚠️</div>
+          <div class="message-content">
+            <div class="message-text error-text">{{ error }}</div>
           </div>
+        </div>
         </transition>
       </div>
 
@@ -125,8 +179,8 @@
         :can-send="canSend"
         @send="executeTask"
       />
-    </div>
-
+        </div>
+        
     <!-- RAG知识库管理视图 -->
     <div v-if="currentView === 'rag'" class="rag-container">
       <RagManagement />
@@ -135,7 +189,7 @@
 </template>
 
 <script setup>
-import { reactive, ref, computed } from 'vue'
+import { reactive, ref, computed, watch } from 'vue'
 import TaskList from './components/TaskList.vue'
 import MessageItem from './components/MessageItem.vue'
 import InputArea from './components/InputArea.vue'
@@ -143,9 +197,79 @@ import RagManagement from './components/RagManagement.vue'
 import { useMessages } from './composables/useMessages.js'
 import { useEventHandlers } from './composables/useEventHandlers.js'
 import { useTaskExecution } from './composables/useTaskExecution.js'
+import { useSession } from './composables/useSession.js'
 
 // 当前视图
 const currentView = ref('chat')
+
+// 调试面板
+const showDebugPanel = ref(false)
+const session = useSession()
+const debugUserId = ref('')
+const debugSessionId = ref('')
+
+// 初始化调试面板的值
+watch(() => session.userId?.value, (newVal) => {
+  if (newVal && typeof newVal === 'string') {
+    debugUserId.value = newVal
+  } else if (!debugUserId.value) {
+    debugUserId.value = ''
+  }
+}, { immediate: true })
+
+watch(() => session.sessionId?.value, (newVal) => {
+  if (newVal && typeof newVal === 'string') {
+    debugSessionId.value = newVal
+  } else if (!debugSessionId.value) {
+    debugSessionId.value = ''
+  }
+}, { immediate: true })
+
+// 处理 userId 变化
+const handleUserIdChange = () => {
+  const value = typeof debugUserId.value === 'string' ? debugUserId.value : String(debugUserId.value || '')
+  if (value && value.trim()) {
+    session.setUserId(value.trim())
+  } else {
+    debugUserId.value = session.userId?.value || ''
+  }
+}
+
+// 处理 sessionId 变化
+const handleSessionIdChange = () => {
+  const value = typeof debugSessionId.value === 'string' ? debugSessionId.value : String(debugSessionId.value || '')
+  if (value && value.trim()) {
+    session.setSessionId(value.trim())
+  } else {
+    debugSessionId.value = session.sessionId?.value || ''
+  }
+}
+
+// 生成新的 userId
+const generateNewUserId = () => {
+  const newUserId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9)
+  debugUserId.value = newUserId
+  session.setUserId(newUserId)
+}
+
+// 生成新的 sessionId
+const generateNewSessionId = () => {
+  const newSessionId = session.newSession()
+  debugSessionId.value = newSessionId
+}
+
+// 应用调试设置
+const applyDebugSettings = () => {
+  handleUserIdChange()
+  handleSessionIdChange()
+  showDebugPanel.value = false
+}
+
+// 重置调试设置
+const resetDebugSettings = () => {
+  debugUserId.value = session.userId?.value || ''
+  debugSessionId.value = session.sessionId?.value || ''
+}
 
 // 表单数据
 const form = reactive({
@@ -163,7 +287,7 @@ const { isExecuting, isPlanning } = eventHandlers
 
 // 任务执行
 const messagesContainerRef = ref(null)
-const taskExecution = useTaskExecution(messagesManager, eventHandlers, form, messagesContainerRef)
+const taskExecution = useTaskExecution(messagesManager, eventHandlers, form, messagesContainerRef, session)
 const { executeTask } = taskExecution
 
 
@@ -334,6 +458,16 @@ const canSend = computed(() => {
 .nav-tab.active .tab-icon {
   transform: scale(1.15);
   filter: drop-shadow(0 2px 4px rgba(33, 150, 243, 0.3));
+}
+
+.nav-tab.debug-tab.active {
+  background: linear-gradient(135deg, rgba(255, 152, 0, 0.15) 0%, rgba(255, 152, 0, 0.12) 100%);
+  color: #ff9800;
+  border-color: rgba(255, 152, 0, 0.2);
+}
+
+.nav-tab.debug-tab.active::before {
+  background: linear-gradient(135deg, rgba(255, 152, 0, 0.1), rgba(255, 152, 0, 0.1));
 }
 
 .tab-text {
@@ -933,5 +1067,216 @@ const canSend = computed(() => {
 .typing-fade-leave-to {
   opacity: 0;
   transform: translateY(-5px) scale(0.98);
+}
+
+/* 调试面板样式 */
+.debug-panel {
+  position: fixed;
+  top: 72px;
+  right: 20px;
+  width: 420px;
+  max-height: calc(100vh - 100px);
+  background: #ffffff;
+  border: 2px solid rgba(255, 152, 0, 0.2);
+  border-radius: 16px;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.12),
+    0 4px 16px rgba(255, 152, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  z-index: 200;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+}
+
+.debug-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, rgba(255, 152, 0, 0.1) 0%, rgba(255, 152, 0, 0.05) 100%);
+  border-bottom: 1px solid rgba(255, 152, 0, 0.2);
+}
+
+.debug-panel-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #ff9800;
+  letter-spacing: -0.01em;
+}
+
+.debug-close {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: #565869;
+  font-size: 24px;
+  font-weight: 300;
+  cursor: pointer;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  line-height: 1;
+}
+
+.debug-close:hover {
+  background: rgba(255, 152, 0, 0.1);
+  color: #ff9800;
+  transform: scale(1.1);
+}
+
+.debug-panel-content {
+  padding: 24px;
+  max-height: calc(100vh - 200px);
+  overflow-y: auto;
+}
+
+.debug-field {
+  margin-bottom: 24px;
+}
+
+.debug-field:last-of-type {
+  margin-bottom: 20px;
+}
+
+.debug-field label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #565869;
+  margin-bottom: 8px;
+  letter-spacing: 0.01em;
+}
+
+.debug-input-group {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.debug-input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  font-size: 14px;
+  font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+  color: #353740;
+  background: #fafafa;
+  transition: all 0.2s ease;
+}
+
+.debug-input:focus {
+  outline: none;
+  border-color: #ff9800;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.1);
+}
+
+.debug-value {
+  font-size: 12px;
+  color: #8e8ea0;
+  font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+  word-break: break-all;
+  padding: 6px 10px;
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 6px;
+  margin-top: 4px;
+}
+
+.debug-btn {
+  padding: 10px 16px;
+  background: linear-gradient(135deg, rgba(255, 152, 0, 0.1) 0%, rgba(255, 152, 0, 0.05) 100%);
+  border: 2px solid rgba(255, 152, 0, 0.2);
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #ff9800;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.debug-btn:hover {
+  background: linear-gradient(135deg, rgba(255, 152, 0, 0.15) 0%, rgba(255, 152, 0, 0.1) 100%);
+  border-color: rgba(255, 152, 0, 0.3);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(255, 152, 0, 0.2);
+}
+
+.debug-btn:active {
+    transform: translateY(0);
+  }
+
+.debug-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.debug-btn-primary {
+  flex: 1;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(255, 152, 0, 0.3);
+}
+
+.debug-btn-primary:hover {
+  background: linear-gradient(135deg, #f57c00 0%, #e65100 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 152, 0, 0.4);
+}
+
+.debug-btn-primary:active {
+    transform: translateY(0);
+}
+
+.debug-btn-secondary {
+  flex: 1;
+  padding: 12px 24px;
+  background: transparent;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #565869;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.debug-btn-secondary:hover {
+  background: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.15);
+}
+
+/* 调试面板过渡动画 */
+.debug-panel-enter-active {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.debug-panel-leave-active {
+  transition: all 0.2s ease-in;
+}
+
+.debug-panel-enter-from {
+    opacity: 0;
+  transform: translateX(20px) scale(0.95);
+}
+
+.debug-panel-leave-to {
+  opacity: 0;
+  transform: translateX(20px) scale(0.95);
 }
 </style>

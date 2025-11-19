@@ -11,6 +11,16 @@
     <div class="message-content" :data-message-id="message.id || message.timestamp || Date.now()">
       <div class="message-card">
         <div class="message-card-glow"></div>
+        <!-- 复制按钮（hover显示，右上角） -->
+        <button
+          v-if="!message.streaming"
+          class="message-copy-btn"
+          @click="handleCopyMessage"
+          :title="isCopied ? '已复制' : '复制消息'"
+        >
+          <span v-if="isCopied">已复制</span>
+          <span v-else>复制</span>
+        </button>
         <div class="message-text" v-html="formattedContent"></div>
         <div v-if="message.streaming" class="streaming-indicator">
           <div class="streaming-pulse"></div>
@@ -91,6 +101,30 @@ const formattedContent = computed(() => {
 // PDF 导出
 const pdfExport = usePdfExport()
 const isExporting = ref(false)
+
+// 消息复制
+const isCopied = ref(false)
+
+// 复制消息内容
+const handleCopyMessage = async (event) => {
+  event.stopPropagation()
+  try {
+    const content = getMessageContent(props.message)
+    // 移除 HTML 标签，获取纯文本
+    const tempDiv = document.createElement('div')
+    tempDiv.innerHTML = content
+    const textContent = tempDiv.textContent || tempDiv.innerText || ''
+    
+    await navigator.clipboard.writeText(textContent)
+    isCopied.value = true
+    setTimeout(() => {
+      isCopied.value = false
+    }, 2000)
+  } catch (err) {
+    console.error('复制失败:', err)
+    alert('复制失败，请稍后重试')
+  }
+}
 
 // 导出单条消息
 const handleExportMessage = async (event) => {
@@ -253,23 +287,48 @@ function initCodeBlock(block) {
   // 复制按钮
   const copyBtn = block.querySelector('.feishu-code-copy')
   if (copyBtn) {
-    copyBtn.addEventListener('click', async () => {
+    copyBtn.addEventListener('click', async (e) => {
+      e.stopPropagation()
+      // 优先使用 data-code-encoded，如果没有则从 code 元素获取
+      let code = ''
       const encodedCode = block.getAttribute('data-code-encoded')
       if (encodedCode) {
         try {
-          const code = decodeURIComponent(escape(atob(encodedCode)))
+          code = decodeURIComponent(escape(atob(encodedCode)))
+        } catch (err) {
+          console.error('解码失败:', err)
+        }
+      }
+      
+      // 如果编码方式失败，直接从 code 元素获取文本
+      if (!code) {
+        const codeElement = block.querySelector('.feishu-code-pre code')
+        if (codeElement) {
+          code = codeElement.textContent || codeElement.innerText || ''
+        }
+      }
+      
+      if (code) {
+        try {
           await navigator.clipboard.writeText(code)
           const span = copyBtn.querySelector('span')
-          const originalText = span.textContent
+          const originalText = span ? span.textContent : '复制'
           copyBtn.classList.add('copied')
-          span.textContent = '已复制'
+          if (span) {
+            span.textContent = '已复制'
+          }
           setTimeout(() => {
             copyBtn.classList.remove('copied')
-            span.textContent = originalText
+            if (span) {
+              span.textContent = originalText
+            }
           }, 2000)
         } catch (err) {
           console.error('复制失败:', err)
+          alert('复制失败，请稍后重试')
         }
+      } else {
+        console.error('无法获取代码内容')
       }
     })
   }
@@ -533,6 +592,11 @@ document.addEventListener('click', (e) => {
   max-width: 100%; /* 不超过父容器 */
 }
 
+.message-card:hover .message-copy-btn {
+  opacity: 1;
+  visibility: visible;
+}
+
 /* 当消息前面有任务列表时，调整消息气泡的顶部圆角 - 通过全局样式处理 */
 
 .message-card-glow {
@@ -700,8 +764,9 @@ document.addEventListener('click', (e) => {
 
 .message-text ul,
 .message-text ol {
-  margin: 16px 0;
-  padding-left: 0;
+  margin: 20px 0;
+  padding-left: 24px;
+  padding-right: 16px;
   line-height: 1.85;
   list-style: none;
 }
@@ -715,14 +780,14 @@ document.addEventListener('click', (e) => {
 }
 
 .message-text li {
-  margin: 8px 0;
+  margin: 12px 0;
   line-height: 1.85;
-  padding: 8px 12px 8px 32px;
+  padding: 12px 20px 12px 40px;
   text-align: left;
   position: relative;
   background: linear-gradient(135deg, rgba(33, 150, 243, 0.04) 0%, rgba(66, 165, 245, 0.02) 100%);
   border-left: 3px solid rgba(33, 150, 243, 0.2);
-  border-radius: 6px;
+  border-radius: 8px;
   transition: all 0.3s ease;
 }
 
@@ -736,8 +801,8 @@ document.addEventListener('click', (e) => {
 .message-text ul > li::before {
   content: '▸';
   position: absolute;
-  left: 12px;
-  top: 8px;
+  left: 16px;
+  top: 12px;
   color: #2196f3;
   font-weight: 700;
   font-size: 14px;
@@ -751,15 +816,15 @@ document.addEventListener('click', (e) => {
 .message-text ol > li::before {
   content: counter(list-counter);
   position: absolute;
-  left: 10px;
-  top: 8px;
-  width: 20px;
-  height: 20px;
+  left: 12px;
+  top: 12px;
+  width: 22px;
+  height: 22px;
   background: linear-gradient(135deg, #10a37f 0%, #19c37d 100%);
   color: #ffffff;
   font-weight: 700;
   font-size: 12px;
-  line-height: 20px;
+  line-height: 22px;
   text-align: center;
   border-radius: 50%;
   box-shadow: 0 2px 4px rgba(16, 163, 127, 0.3);
@@ -769,15 +834,17 @@ document.addEventListener('click', (e) => {
 .message-text ol ol,
 .message-text ul ol,
 .message-text ol ul {
-  margin: 8px 0 8px 16px;
-  padding-left: 0;
+  margin: 12px 0 12px 20px;
+  padding-left: 24px;
+  padding-right: 16px;
 }
 
 .message-text ul ul > li,
 .message-text ol ol > li,
 .message-text ul ol > li,
 .message-text ol ul > li {
-  padding-left: 28px;
+  padding-left: 36px;
+  padding-right: 20px;
   background: linear-gradient(135deg, rgba(33, 150, 243, 0.02) 0%, rgba(66, 165, 245, 0.01) 100%);
   border-left-color: rgba(33, 150, 243, 0.15);
 }
@@ -785,16 +852,16 @@ document.addEventListener('click', (e) => {
 .message-text ul ul > li::before {
   content: '▪';
   font-size: 12px;
-  left: 10px;
+  left: 14px;
 }
 
 .message-text ol ol > li::before {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   font-size: 11px;
-  line-height: 18px;
-  left: 8px;
-  top: 9px;
+  line-height: 20px;
+  left: 12px;
+  top: 12px;
 }
 
 .message-text li > p {
@@ -1724,6 +1791,46 @@ document.addEventListener('click', (e) => {
 .message-text :deep(table td),
 .message-text :deep(table th) {
   vertical-align: top;
+}
+
+/* 消息复制按钮（hover显示，右上角，无边框） */
+.message-copy-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s, visibility 0.2s;
+  background: transparent;
+  border: none;
+  color: #646a73;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 6px;
+  z-index: 10;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', 'Hiragino Sans GB', sans-serif;
+  transition: all 0.2s ease;
+}
+
+.message-copy-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: #1d2129;
+}
+
+.message-copy-btn:active {
+  background: rgba(0, 0, 0, 0.08);
+  transform: scale(0.95);
+}
+
+.message.user .message-copy-btn {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.message.user .message-copy-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
 }
 
 /* 导出按钮包装器（hover显示） */

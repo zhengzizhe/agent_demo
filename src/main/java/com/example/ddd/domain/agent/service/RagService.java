@@ -7,6 +7,7 @@ import com.example.ddd.domain.agent.model.entity.RagEntity;
 import com.example.ddd.domain.agent.model.entity.VectorDocumentEntity;
 import com.example.ddd.infrastructure.config.DSLContextFactory;
 import dev.langchain4j.data.document.Document;
+import dev.langchain4j.data.document.DocumentSplitter;
 import dev.langchain4j.data.document.Metadata;
 import dev.langchain4j.data.document.splitter.DocumentSplitters;
 import dev.langchain4j.data.embedding.Embedding;
@@ -56,7 +57,7 @@ public class RagService {
             throw new IllegalArgumentException("未找到RAG: " + ragId);
         }
         EmbeddingModel embeddingModel = createEmbeddingModel();
-        var splitter = DocumentSplitters.recursive(1000, 200);
+        DocumentSplitter splitter = DocumentSplitters.recursive(1000, 200);
         Document document = Document.from(text, Metadata.from(metadata != null ? metadata : new HashMap<>()));
         List<TextSegment> segments = splitter.split(document);
         List<Embedding> embeddings = embeddingModel.embedAll(segments).content();
@@ -65,7 +66,6 @@ public class RagService {
         for (int i = 0; i < segments.size(); i++) {
             TextSegment segment = segments.get(i);
             Embedding embedding = embeddings.get(i);
-            
             VectorDocumentEntity entity = new VectorDocumentEntity();
             entity.setRagId(ragId);
             entity.setContent(segment.text());
@@ -73,25 +73,18 @@ public class RagService {
             entity.setChunkIndex(i);
             entity.setCreatedAt(currentTime);
             entity.setUpdatedAt(currentTime);
-            
-            // 合并metadata
             Map<String, Object> mergedMetadata = new HashMap<>();
             if (metadata != null) {
                 mergedMetadata.putAll(metadata);
             }
-            // 添加chunk索引到metadata
             mergedMetadata.put("chunkIndex", i);
             mergedMetadata.put("totalChunks", segments.size());
             entity.setMetadata(mergedMetadata);
-            
             entities.add(entity);
         }
-        
-        // 批量插入到数据库
         int insertedCount = dslContextFactory.callable(dslContext -> {
             return vectorDocumentRepository.batchInsert(dslContext, entities);
         });
-        
         log.info("文档已添加到RAG: ragId={}, segments={}, insertedCount={}", ragId, segments.size(), insertedCount);
         return insertedCount;
     }
@@ -113,13 +106,11 @@ public class RagService {
             );
         });
     }
-
     public int deleteAllDocuments(Long ragId) {
         return dslContextFactory.callable(dslContext -> {
             return vectorDocumentRepository.deleteByRagId(dslContext, ragId);
         });
     }
-
     /**
      * 根据RAG ID查询所有文档
      *
@@ -131,7 +122,6 @@ public class RagService {
             return vectorDocumentRepository.queryByRagId(dslContext, ragId);
         });
     }
-
     /**
      * 根据ID删除文档
      *

@@ -2,8 +2,12 @@
  * 任务执行 Composable
  */
 import { ref, nextTick } from 'vue'
+import { useSession } from './useSession.js'
 
-export function useTaskExecution(messagesManager, eventHandlers, formRef, messagesContainerRef) {
+export function useTaskExecution(messagesManager, eventHandlers, formRef, messagesContainerRef, session) {
+  // 使用传入的 session 实例（确保使用同一个 session），如果没有传入则创建新的
+  const sessionInstance = session || useSession()
+  const { userId, sessionId } = sessionInstance
 
   /**
    * 执行任务
@@ -35,7 +39,9 @@ export function useTaskExecution(messagesManager, eventHandlers, formRef, messag
         },
         body: JSON.stringify({
           orchestratorId: form.orchestratorId,
-          message: userMessage
+          message: userMessage,
+          userId: userId.value,
+          sessionId: sessionId.value
         })
       })
 

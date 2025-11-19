@@ -16,9 +16,29 @@ public class UserContext {
     private final AtomicBoolean running = new AtomicBoolean(false);
     private Thread dispatcherThread;
     private FluxSink<TaskStatusEvent> emitter;
+    
+    // 用户ID和会话ID
+    private String userId;
+    private String sessionId;
 
     public UserContext() {
         this.eventQueue = new LinkedBlockingQueue<>();
+    }
+    
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+    
+    public String getUserId() {
+        return userId;
+    }
+    
+    public void setSessionId(String sessionId) {
+        this.sessionId = sessionId;
+    }
+    
+    public String getSessionId() {
+        return sessionId;
     }
 
     /**

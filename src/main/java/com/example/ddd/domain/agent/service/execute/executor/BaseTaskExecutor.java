@@ -85,7 +85,8 @@ public abstract class BaseTaskExecutor implements TaskExecutor {
         }
 
         inputMap.put("taskInput", taskSpecificInput != null ? taskSpecificInput : "");
-
+        String memoryContext = getMemoryContext();
+        inputMap.put("chatHistory(作为记忆联系上下文作为附加信息)", memoryContext);
         return inputMap;
     }
 
@@ -93,24 +94,26 @@ public abstract class BaseTaskExecutor implements TaskExecutor {
      * 获取格式化的任务输入字符串（用于向后兼容）
      * 格式：usermessage:用户问题\n[任务输入内容]
      */
-    protected String getTaskInputString(WorkspaceState state) {
-        Map<String, Object> inputMap = getTaskInput(state);
-        StringBuilder inputBuilder = new StringBuilder();
 
-        String userMessage = (String) inputMap.getOrDefault("usermessage", "");
-        String taskInput = (String) inputMap.getOrDefault("taskInput", "");
 
-        // 始终添加用户消息
-        if (userMessage != null && !userMessage.trim().isEmpty()) {
-            inputBuilder.append("usermessage:").append(userMessage).append("\n");
+    /**
+     * 获取记忆上下文（仅对 Supervisor、Researcher、Summarizer）
+     * Agent ID: 1=Supervisor, 2=Researcher, 4=Summarizer
+     */
+    protected String getMemoryContext() {
+        if (userContext == null || userContext.getUserId() == null || userContext.getSessionId() == null) {
+            return null;
         }
 
-        // 添加任务特定输入
-        if (taskInput != null && !taskInput.trim().isEmpty()) {
-            inputBuilder.append(taskInput);
+        Long agentId = task.getAgentId();
+        // 只对 Supervisor(1)、Researcher(2)、Summarizer(4) 获取记忆
+        if (agentId != null && (agentId == 1L || agentId == 2L || agentId == 4L)) {
+            com.example.ddd.domain.agent.service.execute.memory.InMemory memory =
+                    com.example.ddd.domain.agent.service.execute.memory.InMemory.getInstance();
+            return memory.formatHistoryForPrompt(userContext.getUserId(), userContext.getSessionId(), 10);
         }
 
-        return inputBuilder.toString();
+        return null;
     }
 
     /**

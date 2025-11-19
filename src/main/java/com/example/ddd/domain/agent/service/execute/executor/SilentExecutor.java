@@ -7,6 +7,7 @@ import com.example.ddd.domain.agent.service.execute.context.UserContext;
 import com.example.ddd.domain.agent.service.execute.graph.WorkspaceState;
 import com.example.ddd.domain.agent.service.execute.task.Task;
 import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.internal.Json;
 import dev.langchain4j.service.TokenStream;
 import lombok.extern.slf4j.Slf4j;
 
@@ -36,7 +37,7 @@ public class SilentExecutor extends BaseTaskExecutor {
                 .taskId(task.getId())
                 .message("任务开始执行")
                 .build());
-        String input = getTaskInputString(state);
+        Map<String, Object> taskInput = getTaskInput(state);
         AiService aiService = serviceNode.getAiService();
         if (aiService == null) {
             log.error("ServiceNode的AiService为空: taskId={}", task.getId());
@@ -54,21 +55,17 @@ public class SilentExecutor extends BaseTaskExecutor {
 
         try {
 
-            TokenStream tokenStream = aiService.chat(input);
+            TokenStream tokenStream = aiService.chat(Json.toJson(taskInput));
             StringBuilder resultBuilder = new StringBuilder();
             CountDownLatch latch = new CountDownLatch(1);
-
-            // onPartialResponse: 静默执行器发送任务执行中事件（不包含内容）
             tokenStream.onPartialResponse(token -> {
 
             });
-
             tokenStream.onCompleteResponse(e -> {
                 AiMessage aiMessage = e.aiMessage();
                 if (aiMessage != null && aiMessage.text() != null) {
                     resultBuilder.append(aiMessage.text());
                 }
-                // 发送任务完成事件（不包含内容）
                 if (userContext != null) {
                     userContext.emit(UserContext.TaskStatusEvent.builder()
                             .type(EventType.TASK_COMPLETE)
@@ -76,7 +73,6 @@ public class SilentExecutor extends BaseTaskExecutor {
                             .message("任务执行完成")
                             .build());
                 }
-
                 latch.countDown();
             });
 

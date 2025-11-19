@@ -72,12 +72,21 @@ public class Orchestrator {
         if (supAi == null) {
             throw new IllegalStateException("Supervisor AiService 未初始化");
         }
+
+        // 获取历史对话记忆
+        String historyContext = "";
+        if (userContext != null && userContext.getUserId() != null && userContext.getSessionId() != null) {
+            historyContext = com.example.ddd.domain.agent.service.execute.memory.InMemory.getInstance()
+                    .formatHistoryForPrompt(userContext.getUserId(), userContext.getSessionId(), 10);
+        }
+
         String planningPrompt = """
                 {
                   "userRequest": "%s",
-                  "subAgents": %s   
+                  "subAgents": %s,
+                  "chatHistory(作为记忆联系上下午，不要从记忆中汇总问题)":%s
                 }
-                """.formatted(userRequest, subWorkersDesc());
+                """.formatted(userRequest, subWorkersDesc(), historyContext);
         TokenStream chat = supAi.chat(planningPrompt);
         CountDownLatch latch = new CountDownLatch(1);
         StringBuilder builder = new StringBuilder();
@@ -173,6 +182,16 @@ public class Orchestrator {
                 log.info("执行图构建完成");
                 Map<String, Object> init = new HashMap<>();
                 init.put("userMessage", userRequest);
+
+                // 添加历史对话到 state
+                if (userContext != null && userContext.getUserId() != null && userContext.getSessionId() != null) {
+                    String historyContext = com.example.ddd.domain.agent.service.execute.memory.InMemory.getInstance()
+                            .formatHistoryForPrompt(userContext.getUserId(), userContext.getSessionId(), 10);
+                    if (!historyContext.isEmpty()) {
+                        init.put("historyContext", historyContext);
+                    }
+                }
+
                 log.info("开始执行图");
                 graph.invoke(init);
             }

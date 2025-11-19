@@ -49,6 +49,20 @@ public class TaskExecuteController {
                 return;
             }
             UserContext userContext = new UserContext();
+            
+            // 设置用户ID和会话ID
+            String userId = request.getUserId() != null ? request.getUserId() : "default_user";
+            String sessionId = request.getSessionId() != null ? request.getSessionId() : 
+                    java.util.UUID.randomUUID().toString();
+            userContext.setUserId(userId);
+            userContext.setSessionId(sessionId);
+            
+            // 保存用户输入到 InMemory
+            if (request.getMessage() != null && !request.getMessage().trim().isEmpty()) {
+                com.example.ddd.domain.agent.service.execute.memory.InMemory.getInstance()
+                        .addMessage(userId, sessionId, "USER", request.getMessage());
+            }
+            
             userContext.startEventDispatcher(emitter);
             new Thread(() -> {
                 try {
@@ -89,6 +103,8 @@ public class TaskExecuteController {
     public static class TaskExecuteRequest {
         private Long orchestratorId;
         private String message;
+        private String userId;      // 用户ID（可选，如果不传则使用默认值）
+        private String sessionId;   // 会话ID（可选，如果不传则自动生成）
     }
 
 

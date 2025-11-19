@@ -52,6 +52,51 @@
       <!-- 图状视图 -->
       <div v-else class="task-graph-view">
         <div ref="graphContainer" class="graph-container"></div>
+        <!-- 任务详情 Tooltip -->
+        <div 
+          v-if="hoveredTask"
+          ref="taskTooltip"
+          class="task-tooltip"
+          :style="tooltipStyle"
+        >
+          <div class="tooltip-header">
+            <div class="tooltip-status-badge" :class="`status-${hoveredTask.status?.toLowerCase()}`">
+              <span class="status-icon">{{ getTaskStatusIcon(hoveredTask.status) }}</span>
+              <span class="status-text">{{ getStatusLabel(hoveredTask.status) }}</span>
+            </div>
+            <div class="tooltip-close" @click="hoveredTask = null">×</div>
+          </div>
+          <div class="tooltip-content">
+            <div class="tooltip-section">
+              <div class="tooltip-label">任务标题</div>
+              <div class="tooltip-value">{{ hoveredTask.title || hoveredTask.description || hoveredTask.id }}</div>
+            </div>
+            <div v-if="hoveredTask.description && hoveredTask.description !== hoveredTask.title" class="tooltip-section">
+              <div class="tooltip-label">任务描述</div>
+              <div class="tooltip-value">{{ hoveredTask.description }}</div>
+            </div>
+            <div v-if="hoveredTask.inputs?.fromTask && hoveredTask.inputs.fromTask.length > 0" class="tooltip-section">
+              <div class="tooltip-label">依赖任务</div>
+              <div class="tooltip-value">
+                <span 
+                  v-for="(depId, idx) in hoveredTask.inputs.fromTask" 
+                  :key="depId"
+                  class="tooltip-tag"
+                >
+                  {{ getTaskTitleById(depId) || depId }}<span v-if="idx < hoveredTask.inputs.fromTask.length - 1">, </span>
+                </span>
+              </div>
+            </div>
+            <div v-if="hoveredTask.inputs?.fromUser" class="tooltip-section">
+              <div class="tooltip-label">输入来源</div>
+              <div class="tooltip-value tooltip-tag user-input">用户输入</div>
+            </div>
+            <div v-if="hoveredTask.executionStrategy" class="tooltip-section">
+              <div class="tooltip-label">执行策略</div>
+              <div class="tooltip-value tooltip-tag strategy-tag">{{ hoveredTask.executionStrategy }}</div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -78,6 +123,53 @@ const viewMode = ref('list') // 'list' 或 'chart'
 const graphContainer = ref(null)
 let network = null
 let updateGraphThrottleTimer = null // 节流定时器
+
+// Tooltip 相关
+const hoveredTask = ref(null)
+const taskTooltip = ref(null)
+const tooltipStyle = ref({})
+let hideTooltipTimer = null // 用于清除延迟隐藏的定时器
+
+// 更新 tooltip 位置
+const updateTooltipPosition = (event) => {
+  if (!taskTooltip.value || !graphContainer.value) return
+  
+  nextTick(() => {
+    const containerRect = graphContainer.value.getBoundingClientRect()
+    const tooltipRect = taskTooltip.value.getBoundingClientRect()
+    const mouseX = event.clientX || (event.touches && event.touches[0]?.clientX) || 0
+    const mouseY = event.clientY || (event.touches && event.touches[0]?.clientY) || 0
+    
+    // 计算 tooltip 位置（鼠标右侧，垂直居中）
+    let left = mouseX - containerRect.left + 20 // 鼠标右侧 20px
+    let top = mouseY - containerRect.top - tooltipRect.height / 2 // 垂直居中
+    
+    // 边界检查：确保 tooltip 不超出容器
+    if (left + tooltipRect.width > containerRect.width) {
+      left = mouseX - containerRect.left - tooltipRect.width - 20 // 显示在鼠标左侧
+    }
+    if (top < 0) {
+      top = 10 // 顶部对齐
+    }
+    if (top + tooltipRect.height > containerRect.height) {
+      top = containerRect.height - tooltipRect.height - 10 // 底部对齐
+    }
+    
+    tooltipStyle.value = {
+      left: `${left}px`,
+      top: `${top}px`,
+      opacity: 1,
+      visibility: 'visible'
+    }
+  })
+}
+
+// 监听鼠标移动，更新 tooltip 位置
+const handleMouseMove = (event) => {
+  if (hoveredTask.value) {
+    updateTooltipPosition(event)
+  }
+}
 
 // 获取状态颜色 - 改进为更美观的渐变和颜色
 const getStatusColor = (status) => {
@@ -184,15 +276,21 @@ const buildGraphData = () => {
     // 正确编码SVG为data URL - 使用URI编码方式，更兼容
     const svgDataUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgContent)
     
+    // 根据任务数量动态调整节点大小
+    const taskCount = props.tasks.length
+    const baseSize = taskCount > 10 ? 50 : (taskCount > 5 ? 55 : 60)
+    const runningSize = taskCount > 10 ? 55 : (taskCount > 5 ? 60 : 70)
+    const doneSize = taskCount > 10 ? 50 : (taskCount > 5 ? 55 : 65)
+    
     const nodeConfig = {
       id: task.id,
       label: shortLabel, // 保留标签用于搜索
-      title: `${label}\n状态: ${status}\nID: ${task.id}`,
+      // 移除 title 属性，禁用 vis-network 默认的黄色 tooltip
       shape: 'circularImage', // 使用圆形图片形状
       image: svgDataUrl,
-      size: isRunning ? 70 : (isDone ? 65 : (isFailed ? 65 : 60)),
+      size: isRunning ? runningSize : (isDone ? doneSize : (isFailed ? doneSize : baseSize)),
       brokenImage: svgDataUrl, // 备用图片
-      mass: isRunning ? 2 : 1.5,
+      mass: isRunning ? 1.5 : 1.2, // 减小质量，让节点更容易分散
       font: {
         size: 0, // 隐藏默认文字，使用SVG中的文字
         color: textColor
@@ -257,7 +355,7 @@ const initGraph = () => {
         size: 0, // 隐藏默认文字
         face: 'Arial, sans-serif'
       },
-      margin: 8,
+      margin: 15, // 增加节点边距，让节点之间距离更远
       size: 60, // 默认大小
       borderWidth: 0, // SVG中已包含边框
       chosen: {
@@ -275,8 +373,8 @@ const initGraph = () => {
         }
       },
       scaling: {
-        min: 40,
-        max: 80,
+        min: 35, // 缩小最小尺寸
+        max: 70, // 缩小最大尺寸
         label: {
           enabled: false // 不使用标签缩放
         }
@@ -304,27 +402,33 @@ const initGraph = () => {
       enabled: true,
       stabilization: {
         enabled: true,
-        iterations: 100, // 减少迭代次数，提高性能
+        iterations: 150, // 增加迭代次数，让布局更稳定
         updateInterval: 50 // 增加更新间隔
       },
       barnesHut: {
-        gravitationalConstant: -2000,
-        centralGravity: 0.1,
-        springLength: 120,
-        springConstant: 0.04,
-        damping: 0.15, // 增加阻尼，减少抖动
-        avoidOverlap: 0.5
+        gravitationalConstant: -3000, // 增加引力常数，让节点更分散
+        centralGravity: 0.05, // 减小中心引力，让节点更分散
+        springLength: props.tasks.length > 10 ? 180 : (props.tasks.length > 5 ? 150 : 120), // 根据节点数量动态调整弹簧长度
+        springConstant: 0.03, // 减小弹簧常数，让节点更容易分散
+        damping: 0.2, // 增加阻尼，减少抖动
+        avoidOverlap: 1.0 // 增加避免重叠的强度
       },
       solver: 'barnesHut',
-      timestep: 0.5 // 增加时间步长，减少计算频率
+      timestep: 0.4 // 稍微减小时间步长，让布局更稳定
     },
     interaction: {
       dragNodes: true,
       dragView: true,
       zoomView: true,
       hover: true,
-      tooltipDelay: 100,
-      hoverConnectedEdges: true
+      tooltipDelay: 0, // 设置为0禁用默认tooltip
+      hideEdgesOnDrag: false,
+      hideEdgesOnZoom: false,
+      hoverConnectedEdges: true,
+      tooltip: {
+        delay: 0,
+        enabled: false // 禁用默认tooltip
+      }
     },
     layout: {
       improvedLayout: true,
@@ -346,6 +450,58 @@ const initGraph = () => {
       }
     }
   })
+  
+  // 添加 hover 事件监听，显示任务详情 tooltip
+  network.on('hoverNode', (params) => {
+    if (params.node) {
+      // 清除之前的隐藏定时器
+      if (hideTooltipTimer) {
+        clearTimeout(hideTooltipTimer)
+        hideTooltipTimer = null
+      }
+      
+      const nodeId = params.node
+      const task = props.tasks.find(t => t.id === nodeId)
+      if (task) {
+        hoveredTask.value = task
+        // 立即更新位置
+        if (params.event) {
+          updateTooltipPosition(params.event)
+        } else {
+          // 如果没有event，使用鼠标当前位置
+          nextTick(() => {
+            if (graphContainer.value) {
+              const rect = graphContainer.value.getBoundingClientRect()
+              const fakeEvent = {
+                clientX: rect.left + rect.width / 2,
+                clientY: rect.top + rect.height / 2
+              }
+              updateTooltipPosition(fakeEvent)
+            }
+          })
+        }
+      }
+    }
+  })
+  
+  // 鼠标移出节点时隐藏 tooltip
+  network.on('blurNode', () => {
+    // 清除之前的定时器
+    if (hideTooltipTimer) {
+      clearTimeout(hideTooltipTimer)
+    }
+    
+    // 延迟隐藏，允许鼠标移动到 tooltip 上
+    hideTooltipTimer = setTimeout(() => {
+      hoveredTask.value = null
+      hideTooltipTimer = null
+    }, 200)
+  })
+  
+  // 监听鼠标移动，更新 tooltip 位置
+  if (graphContainer.value) {
+    graphContainer.value.addEventListener('mousemove', handleMouseMove)
+  }
   
   // 添加动画效果：运行中的任务脉冲闪烁动画（优化性能）
   let animationFrameId = null
@@ -545,7 +701,13 @@ const getStatusLabel = (status) => {
     'FAILED': '失败',
     'SKIPPED': '已跳过'
   }
-  return labels[status] || status
+  return labels[status?.toUpperCase()] || status
+}
+
+// 根据任务ID获取任务标题
+const getTaskTitleById = (taskId) => {
+  const task = props.tasks.find(t => t.id === taskId)
+  return task ? (task.title || task.description || task.id) : null
 }
 
 // 监听视图模式变化
@@ -579,6 +741,17 @@ onBeforeUnmount(() => {
   if (updateGraphThrottleTimer) {
     clearTimeout(updateGraphThrottleTimer)
     updateGraphThrottleTimer = null
+  }
+  
+  // 清理tooltip隐藏定时器
+  if (hideTooltipTimer) {
+    clearTimeout(hideTooltipTimer)
+    hideTooltipTimer = null
+  }
+  
+  // 清理鼠标移动监听
+  if (graphContainer.value) {
+    graphContainer.value.removeEventListener('mousemove', handleMouseMove)
   }
   
   // 清理网络和动画
@@ -741,6 +914,202 @@ onBeforeUnmount(() => {
   background: #ffffff;
   overflow: hidden;
   position: relative;
+}
+
+/* 任务详情 Tooltip */
+.task-tooltip {
+  position: absolute;
+  width: 320px;
+  max-height: 500px;
+  background: linear-gradient(135deg, #ffffff 0%, #fafafa 50%, #ffffff 100%);
+  border: 1.5px solid rgba(16, 163, 127, 0.15);
+  border-radius: 12px;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.12),
+    0 4px 16px rgba(0, 0, 0, 0.08),
+    0 2px 4px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease, transform 0.2s ease;
+  transform: translateY(-10px);
+  pointer-events: auto;
+  overflow: hidden;
+}
+
+.task-tooltip:hover {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.tooltip-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(250, 250, 250, 0.6) 100%);
+}
+
+.tooltip-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.tooltip-status-badge.status-pending {
+  background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+  color: #666;
+  border: 1px solid #d1d1d1;
+}
+
+.tooltip-status-badge.status-running {
+  background: linear-gradient(135deg, #2196f3 0%, #42a5f5 50%, #64b5f6 100%);
+  color: #ffffff;
+  border: 1px solid #1565c0;
+  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
+  animation: statusPulse 2s ease-in-out infinite;
+}
+
+.tooltip-status-badge.status-done {
+  background: linear-gradient(135deg, #4caf50 0%, #66bb6a 50%, #81c784 100%);
+  color: #ffffff;
+  border: 1px solid #2e7d32;
+  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.25);
+}
+
+.tooltip-status-badge.status-failed {
+  background: linear-gradient(135deg, #f44336 0%, #e57373 50%, #ef5350 100%);
+  color: #ffffff;
+  border: 1px solid #c62828;
+  box-shadow: 0 2px 8px rgba(244, 67, 54, 0.25);
+}
+
+.tooltip-status-badge.status-skipped {
+  background: linear-gradient(135deg, #e0e0e0 0%, #bdbdbd 100%);
+  color: #616161;
+  border: 1px solid #9e9e9e;
+}
+
+.status-icon {
+  font-size: 14px;
+}
+
+.status-text {
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.tooltip-close {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  background: transparent;
+  color: rgba(0, 0, 0, 0.4);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 300;
+}
+
+.tooltip-close:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.tooltip-content {
+  padding: 16px;
+  max-height: 450px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.tooltip-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.tooltip-content::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 3px;
+}
+
+.tooltip-content::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 3px;
+}
+
+.tooltip-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.tooltip-section {
+  margin-bottom: 16px;
+}
+
+.tooltip-section:last-child {
+  margin-bottom: 0;
+}
+
+.tooltip-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+.tooltip-value {
+  font-size: 13px;
+  color: rgba(0, 0, 0, 0.8);
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+.tooltip-value.tooltip-code {
+  font-family: 'SF Mono', 'Monaco', 'Consolas', 'Courier New', monospace;
+  background: rgba(0, 0, 0, 0.04);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.7);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.tooltip-tag {
+  display: inline-block;
+  padding: 3px 8px;
+  background: linear-gradient(135deg, rgba(33, 150, 243, 0.1) 0%, rgba(66, 165, 245, 0.08) 100%);
+  border: 1px solid rgba(33, 150, 243, 0.2);
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #2196f3;
+  margin-right: 4px;
+  margin-bottom: 4px;
+  font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+}
+
+.tooltip-tag.user-input {
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.1) 0%, rgba(102, 187, 106, 0.08) 100%);
+  border-color: rgba(76, 175, 80, 0.2);
+  color: #4caf50;
+}
+
+.tooltip-tag.strategy-tag {
+  background: linear-gradient(135deg, rgba(156, 39, 176, 0.1) 0%, rgba(171, 71, 188, 0.08) 100%);
+  border-color: rgba(156, 39, 176, 0.2);
+  color: #9c27b0;
 }
 
 /* 运行中任务的脉冲动画 */

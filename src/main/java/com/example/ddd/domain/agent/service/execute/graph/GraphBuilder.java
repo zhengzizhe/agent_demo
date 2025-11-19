@@ -17,6 +17,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 import static org.bsc.langgraph4j.action.AsyncNodeAction.node_async;
@@ -27,6 +30,12 @@ import static org.bsc.langgraph4j.action.AsyncNodeAction.node_async;
  */
 @Slf4j
 public class GraphBuilder {
+    // 线程池用于异步执行节点
+    private static final ExecutorService executorService = Executors.newCachedThreadPool(r -> {
+        Thread t = new Thread(r, "GraphNodeExecutor-" + System.currentTimeMillis());
+        return t;
+    });
+
     /**
      * 根据 TaskPlan 和 Orchestrator 构建执行图
      *
@@ -91,11 +100,21 @@ public class GraphBuilder {
         }
 
         StateGraph<WorkspaceState> graph = new StateGraph<>(WorkspaceState::new);
-
-        // 1. 添加所有节点，传递UserContext给执行器
         for (Task task : taskPlan.getTasks()) {
             TaskExecutor executor = ExecutorFactory.create(task, workersByID.get(task.getAgentId()), userContext);
-            graph.addNode(task.getId(), node_async(executor));
+            // 创建真正异步的 NodeAction
+            graph.addNode(task.getId(), state -> {
+                // 在独立线程中执行，实现真正的异步
+                return CompletableFuture.supplyAsync(() -> {
+                    try {
+                        log.debug("异步执行节点: taskId={}, thread={}", task.getId(), Thread.currentThread().getName());
+                        return executor.apply(state);
+                    } catch (Exception e) {
+                        log.error("节点执行异常: taskId={}", task.getId(), e);
+                        throw new RuntimeException("节点执行失败: taskId=" + task.getId(), e);
+                    }
+                }, executorService);
+            });
         }
         Map<String, Task.TaskInputs> inputMap =
                 taskPlan.getTasks().stream().collect(Collectors.toMap(Task::getId, Task::getInputs));
@@ -105,7 +124,6 @@ public class GraphBuilder {
             String taskId = entry.getKey();
             Task.TaskInputs inputs = entry.getValue();
             if (inputs != null && inputs.getFromTask() != null && !inputs.getFromTask().isEmpty()) {
-                // 支持多个依赖任务，为每个依赖任务添加边
                 List<String> fromTasks = inputs.getFromTask();
                 for (String fromTask : fromTasks) {
                     if (StringUtils.isNotBlank(fromTask)) {
@@ -130,15 +148,14 @@ public class GraphBuilder {
         for (String root : rootNodes) {
             graph.addEdge(StateGraph.START, root);
         }
-        Set<String> allSources = new HashSet<>();
+        Set<String> nodesWithTargets = new HashSet<>();
         for (Task task : taskPlan.getTasks()) {
             if (task.getInputs() != null && task.getInputs().getFromTask() != null && !task.getInputs().getFromTask().isEmpty()) {
-                allSources.addAll(task.getInputs().getFromTask());
+                nodesWithTargets.addAll(task.getInputs().getFromTask());
             }
         }
-
         List<String> leafNodes = allNodes.stream()
-                .filter(node -> !allSources.contains(node))
+                .filter(node -> !nodesWithTargets.contains(node))
                 .toList();
         for (String leaf : leafNodes) {
             graph.addEdge(leaf, StateGraph.END);
