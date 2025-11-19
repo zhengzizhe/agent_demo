@@ -2,53 +2,88 @@
   <div class="knowledge-base-page">
     <!-- 左侧边栏 -->
     <div class="kb-sidebar">
-      <!-- 用户信息区域 -->
-      <div class="sidebar-user">
-        <div class="user-avatar">Z</div>
-        <div class="user-info">
-          <div class="user-name">个人空间</div>
-        </div>
-      </div>
-
       <!-- 导航菜单 -->
       <div class="sidebar-nav">
         <div class="nav-section">
-          <div class="nav-item active">
+          <div class="nav-section-title">知识库</div>
+          <div 
+            class="nav-item" 
+            :class="{ active: currentView === 'personal' }"
+            @click="switchView('personal')"
+          >
             <svg class="nav-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M2 4h12M2 8h12M2 12h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              <path d="M8 2L2 5v6l6 3 6-3V5l-6-3z" stroke="currentColor" stroke-width="1.5" fill="none"/>
+              <path d="M8 5v6M5 8h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
             </svg>
             <span class="nav-text">个人知识库</span>
+            <span v-if="currentView === 'personal' && documents.length > 0" class="nav-badge">{{ documents.length }}</span>
+          </div>
+          
+          <div 
+            class="nav-item" 
+            :class="{ active: currentView === 'shared' }"
+            @click="switchView('shared')"
+          >
+            <svg class="nav-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M8 2L2 5v6l6 3 6-3V5l-6-3z" stroke="currentColor" stroke-width="1.5" fill="none"/>
+              <circle cx="8" cy="8" r="2" fill="currentColor"/>
+            </svg>
+            <span class="nav-text">共享知识库</span>
+            <span v-if="currentView === 'shared' && sharedDocuments.length > 0" class="nav-badge">{{ sharedDocuments.length }}</span>
           </div>
         </div>
 
         <div class="nav-section">
-          <div class="nav-item" @click="toggleMyCreations">
+          <div class="nav-section-title">发现</div>
+          <div 
+            class="nav-item" 
+            :class="{ active: currentView === 'square' }"
+            @click="switchView('square')"
+          >
             <svg class="nav-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M3 3h10v10H3V3z" stroke="currentColor" stroke-width="1.5" fill="none"/>
-              <path d="M6 3v10M10 3v10" stroke="currentColor" stroke-width="1.5"/>
+              <rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/>
+              <path d="M6 6h4M6 10h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
             </svg>
-            <span class="nav-text">我创建的</span>
-            <svg class="nav-arrow" :class="{ expanded: showMyCreations }" width="12" height="12" viewBox="0 0 12 12" fill="none">
-              <path d="M3 4.5l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
+            <span class="nav-text">知识库广场</span>
           </div>
-          <div v-if="showMyCreations" class="nav-submenu">
-            <div class="nav-subitem">
-              <svg class="nav-icon" width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1.5" fill="none"/>
-                <path d="M7 4v3M7 9h.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-              </svg>
-              <span class="nav-text">AI</span>
-            </div>
+          
+          <div 
+            class="nav-item" 
+            :class="{ active: currentView === 'recent' }"
+            @click="switchView('recent')"
+          >
+            <svg class="nav-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5" fill="none"/>
+              <path d="M8 4v4l3 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            <span class="nav-text">最近使用</span>
+          </div>
+          
+          <div 
+            class="nav-item" 
+            :class="{ active: currentView === 'favorites' }"
+            @click="switchView('favorites')"
+          >
+            <svg class="nav-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M8 2l2 4 4 1-3 3 1 4-4-2-4 2 1-4-3-3 4-1 2-4z" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linejoin="round"/>
+            </svg>
+            <span class="nav-text">收藏</span>
+            <span v-if="favoriteCount > 0" class="nav-badge">{{ favoriteCount }}</span>
           </div>
         </div>
 
         <div class="nav-section nav-section-bottom">
-          <div class="nav-item">
+          <div class="nav-section-title">管理</div>
+          <div 
+            class="nav-item" 
+            :class="{ active: currentView === 'tags' }"
+            @click="switchView('tags')"
+          >
             <svg class="nav-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M8 2L2 5v6l6 3 6-3V5l-6-3z" stroke="currentColor" stroke-width="1.5" fill="none"/>
+              <rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/>
+              <path d="M6 6h4M6 10h2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
             </svg>
-            <span class="nav-text">知识库广场</span>
+            <span class="nav-text">标签管理</span>
           </div>
         </div>
       </div>
@@ -59,36 +94,20 @@
       <!-- 顶部标题栏 -->
       <div class="kb-header">
         <div class="kb-header-left">
-          <h1 class="kb-title">个人知识库</h1>
-          <div class="kb-stats" v-if="!loading && documents.length > 0">
+          <h1 class="kb-title">{{ getViewTitle() }}</h1>
+          <div class="kb-stats" v-if="!loading && getCurrentDocuments().length > 0">
             <span class="stat-item">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                 <rect x="2" y="3" width="10" height="8" rx="1" stroke="currentColor" stroke-width="1.5" fill="none"/>
                 <path d="M5 3v6M9 3v6" stroke="currentColor" stroke-width="1.5"/>
               </svg>
-              {{ documents.length }} 个文档
+              {{ getCurrentDocuments().length }} 个文档
             </span>
           </div>
         </div>
         <div class="kb-actions">
           <!-- 搜索框 -->
-          <div class="search-wrapper">
-            <svg class="search-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5" fill="none"/>
-              <path d="M11 11l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            </svg>
-            <input 
-              v-model="searchQuery" 
-              type="text" 
-              class="search-input" 
-              placeholder="搜索文档..."
-            />
-            <button v-if="searchQuery" class="search-clear" @click="searchQuery = ''">
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                <path d="M3 3l6 6M9 3l-6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-              </svg>
-            </button>
-          </div>
+          <SearchBox v-model="searchQuery" placeholder="搜索文档..." />
           <!-- 排序 -->
           <div class="sort-wrapper">
             <select v-model="sortBy" class="sort-select">
@@ -97,31 +116,7 @@
             </select>
           </div>
           <!-- 视图切换 -->
-          <div class="view-toggle">
-            <button 
-              class="view-btn" 
-              :class="{ active: viewMode === 'grid' }" 
-              @click="viewMode = 'grid'"
-              title="网格视图"
-            >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <rect x="2" y="2" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.5" fill="none"/>
-                <rect x="9" y="2" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.5" fill="none"/>
-                <rect x="2" y="9" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.5" fill="none"/>
-                <rect x="9" y="9" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.5" fill="none"/>
-              </svg>
-            </button>
-            <button 
-              class="view-btn" 
-              :class="{ active: viewMode === 'list' }" 
-              @click="viewMode = 'list'"
-              title="列表视图"
-            >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M2 4h12M2 8h12M2 12h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-              </svg>
-            </button>
-          </div>
+          <ViewToggle v-model="viewMode" />
           <button class="upload-btn" @click="showUploadDialog = true" title="上传文档">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
               <path d="M8 2v8M4 6l4-4 4 4M2 12h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -130,64 +125,73 @@
         </div>
       </div>
 
-      <!-- 文档列表 -->
-      <div class="kb-content">
-        <!-- 加载状态 -->
-        <div v-if="loading" class="kb-loading">
-          <div class="loading-spinner"></div>
-          <p>加载中...</p>
-        </div>
+        <!-- 文档列表 -->
+        <div class="kb-content">
+          <!-- 加载状态 -->
+          <LoadingState v-if="loading" />
 
-        <!-- 空状态 -->
-        <div v-else-if="sortedAndFilteredDocuments.length === 0" class="kb-empty">
-          <svg class="empty-icon" width="64" height="64" viewBox="0 0 64 64" fill="none">
-            <rect x="12" y="8" width="40" height="48" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/>
-            <path d="M16 16h32M16 24h24M16 32h32M16 40h20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
-          <h3 class="empty-title">暂无文档</h3>
-          <p class="empty-desc">上传第一个文档开始使用</p>
-          <button class="empty-btn" @click="showUploadDialog = true">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="margin-right: 8px;">
-              <path d="M8 2v8M4 6l4-4 4 4M2 12h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            上传文档
-          </button>
-        </div>
+          <!-- 空状态 -->
+          <EmptyState 
+            v-else-if="sortedAndFilteredDocuments.length === 0"
+            :title="getEmptyTitle()"
+            :description="getEmptyDesc()"
+            :show-button="currentView === 'personal'"
+            button-text="上传文档"
+            @action="showUploadDialog = true"
+          />
 
-        <!-- 文档网格 -->
-        <div v-else :class="['kb-documents', viewMode === 'grid' ? 'kb-documents-grid' : 'kb-documents-list']">
-          <div
-            v-for="(doc, index) in sortedAndFilteredDocuments"
-            :key="doc.embeddingId || index"
-            class="document-card"
-            @click="openDocument(doc)"
-            @mouseenter="hoveredDoc = doc.embeddingId"
-            @mouseleave="hoveredDoc = null"
-          >
-            <div class="doc-icon" :class="getFileIconClass(doc)">
-              {{ getFileIcon(doc) }}
-            </div>
-            <div class="doc-info">
-              <div class="doc-title">{{ getDocumentTitle(doc) }}</div>
-              <div class="doc-meta">
-                <span class="doc-time">{{ formatTime(doc.createdAt) }}</span>
-                <span v-if="doc.text" class="doc-size">{{ formatSize(doc.text.length) }}</span>
+          <!-- 文档网格 -->
+          <div v-else :class="['kb-documents', viewMode === 'grid' ? 'kb-documents-grid' : 'kb-documents-list']">
+            <div
+              v-for="(doc, index) in sortedAndFilteredDocuments"
+              :key="doc.embeddingId || index"
+              class="document-card"
+              @click="openDocument(doc)"
+              @mouseenter="hoveredDoc = doc.embeddingId"
+              @mouseleave="hoveredDoc = null"
+            >
+              <div class="doc-icon" :class="getFileIconClass(doc)">
+                {{ getFileIcon(doc) }}
               </div>
-            </div>
-            <div class="doc-actions" v-if="hoveredDoc === doc.embeddingId">
-              <button 
-                class="doc-action-btn" 
-                @click.stop="deleteDocument(doc)"
-                title="删除"
-              >
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                  <path d="M3.5 3.5l7 7M10.5 3.5l-7 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                </svg>
-              </button>
+              <div class="doc-info">
+                <div class="doc-title">{{ getDocumentTitle(doc) }}</div>
+                <div class="doc-meta">
+                  <span class="doc-time">{{ formatTime(doc.createdAt) }}</span>
+                  <span v-if="doc.text" class="doc-size">{{ formatSize(doc.text.length) }}</span>
+                  <span v-if="currentView === 'shared'" class="doc-shared-badge">共享</span>
+                </div>
+              </div>
+              <div class="doc-actions" v-if="hoveredDoc === doc.embeddingId">
+                <button 
+                  v-if="currentView === 'personal'"
+                  class="doc-action-btn" 
+                  @click.stop="deleteDocument(doc)"
+                  title="删除"
+                >
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <path d="M3.5 3.5l7 7M10.5 3.5l-7 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                  </svg>
+                </button>
+                <button 
+                  v-if="currentView !== 'personal'"
+                  class="doc-action-btn" 
+                  @click.stop="toggleFavorite(doc)"
+                  :title="isFavorite(doc) ? '取消收藏' : '收藏'"
+                >
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <path 
+                      d="M7 2l1.5 3 3.5 0.5-2.5 2.5 0.5 3.5L7 10l-3 1.5 0.5-3.5L2 6l3.5-0.5L7 2z" 
+                      :fill="isFavorite(doc) ? 'currentColor' : 'none'"
+                      stroke="currentColor" 
+                      stroke-width="1.5" 
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
     </div>
 
     <!-- 上传对话框 -->
@@ -363,16 +367,24 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, nextTick, watch } from 'vue'
+import { ref, onMounted, onUnmounted, computed, nextTick, watch } from 'vue'
 import ConfirmDialog from './ConfirmDialog.vue'
 import MessageToast from './MessageToast.vue'
 import ErrorDialog from './ErrorDialog.vue'
+import SearchBox from './SearchBox.vue'
+import ViewToggle from './ViewToggle.vue'
+import LoadingState from './LoadingState.vue'
+import EmptyState from './EmptyState.vue'
+import { formatTime, formatSize } from '../utils/format.js'
 
 const selectedRagId = ref(1)
 const ragList = ref([
   { id: 1, name: 'Default RAG' }
 ])
 const documents = ref([])
+const sharedDocuments = ref([])
+const recentDocuments = ref([])
+const favoriteDocuments = ref([])
 const loading = ref(false)
 const showUploadDialog = ref(false)
 const uploadMode = ref('text')
@@ -380,7 +392,7 @@ const documentText = ref('')
 const selectedFiles = ref([])
 const fileInput = ref(null)
 const filterMode = ref('uploaded')
-const showMyCreations = ref(false)
+const currentView = ref('personal') // 'personal', 'shared', 'square', 'recent', 'favorites', 'tags'
 const searchQuery = ref('')
 const sortBy = ref('time')
 const viewMode = ref('grid')
@@ -410,9 +422,29 @@ const showErrorDialog = ref(false)
 const errorDialogTitle = ref('操作失败')
 const errorDialogMessage = ref('')
 
+// 获取当前视图的文档列表
+const getCurrentDocuments = () => {
+  switch (currentView.value) {
+    case 'personal':
+      return documents.value
+    case 'shared':
+      return sharedDocuments.value
+    case 'recent':
+      return recentDocuments.value
+    case 'favorites':
+      return favoriteDocuments.value
+    case 'square':
+      return [] // 知识库广场显示的是知识库列表，不是文档
+    case 'tags':
+      return [] // 标签管理不显示文档
+    default:
+      return documents.value
+  }
+}
+
 // 过滤和排序文档
 const sortedAndFilteredDocuments = computed(() => {
-  let result = documents.value
+  let result = getCurrentDocuments()
   
   // 过滤
   if (filterMode.value === 'uploaded') {
@@ -443,9 +475,96 @@ const sortedAndFilteredDocuments = computed(() => {
   return result
 })
 
-// 切换"我创建的"菜单
-const toggleMyCreations = () => {
-  showMyCreations.value = !showMyCreations.value
+// 切换视图
+const switchView = (view) => {
+  currentView.value = view
+  if (view === 'shared') {
+    loadSharedDocuments()
+  } else if (view === 'recent') {
+    loadRecentDocuments()
+  } else if (view === 'favorites') {
+    loadFavoriteDocuments()
+  } else if (view === 'personal') {
+    loadDocuments()
+  }
+}
+
+// 获取视图标题
+const getViewTitle = () => {
+  const titles = {
+    personal: '个人知识库',
+    shared: '共享知识库',
+    square: '知识库广场',
+    recent: '最近使用',
+    favorites: '收藏',
+    tags: '标签管理'
+  }
+  return titles[currentView.value] || '知识库'
+}
+
+// 获取空状态标题
+const getEmptyTitle = () => {
+  const titles = {
+    personal: '暂无文档',
+    shared: '暂无共享文档',
+    square: '暂无知识库',
+    recent: '暂无最近使用',
+    favorites: '暂无收藏',
+    tags: '暂无标签'
+  }
+  return titles[currentView.value] || '暂无内容'
+}
+
+// 获取空状态描述
+const getEmptyDesc = () => {
+  const descs = {
+    personal: '上传第一个文档开始使用',
+    shared: '还没有人分享文档给你',
+    square: '知识库广场暂时为空',
+    recent: '您还没有使用过任何文档',
+    favorites: '收藏的文档将显示在这里',
+    tags: '创建标签来组织您的文档'
+  }
+  return descs[currentView.value] || ''
+}
+
+// 收藏相关
+const favoriteCount = computed(() => favoriteDocuments.value.length)
+
+const isFavorite = (doc) => {
+  return favoriteDocuments.value.some(fav => fav.embeddingId === doc.embeddingId)
+}
+
+const toggleFavorite = (doc) => {
+  const index = favoriteDocuments.value.findIndex(fav => fav.embeddingId === doc.embeddingId)
+  if (index > -1) {
+    favoriteDocuments.value.splice(index, 1)
+    showMessage('已取消收藏', 'info')
+  } else {
+    favoriteDocuments.value.push(doc)
+    showMessage('已收藏', 'success')
+  }
+  // 保存到 localStorage
+  localStorage.setItem('rag_favorites', JSON.stringify(favoriteDocuments.value.map(d => d.embeddingId)))
+}
+
+// 加载共享文档
+const loadSharedDocuments = async () => {
+  // 模拟数据，实际应该从后端获取
+  sharedDocuments.value = []
+}
+
+// 加载最近使用
+const loadRecentDocuments = async () => {
+  // 从 localStorage 读取最近使用的文档 ID，然后从 documents 中查找
+  const recentIds = JSON.parse(localStorage.getItem('rag_recent') || '[]')
+  recentDocuments.value = documents.value.filter(doc => recentIds.includes(doc.embeddingId))
+}
+
+// 加载收藏
+const loadFavoriteDocuments = async () => {
+  const favoriteIds = JSON.parse(localStorage.getItem('rag_favorites') || '[]')
+  favoriteDocuments.value = documents.value.filter(doc => favoriteIds.includes(doc.embeddingId))
 }
 
 // 获取文件图标
@@ -471,23 +590,7 @@ const getDocumentTitle = (doc) => {
   return doc.metadata?.fileName || `文档 ${doc.embeddingId?.substring(0, 8)}`
 }
 
-// 格式化时间
-const formatTime = (timestamp) => {
-  if (!timestamp) return '未知时间'
-  const now = Date.now() / 1000
-  const diff = now - timestamp
-  if (diff < 60) return '刚刚'
-  if (diff < 3600) return `${Math.floor(diff / 60)}分钟前`
-  if (diff < 86400) return `${Math.floor(diff / 3600)}小时前`
-  return `${Math.floor(diff / 86400)}天前`
-}
-
-// 格式化文件大小
-const formatSize = (bytes) => {
-  if (bytes < 1024) return `${bytes} 字符`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
-}
+// 使用公共工具函数 formatTime 和 formatSize
 
 // 删除文档
 const deleteDocument = (doc) => {
@@ -541,6 +644,19 @@ const showMessage = (message, type = 'info') => {
 
 // 打开文档
 const openDocument = (doc) => {
+  // 记录到最近使用
+  const recentIds = JSON.parse(localStorage.getItem('rag_recent') || '[]')
+  const index = recentIds.indexOf(doc.embeddingId)
+  if (index > -1) {
+    recentIds.splice(index, 1)
+  }
+  recentIds.unshift(doc.embeddingId)
+  // 只保留最近20个
+  if (recentIds.length > 20) {
+    recentIds.splice(20)
+  }
+  localStorage.setItem('rag_recent', JSON.stringify(recentIds))
+  
   // 可以在这里实现文档详情查看
   console.log('打开文档:', doc)
 }
@@ -746,10 +862,43 @@ const closeChat = () => {
   chatMinimized.value = true
 }
 
+// 刷新处理函数
+const handleRefresh = (event) => {
+  const { view } = event.detail || {}
+  if (view === 'rag') {
+    console.log('刷新RAG知识库')
+    // 根据当前视图刷新对应的数据
+    switch (currentView.value) {
+      case 'personal':
+        loadDocuments()
+        break
+      case 'shared':
+        loadSharedDocuments()
+        break
+      case 'recent':
+        loadRecentDocuments()
+        break
+      case 'favorites':
+        loadFavoriteDocuments()
+        break
+      default:
+        loadDocuments()
+    }
+  }
+}
+
 // 初始化
 onMounted(() => {
   console.log('RagManagement mounted, selectedRagId:', selectedRagId.value)
   loadDocuments()
+  loadFavoriteDocuments()
+  // 监听刷新事件
+  window.addEventListener('tab-refresh', handleRefresh)
+})
+
+// 清理
+onUnmounted(() => {
+  window.removeEventListener('tab-refresh', handleRefresh)
 })
 </script>
 
@@ -772,38 +921,20 @@ onMounted(() => {
   flex-shrink: 0;
 }
 
-.sidebar-user {
-  padding: 16px;
-  border-bottom: 1px solid #e5e7eb;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.user-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 6px;
-  background: #6366f1;
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-  font-size: 14px;
-  flex-shrink: 0;
-}
-
-.user-name {
-  font-size: 14px;
-  font-weight: 500;
-  color: #111827;
-}
-
 .sidebar-nav {
   flex: 1;
-  padding: 8px;
+  padding: 12px 8px;
   overflow-y: auto;
+}
+
+.nav-section-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 8px 12px;
+  margin-bottom: 4px;
 }
 
 .nav-section {
@@ -850,6 +981,18 @@ onMounted(() => {
 
 .nav-text {
   flex: 1;
+}
+
+.nav-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: #ffffff;
+  background: var(--theme-accent, #165dff);
+  padding: 2px 6px;
+  border-radius: 10px;
+  min-width: 18px;
+  text-align: center;
+  line-height: 1.4;
 }
 
 .nav-arrow {
@@ -955,142 +1098,7 @@ onMounted(() => {
   gap: 12px;
 }
 
-.search-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-  width: 280px;
-  background: #f2f3f5;
-  border: none;
-  border-radius: 8px;
-  padding: 8px 12px;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.search-wrapper:focus-within {
-  background: #ffffff;
-  box-shadow: 0 0 0 2px rgba(22, 93, 255, 0.1);
-}
-
-.search-icon {
-  width: 16px;
-  height: 16px;
-  color: #9ca3af;
-  flex-shrink: 0;
-  margin-right: 8px;
-}
-
-.search-input {
-  flex: 1;
-  border: none;
-  background: transparent;
-  outline: none;
-  font-size: 14px;
-  color: #111827;
-}
-
-.search-input::placeholder {
-  color: #9ca3af;
-}
-
-.search-clear {
-  width: 20px;
-  height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: transparent;
-  border: none;
-  border-radius: 4px;
-  color: #9ca3af;
-  cursor: pointer;
-  transition: all 0.15s ease-out;
-  flex-shrink: 0;
-}
-
-.search-clear:hover {
-  background: #f3f4f6;
-  color: #6b7280;
-}
-
-.sort-wrapper {
-  position: relative;
-}
-
-.sort-select {
-  padding: 8px 12px;
-  font-size: 14px;
-  color: #1d2129;
-  background: #ffffff;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  outline: none;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
-}
-
-.sort-select:hover {
-  background: #f2f3f5;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
-}
-
-.sort-select:focus {
-  background: #ffffff;
-  box-shadow: 0 0 0 2px rgba(22, 93, 255, 0.1);
-}
-
-.view-toggle {
-  display: flex;
-  align-items: center;
-  background: #f2f3f5;
-  border: none;
-  border-radius: 8px;
-  padding: 2px;
-  gap: 2px;
-}
-
-.view-btn {
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: transparent;
-  border: none;
-  border-radius: 4px;
-  color: #6b7280;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-}
-
-.view-btn::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: currentColor;
-  opacity: 0;
-  border-radius: 4px;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.view-btn:hover {
-  color: #111827;
-  background: #ffffff;
-  transform: scale(1.05);
-}
-
-.view-btn:active {
-  transform: scale(0.95);
-}
-
-.view-btn.active {
-  background: #ffffff;
-  color: #2563eb;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  transform: scale(1);
-}
+/* 搜索框、排序、视图切换样式已移至 common.css */
 
 .action-btn {
   padding: 8px 16px;
@@ -1165,94 +1173,7 @@ onMounted(() => {
   background: #fafbfc;
 }
 
-.kb-loading {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 60px 20px;
-  color: #9b9a97;
-}
-
-.loading-spinner {
-  width: 32px;
-  height: 32px;
-  border: 3px solid #e5e5e5;
-  border-top-color: #2196f3;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-  margin-bottom: 12px;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.kb-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 80px 20px;
-  text-align: center;
-}
-
-.empty-icon {
-  width: 64px;
-  height: 64px;
-  margin-bottom: 16px;
-  color: #9ca3af;
-}
-
-.empty-title {
-  margin: 0 0 8px 0;
-  font-size: 18px;
-  font-weight: 600;
-  color: #111827;
-}
-
-.empty-desc {
-  margin: 0 0 24px 0;
-  font-size: 14px;
-  color: #6b7280;
-}
-
-.empty-btn {
-  padding: 10px 20px;
-  font-size: 14px;
-  font-weight: 500;
-  color: white;
-  background: #2563eb;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  display: flex;
-  align-items: center;
-  position: relative;
-  overflow: hidden;
-}
-
-.empty-btn::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: rgba(255, 255, 255, 0.2);
-  opacity: 0;
-  transform: scale(0);
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  border-radius: 6px;
-}
-
-.empty-btn:hover {
-  background-color: #1d4ed8;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-}
-
-.empty-btn:active {
-  transform: translateY(0) scale(0.98);
-}
+/* 加载状态和空状态样式已移至 common.css */
 
 .kb-documents {
   display: grid;
@@ -1373,6 +1294,15 @@ onMounted(() => {
   font-size: 12px;
   color: #9ca3af;
   font-weight: 400;
+}
+
+.doc-shared-badge {
+  font-size: 11px;
+  color: #10a37f;
+  background: rgba(16, 163, 127, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 500;
 }
 
 .doc-actions {
@@ -1613,79 +1543,7 @@ onMounted(() => {
   justify-content: flex-end;
 }
 
-.btn-secondary {
-  padding: 10px 20px;
-  font-size: 14px;
-  font-weight: 400;
-  color: #4e5969;
-  background: #f2f3f5;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  overflow: hidden;
-}
-
-.btn-secondary::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: currentColor;
-  opacity: 0;
-  transform: scale(0);
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  border-radius: 6px;
-}
-
-.btn-secondary:hover {
-  background: #e5e6eb;
-  color: #1d2129;
-}
-
-.btn-secondary:active {
-  transform: translateY(0) scale(0.98);
-}
-
-.btn-primary {
-  padding: 10px 20px;
-  font-size: 14px;
-  font-weight: 500;
-  color: white;
-  background: #165dff;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  overflow: hidden;
-}
-
-.btn-primary::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: rgba(255, 255, 255, 0.2);
-  opacity: 0;
-  transform: scale(0);
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  border-radius: 6px;
-}
-
-.btn-primary:hover:not(:disabled) {
-  background: #0e42d2;
-  box-shadow: 0 2px 8px rgba(22, 93, 255, 0.2);
-}
-
-.btn-primary:active:not(:disabled) {
-  transform: translateY(0) scale(0.98);
-}
-
-.btn-primary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none;
-}
+/* 按钮样式已移至 common.css */
 
 /* 聊天窗口 */
 .chat-window {

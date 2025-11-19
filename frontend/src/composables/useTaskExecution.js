@@ -69,12 +69,16 @@ export function useTaskExecution(messagesManager, eventHandlers, formRef, messag
     const readStream = () => {
       return reader.read().then(({ done, value }) => {
         if (done) {
-          eventHandlers.isExecuting.value = false
-          eventHandlers.isPlanning.value = false
-          // 流式响应结束时，将最后一条消息的 streaming 状态设置为 false
-          const lastMessage = messagesManager.messages.value[messagesManager.messages.value.length - 1]
-          if (lastMessage && lastMessage.role === 'assistant' && lastMessage.streaming) {
-            messagesManager.updateLastAssistantMessage(lastMessage.content, false)
+          try {
+            eventHandlers.isExecuting.value = false
+            eventHandlers.isPlanning.value = false
+            // 流式响应结束时，将最后一条消息的 streaming 状态设置为 false
+            const lastMessage = messagesManager.messages.value[messagesManager.messages.value.length - 1]
+            if (lastMessage && lastMessage.role === 'assistant' && lastMessage.streaming) {
+              messagesManager.updateLastAssistantMessage(lastMessage.content, false)
+            }
+          } catch (error) {
+            console.error('处理流式响应结束失败:', error)
           }
           return
         }
@@ -117,6 +121,7 @@ export function useTaskExecution(messagesManager, eventHandlers, formRef, messag
    */
   let scrollTimer = null
   let lastScrollTime = 0
+  let isFirstScroll = true // 标记是否是首次滚动
   
   const scrollToBottom = (immediate = false) => {
     nextTick(() => {
@@ -128,13 +133,22 @@ export function useTaskExecution(messagesManager, eventHandlers, formRef, messag
           clearTimeout(scrollTimer)
         }
         
-        // 对于流式更新，使用防抖延迟滚动，避免过于频繁
-        const delay = immediate ? 0 : 50
+        // 首次滚动使用立即执行，避免延迟
+        const delay = (immediate || isFirstScroll) ? 0 : 50
         
         scrollTimer = setTimeout(() => {
           // 使用 requestAnimationFrame 确保 DOM 更新后再滚动
           requestAnimationFrame(() => {
             const now = Date.now()
+            
+            // 首次滚动使用 auto，避免动画计算导致的卡顿
+            if (isFirstScroll) {
+              container.scrollTop = container.scrollHeight
+              isFirstScroll = false
+              lastScrollTime = now
+              return
+            }
+            
             // 如果距离上次滚动时间太短，使用平滑滚动；否则可以稍微快一点
             const timeSinceLastScroll = now - lastScrollTime
             const useSmooth = timeSinceLastScroll > 100 || !immediate

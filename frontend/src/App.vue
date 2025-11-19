@@ -9,186 +9,227 @@
       <Sidebar 
         :current-view="currentView"
         :show-debug-panel="showDebugPanel"
+        :show-color-palette="showColorPalette"
         @view-change="handleViewChange"
         @debug-toggle="showDebugPanel = !showDebugPanel"
+        @color-palette-toggle="showColorPalette = !showColorPalette"
       />
 
       <!-- 主内容区域 -->
       <div class="main-content">
-        <!-- 顶部工具栏 -->
-        <TopBar 
-          :page-title="pageTitle"
-          :breadcrumbs="breadcrumbs"
-          @breadcrumb-click="handleBreadcrumbClick"
+        <!-- 标签页栏 -->
+        <TabsBar
+          :tabs="tabs"
+          :active-tab-id="activeTabId"
+          :can-go-back="canGoBack"
+          :can-go-forward="canGoForward"
+          @tab-click="handleTabClick"
+          @tab-close="handleTabClose"
+          @new-tab="handleNewTab"
+          @go-back="handleGoBack"
+          @go-forward="handleGoForward"
+          @refresh="handleRefresh"
         />
         
         <!-- 内容区域 -->
         <div class="content-area">
-          <!-- 对话视图 -->
+          <!-- 根据当前激活标签页的视图显示对应内容 -->
           <transition name="view-transition" mode="out-in">
-            <div v-if="currentView === 'chat'" key="chat" class="view-container chat-view">
-            <!-- 调试面板 -->
-            <transition name="debug-panel">
-              <div v-if="showDebugPanel" class="debug-panel">
-                <div class="debug-panel-header">
-                  <h3>调试面板</h3>
-                  <button class="debug-close" @click="showDebugPanel = false">×</button>
-                </div>
-                <div class="debug-panel-content">
-                  <div class="debug-field">
-                    <label>用户ID (userId)</label>
-                    <div class="debug-input-group">
-                      <input
-                        v-model="debugUserId"
-                        type="text"
-                        placeholder="输入用户ID"
-                        class="debug-input"
-                        @blur="handleUserIdChange"
-                      />
-                      <button class="debug-btn" @click="generateNewUserId">生成新ID</button>
+            <!-- 对话视图 -->
+            <div v-if="currentView === 'chat'" :key="`${activeTabId}-chat`" class="view-container chat-view">
+              <!-- 调试面板 -->
+              <transition name="debug-panel">
+                <div v-if="showDebugPanel" class="debug-panel">
+                  <div class="debug-panel-header">
+                    <h3>调试面板</h3>
+                    <button class="debug-close" @click="showDebugPanel = false">×</button>
+                  </div>
+                  <div class="debug-panel-content">
+                    <div class="debug-field">
+                      <label>用户ID (userId)</label>
+                      <div class="debug-input-group">
+                        <input
+                          v-model="debugUserId"
+                          type="text"
+                          placeholder="输入用户ID"
+                          class="debug-input"
+                          @blur="handleUserIdChange"
+                        />
+                        <button class="debug-btn" @click="generateNewUserId">生成新ID</button>
+                      </div>
+                      <div class="debug-value">当前: {{ session.userId?.value || debugUserId }}</div>
                     </div>
-                    <div class="debug-value">当前: {{ session.userId?.value || debugUserId }}</div>
-                  </div>
-                  <div class="debug-field">
-                    <label>会话ID (sessionId)</label>
-                    <div class="debug-input-group">
-                      <input
-                        v-model="debugSessionId"
-                        type="text"
-                        placeholder="输入会话ID"
-                        class="debug-input"
-                        @blur="handleSessionIdChange"
-                      />
-                      <button class="debug-btn" @click="generateNewSessionId">生成新ID</button>
+                    <div class="debug-field">
+                      <label>会话ID (sessionId)</label>
+                      <div class="debug-input-group">
+                        <input
+                          v-model="debugSessionId"
+                          type="text"
+                          placeholder="输入会话ID"
+                          class="debug-input"
+                          @blur="handleSessionIdChange"
+                        />
+                        <button class="debug-btn" @click="generateNewSessionId">生成新ID</button>
+                      </div>
+                      <div class="debug-value">当前: {{ session.sessionId?.value || debugSessionId }}</div>
                     </div>
-                    <div class="debug-value">当前: {{ session.sessionId?.value || debugSessionId }}</div>
-                  </div>
-                  <div class="debug-actions">
-                    <button class="debug-btn-primary" @click="applyDebugSettings">应用设置</button>
-                    <button class="debug-btn-secondary" @click="resetDebugSettings">重置</button>
+                    <div class="debug-actions">
+                      <button class="debug-btn-primary" @click="applyDebugSettings">应用设置</button>
+                      <button class="debug-btn-secondary" @click="resetDebugSettings">重置</button>
+                    </div>
                   </div>
                 </div>
+              </transition>
+
+              <!-- 对话容器 -->
+              <div class="dialog-container">
+                <!-- 对话框消息区域 -->
+                <div class="dialog-messages" ref="messagesContainerRef">
+                  <!-- 欢迎消息和输入框容器 -->
+                  <transition name="welcome-fade">
+                    <div v-if="messages.length === 0 && !isPlanning" class="welcome-container">
+                      <div class="welcome-message">
+                        <AnimatedLogo :size="'large'" :show-text="false" />
+                        <h2>伙计，让我来帮你吧。</h2>
+                      </div>
+                      <!-- 输入框在欢迎消息下方 -->
+                      <InputArea
+                        :form="form"
+                        :is-executing="isExecuting"
+                        :is-planning="isPlanning"
+                        :can-send="canSend"
+                        :centered="true"
+                        @send="executeTask"
+                      />
+                    </div>
+                  </transition>
+
+                  <!-- 初始加载动画（3个点轮流跳动） -->
+                  <transition name="loading-fade">
+                    <div v-if="messages.length === 0 && isPlanning" class="loading-message">
+                      <div class="loading-dots">
+                        <span class="loading-dot"></span>
+                        <span class="loading-dot"></span>
+                        <span class="loading-dot"></span>
+                      </div>
+                      <p class="loading-text">正在思考中...</p>
+                    </div>
+                  </transition>
+
+                  <!-- 消息列表 -->
+                  <template v-for="(msg, index) in messages" :key="`msg-${index}-${msg.timestamp?.getTime() || index}`">
+                    <!-- 任务列表（先显示任务列表） -->
+                    <TaskList 
+                      v-if="msg.role === 'assistant' && msg.tasks && Array.isArray(msg.tasks) && msg.tasks.length > 0" 
+                      :key="`tasklist-${index}-${msg.tasks?.length || 0}-${msg.tasks?.map(t => t.id).join('-') || index}-${msg.timestamp?.getTime() || index}`"
+                      :tasks="msg.tasks"
+                      :animation-delay="index * 0.08"
+                    />
+
+                    <!-- 消息内容（在任务列表之后显示，如果有任务列表则延迟显示） -->
+                    <MessageItem 
+                      :message="msg"
+                      :animation-delay="msg.role === 'assistant' && msg.tasks && Array.isArray(msg.tasks) && msg.tasks.length > 0 
+                        ? index * 0.08 + 0.3 
+                        : index * 0.08"
+                    />
+
+                    <!-- 用户消息后的等待动画（三个点跳动） -->
+                    <transition name="typing-fade">
+                      <div 
+                        v-if="msg.role === 'user' && index === messages.length - 1 && (isExecuting || isPlanning)"
+                        class="typing-indicator"
+                      >
+                        <div class="typing-avatar">AI</div>
+                        <div class="typing-content">
+                          <div class="typing-dots-container">
+                            <span class="typing-dot-item"></span>
+                            <span class="typing-dot-item"></span>
+                            <span class="typing-dot-item"></span>
+                          </div>
+                        </div>
+                      </div>
+                    </transition>
+
+                    <!-- execution_failed 错误框（显示在消息下方） -->
+                    <transition name="error-slide">
+                      <div 
+                        v-if="msg.executionError" 
+                        class="execution-error-box"
+                        :style="{ animationDelay: `${index * 0.08 + 0.4}s` }"
+                      >
+                        <div class="execution-error-icon">⚠️</div>
+                        <div class="execution-error-content">
+                          <div class="execution-error-title">执行异常</div>
+                          <div class="execution-error-text">{{ msg.executionError }}</div>
+                        </div>
+                      </div>
+                    </transition>
+                  </template>
+
+                  <!-- 错误消息 -->
+                  <transition name="error-slide">
+                    <div v-if="error" class="message error">
+                      <div class="message-avatar">⚠️</div>
+                      <div class="message-content">
+                        <div class="message-text error-text">{{ error }}</div>
+                      </div>
+                    </div>
+                  </transition>
+                </div>
+
+                <!-- 输入区域（有消息时显示） -->
+                <InputArea
+                  v-if="messages.length > 0 || isPlanning"
+                  :form="form"
+                  :is-executing="isExecuting"
+                  :is-planning="isPlanning"
+                  :can-send="canSend"
+                  :centered="false"
+                  @send="executeTask"
+                />
               </div>
-            </transition>
-
-            <!-- 对话容器 -->
-            <div class="dialog-container">
-      <!-- 对话框消息区域 -->
-      <div class="dialog-messages" ref="messagesContainerRef">
-        <!-- 欢迎消息 -->
-        <transition name="welcome-fade">
-          <div v-if="messages.length === 0 && !isPlanning" class="welcome-message">
-            <div class="welcome-icon">
-              <div class="welcome-icon-inner">AI</div>
-            </div>
-          <h2>Agent 助手</h2>
-          <p>请输入您的任务描述，我将为您生成执行计划并开始执行</p>
-        </div>
-        </transition>
-
-        <!-- 初始加载动画（3个点轮流跳动） -->
-        <transition name="loading-fade">
-          <div v-if="messages.length === 0 && isPlanning" class="loading-message">
-            <div class="loading-dots">
-              <span class="loading-dot"></span>
-              <span class="loading-dot"></span>
-              <span class="loading-dot"></span>
-            </div>
-            <p class="loading-text">正在思考中...</p>
-          </div>
-        </transition>
-
-        <!-- 消息列表 -->
-        <template v-for="(msg, index) in messages" :key="`msg-${index}-${msg.timestamp?.getTime() || index}`">
-          <!-- 任务列表（先显示任务列表） -->
-          <TaskList 
-            v-if="msg.role === 'assistant' && msg.tasks && Array.isArray(msg.tasks) && msg.tasks.length > 0" 
-            :key="`tasklist-${index}-${msg.tasks?.length || 0}-${msg.tasks?.map(t => t.id).join('-') || index}-${msg.timestamp?.getTime() || index}`"
-            :tasks="msg.tasks"
-            :animation-delay="index * 0.08"
-          />
-
-          <!-- 消息内容（在任务列表之后显示，如果有任务列表则延迟显示） -->
-          <MessageItem 
-            :message="msg"
-            :animation-delay="msg.role === 'assistant' && msg.tasks && Array.isArray(msg.tasks) && msg.tasks.length > 0 
-              ? index * 0.08 + 0.3 
-              : index * 0.08"
-          />
-
-          <!-- 用户消息后的等待动画（三个点跳动） -->
-          <transition name="typing-fade">
-            <div 
-              v-if="msg.role === 'user' && index === messages.length - 1 && (isExecuting || isPlanning)"
-              class="typing-indicator"
-            >
-              <div class="typing-avatar">AI</div>
-              <div class="typing-content">
-                <div class="typing-dots-container">
-                  <span class="typing-dot-item"></span>
-                  <span class="typing-dot-item"></span>
-                  <span class="typing-dot-item"></span>
-            </div>
-              </div>
-            </div>
-          </transition>
-
-          <!-- execution_failed 错误框（显示在消息下方） -->
-          <transition name="error-slide">
-            <div 
-              v-if="msg.executionError" 
-              class="execution-error-box"
-              :style="{ animationDelay: `${index * 0.08 + 0.4}s` }"
-            >
-              <div class="execution-error-icon">⚠️</div>
-              <div class="execution-error-content">
-                <div class="execution-error-title">执行异常</div>
-                <div class="execution-error-text">{{ msg.executionError }}</div>
-            </div>
-              </div>
-          </transition>
-        </template>
-
-        <!-- 错误消息 -->
-        <transition name="error-slide">
-        <div v-if="error" class="message error">
-          <div class="message-avatar">⚠️</div>
-          <div class="message-content">
-            <div class="message-text error-text">{{ error }}</div>
-          </div>
-        </div>
-        </transition>
-      </div>
-
-      <!-- 输入区域 -->
-      <InputArea
-        :form="form"
-        :is-executing="isExecuting"
-        :is-planning="isPlanning"
-        :can-send="canSend"
-        @send="executeTask"
-      />
-            </div>
             </div>
 
             <!-- RAG知识库管理视图 -->
-            <div v-else-if="currentView === 'rag'" key="rag" class="view-container rag-view">
+            <div v-else-if="currentView === 'rag'" :key="`${activeTabId}-rag`" class="view-container rag-view">
               <RagManagement />
             </div>
 
             <!-- 文档库视图 -->
-            <div v-else-if="currentView === 'docs'" key="docs" class="view-container docs-view">
+            <div v-else-if="currentView === 'docs'" :key="`${activeTabId}-docs`" class="view-container docs-view">
               <DocumentLibrary />
+            </div>
+
+            <!-- 其他动态视图（单开标签页） -->
+            <div v-else :key="`${activeTabId}-${currentView}`" class="view-container dynamic-view">
+              <div class="dynamic-view-content">
+                <div class="dynamic-view-header">
+                  <h2>{{ activeTab.label }}</h2>
+                  <p>这是动态视图：{{ currentView }}</p>
+                </div>
+                <div class="dynamic-view-body">
+                  <p>您可以在这里实现自定义视图内容</p>
+                  <p>标签页ID: {{ activeTabId }}</p>
+                  <p>视图类型: {{ currentView }}</p>
+                </div>
+              </div>
             </div>
           </transition>
         </div>
       </div>
     </div>
+    
+    <!-- 主题设置面板 -->
+    <ColorPalette 
+      :is-open="showColorPalette"
+      @close="showColorPalette = false"
+    />
   </div>
 </template>
 
 <script setup>
-import { reactive, ref, computed, watch } from 'vue'
+import { reactive, ref, computed, watch, nextTick } from 'vue'
 import TaskList from './components/TaskList.vue'
 import MessageItem from './components/MessageItem.vue'
 import InputArea from './components/InputArea.vue'
@@ -196,48 +237,89 @@ import RagManagement from './components/RagManagement.vue'
 import DocumentLibrary from './components/DocumentLibrary.vue'
 import TitleBar from './components/TitleBar.vue'
 import Sidebar from './components/Sidebar.vue'
-import TopBar from './components/TopBar.vue'
+import TabsBar from './components/TabsBar.vue'
+import ColorPalette from './components/ColorPalette.vue'
+import AnimatedLogo from './components/AnimatedLogo.vue'
 import { useMessages } from './composables/useMessages.js'
 import { useEventHandlers } from './composables/useEventHandlers.js'
 import { useTaskExecution } from './composables/useTaskExecution.js'
 import { useSession } from './composables/useSession.js'
+import { useTabs } from './composables/useTabs.js'
 
 // 检测是否在 Electron 环境中
 const isElectron = ref(typeof window !== 'undefined' && window.electronAPI !== undefined)
 
-// 当前视图
-const currentView = ref('chat')
+// 标签页管理
+const tabsManager = useTabs()
+const { tabs, activeTabId, activeTab, currentView, canGoBack, canGoForward, openTab, closeTab, switchTab, switchToFixedTab, goBack, goForward, refreshTab, fixedViews } = tabsManager
 
-// 页面标题和面包屑
+// 页面标题（从当前激活的标签页获取）
 const pageTitle = computed(() => {
-  const titles = {
-    chat: '对话',
-    rag: 'RAG知识库',
-    docs: '文档库'
-  }
-  return titles[currentView.value] || 'Agent 系统'
+  return activeTab.value?.label || 'Agent 系统'
 })
 
-const breadcrumbs = computed(() => {
-  return ['首页', pageTitle.value]
-})
-
-// 处理视图切换
+// 处理视图切换（来自左侧边栏）
 const handleViewChange = (view) => {
-  currentView.value = view
+  // 如果是固定视图，切换到固定标签页
+  if (fixedViews.includes(view)) {
+    switchToFixedTab(view)
+  } else {
+    // 如果不是固定视图，打开新标签页
+    openTab(view)
+  }
 }
 
-// 处理面包屑点击
-const handleBreadcrumbClick = ({ crumb, index }) => {
-  if (index === 0) {
-    // 点击首页，切换到对话视图
-    currentView.value = 'chat'
-  }
-  // 其他情况可以根据需要扩展
+// 处理标签页点击
+const handleTabClick = (tabId) => {
+  switchTab(tabId)
+}
+
+// 处理标签页关闭
+const handleTabClose = (tabId) => {
+  closeTab(tabId)
+}
+
+// 处理新建标签页
+const handleNewTab = () => {
+  // 打开一个默认的新标签页（可以自定义）
+  openTab('chat', '新标签页', '📄', true)
+}
+
+// 处理后退
+const handleGoBack = () => {
+  goBack()
+}
+
+// 处理前进
+const handleGoForward = () => {
+  goForward()
+}
+
+// 处理刷新
+const handleRefresh = (tabId) => {
+  // 获取当前标签页信息
+  const tab = tabs.value.find(t => t.id === tabId)
+  if (!tab) return
+  
+  const view = tab.view
+  
+  // 先设置加载状态
+  refreshTab(tabId)
+  
+  // 使用 nextTick 确保状态更新后再触发刷新事件
+  nextTick(() => {
+    // 触发全局刷新事件，让子组件可以监听并执行刷新
+    window.dispatchEvent(new CustomEvent('tab-refresh', { 
+      detail: { tabId, view } 
+    }))
+  })
 }
 
 // 调试面板
 const showDebugPanel = ref(false)
+
+// 主题设置面板
+const showColorPalette = ref(false)
 const session = useSession()
 const debugUserId = ref('')
 const debugSessionId = ref('')
@@ -424,9 +506,56 @@ const canSend = computed(() => {
 /* 视图特定样式 */
 .chat-view,
 .rag-view,
-.docs-view {
+.docs-view,
+.dynamic-view {
   width: 100%;
   height: 100%;
+}
+
+/* 动态视图样式 */
+.dynamic-view-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 24px;
+  background: #ffffff;
+}
+
+.dynamic-view-header {
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.dynamic-view-header h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1d2129;
+  margin: 0 0 8px 0;
+}
+
+.dynamic-view-header p {
+  font-size: 14px;
+  color: #86909c;
+  margin: 0;
+}
+
+.dynamic-view-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+  background: #fafbfc;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.dynamic-view-body p {
+  font-size: 14px;
+  color: #4e5969;
+  margin: 0;
+  line-height: 1.6;
 }
 
 .app::before {
@@ -481,6 +610,11 @@ const canSend = computed(() => {
   align-items: flex-start; /* 确保消息左对齐 */
 }
 
+/* 当有消息时，恢复正常的消息布局 */
+.dialog-messages:has(.message) {
+  align-items: flex-start;
+}
+
 .dialog-messages > .message {
   width: 100%;
   display: flex;
@@ -530,52 +664,45 @@ const canSend = computed(() => {
   z-index: 1;
 }
 
+.welcome-container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  max-width: 900px;
+  padding: 0 24px;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 48px;
+}
+
 .welcome-message {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  flex: 1;
   text-align: center;
-  color: #8e8ea0;
-  width: 100%; /* 确保占满宽度 */
-  align-self: center; /* 覆盖父容器的 align-items: flex-start */
-  margin: 0 auto; /* 水平居中 */
 }
 
-.welcome-icon {
-  width: 64px;
-  height: 64px;
-  border-radius: 12px;
-  background: #2563eb;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-  font-weight: 600;
-  color: white;
-  margin-bottom: 24px;
+.welcome-message :deep(.animated-logo) {
+  margin-bottom: 32px;
 }
 
-.welcome-icon-inner {
-  position: relative;
-  z-index: 1;
+.welcome-message :deep(.logo-icon-wrapper) {
+  width: 120px;
+  height: 120px;
 }
 
 .welcome-message h2 {
-  margin: 0 0 12px 0;
+  margin: 0;
   color: #111827;
   font-size: 32px;
   font-weight: 600;
   letter-spacing: -0.025em;
-}
-
-.welcome-message p {
-  margin: 0;
-  font-size: 16px;
-  color: #6b7280;
-  line-height: 1.6;
-  max-width: 600px;
 }
 
 /* 错误消息样式 */

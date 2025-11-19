@@ -3,24 +3,31 @@
     :class="['message', message.role]"
     :style="{ animationDelay: `${animationDelay}s` }"
   >
-    <div class="message-avatar">
-      <div class="avatar-glow"></div>
-      <span v-if="message.role === 'user'" class="avatar-icon">👤</span>
-      <span v-else class="avatar-icon">🤖</span>
-    </div>
     <div class="message-content" :data-message-id="message.id || message.timestamp || Date.now()">
-      <div class="message-card">
+      <div class="message-card" :class="{ 'has-task-list': message.role === 'assistant' && message.tasks && Array.isArray(message.tasks) && message.tasks.length > 0 }">
         <div class="message-card-glow"></div>
-        <!-- 复制按钮（hover显示，右上角） -->
-        <button
+        <!-- 任务列表（仅AI消息显示，放在消息泡泡顶部） -->
+        <TaskList 
+          v-if="message.role === 'assistant' && message.tasks && Array.isArray(message.tasks) && message.tasks.length > 0" 
+          :tasks="message.tasks"
+          :animation-delay="animationDelay"
+          class="message-task-list"
+        />
+        <!-- 复制按钮（在任务列表下方，或消息文本右上角） -->
+        <div
           v-if="!message.streaming"
-          class="message-copy-btn"
-          @click="handleCopyMessage"
-          :title="isCopied ? '已复制' : '复制消息'"
+          class="message-copy-wrapper"
+          :class="{ 'in-task-list': message.role === 'assistant' && message.tasks && Array.isArray(message.tasks) && message.tasks.length > 0 }"
         >
-          <span v-if="isCopied">已复制</span>
-          <span v-else>复制</span>
-        </button>
+          <button
+            class="message-copy-btn"
+            @click="handleCopyMessage"
+            :title="isCopied ? '已复制' : '复制消息'"
+          >
+            <span v-if="isCopied">已复制</span>
+            <span v-else>复制</span>
+          </button>
+        </div>
         <div class="message-text" v-html="formattedContent"></div>
         <div v-if="message.streaming" class="streaming-indicator">
           <div class="streaming-pulse"></div>
@@ -60,6 +67,7 @@ import { computed, onMounted, nextTick, watch, ref } from 'vue'
 import { getMessageContent } from '../utils/message.js'
 import { formatMessage, createMarkdownRenderer } from '../utils/markdown.js'
 import { usePdfExport } from '../composables/usePdfExport.js'
+import TaskList from './TaskList.vue'
 import hljs from 'highlight.js'
 
 const props = defineProps({
@@ -478,82 +486,14 @@ document.addEventListener('click', (e) => {
 }
 
 .message.assistant {
-  align-self: flex-start;
-  max-width: 70%; /* 最大宽度限制 */
+  align-self: center; /* AI消息居中 */
+  max-width: 85%; /* 增加最大宽度 */
   min-width: fit-content; /* 根据内容自适应 */
-  margin-left: 52px; /* 头像宽度(40px) + gap(12px) = 52px，与头像右边缘对齐 */
+  margin-left: auto; /* 水平居中 */
+  margin-right: auto; /* 水平居中 */
 }
 
-.message-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #2196f3 0%, #42a5f5 50%, #1976d2 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  font-weight: 700;
-  flex-shrink: 0;
-  color: white;
-  box-shadow: 
-    0 8px 24px rgba(33, 150, 243, 0.3),
-    0 4px 8px rgba(33, 150, 243, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.4),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.1);
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  letter-spacing: -0.02em;
-  animation: avatarPopIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
-  will-change: transform;
-  position: relative;
-  overflow: visible;
-  z-index: 2;
-}
-
-.avatar-glow {
-  position: absolute;
-  inset: -4px;
-  border-radius: 20px;
-  background: linear-gradient(135deg, #2196f3, #42a5f5);
-  opacity: 0.3;
-  filter: blur(12px);
-  z-index: -1;
-  animation: avatarGlow 2s ease-in-out infinite;
-}
-
-.avatar-icon {
-  font-size: 20px;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
-  animation: iconFloat 3s ease-in-out infinite;
-}
-
-.message-avatar::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), transparent);
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-
-.message-avatar:hover::before {
-  opacity: 1;
-}
-
-.message.user .message-avatar {
-  background: linear-gradient(135deg, #42a5f5 0%, #1976d2 50%, #1565c0 100%);
-  box-shadow: 
-    0 8px 24px rgba(66, 165, 245, 0.35),
-    0 4px 8px rgba(66, 165, 245, 0.25),
-    inset 0 1px 0 rgba(255, 255, 255, 0.4),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.1);
-  border: 2px solid rgba(255, 255, 255, 0.25);
-}
-
-.message.user .avatar-glow {
-  background: linear-gradient(135deg, #42a5f5, #1976d2);
-  opacity: 0.4;
-}
+/* 头像已移除 */
 
 .message-content {
   flex: 0 1 auto; /* 不拉伸，根据内容自适应 */
@@ -592,10 +532,7 @@ document.addEventListener('click', (e) => {
   max-width: 100%; /* 不超过父容器 */
 }
 
-.message-card:hover .message-copy-btn {
-  opacity: 1;
-  visibility: visible;
-}
+/* 移除旧的hover样式，已在.message-copy-wrapper中处理 */
 
 /* 当消息前面有任务列表时，调整消息气泡的顶部圆角 - 通过全局样式处理 */
 
@@ -641,6 +578,16 @@ document.addEventListener('click', (e) => {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', 'Hiragino Sans GB', sans-serif;
   width: fit-content; /* 根据内容自适应宽度 */
   max-width: 100%; /* 不超过父容器 */
+}
+
+/* AI消息内容增加内边距，不要紧贴消息泡泡 */
+.message.assistant .message-text {
+  padding: 28px 32px; /* 增加内边距 */
+}
+
+/* 当有任务列表时，消息文本的顶部内边距可以正常 */
+.message-card.has-task-list .message-text {
+  padding-top: 28px; /* 正常内边距，因为复制按钮在任务列表下方 */
 }
 
 .message.user .message-text {
@@ -1793,30 +1740,64 @@ document.addEventListener('click', (e) => {
   vertical-align: top;
 }
 
-/* 消息复制按钮（hover显示，右上角，无边框） */
-.message-copy-btn {
+/* 复制按钮包装器 */
+.message-copy-wrapper {
   position: absolute;
-  top: 12px;
-  right: 12px;
+  top: 8px;
+  right: 8px;
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.2s, visibility 0.2s;
-  background: transparent;
-  border: none;
+  z-index: 100;
+  pointer-events: none;
+}
+
+/* 当复制按钮不在任务列表下方时，hover显示 */
+.message-card:hover .message-copy-wrapper:not(.in-task-list) {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+/* 复制按钮在任务列表下方时的样式 */
+.message-copy-wrapper.in-task-list {
+  position: static;
+  opacity: 1 !important; /* 始终显示 */
+  visibility: visible !important; /* 始终显示 */
+  pointer-events: auto;
+  display: flex;
+  justify-content: flex-end;
+  padding: 8px 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  background: #ffffff; /* 与消息文本区域一致 */
+}
+
+/* 消息复制按钮 */
+.message-copy-btn {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(0, 0, 0, 0.08);
   color: #646a73;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   cursor: pointer;
-  padding: 6px 10px;
+  padding: 4px 8px;
   border-radius: 6px;
-  z-index: 10;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', 'Hiragino Sans GB', sans-serif;
   transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  pointer-events: auto;
+}
+
+.message-copy-wrapper:not(.in-task-list) .message-copy-btn {
+  position: relative;
 }
 
 .message-copy-btn:hover {
-  background: rgba(0, 0, 0, 0.05);
+  background: rgba(255, 255, 255, 1);
   color: #1d2129;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
 }
 
 .message-copy-btn:active {
@@ -2089,53 +2070,43 @@ document.addEventListener('click', (e) => {
   margin-bottom: 0;
 }
 
+/* 用户消息泡泡简化 */
 .message.user .message-card {
-  background: linear-gradient(135deg, #42a5f5 0%, #1976d2 50%, #1565c0 100%);
-  box-shadow: 
-    0 8px 32px rgba(66, 165, 245, 0.3),
-    0 4px 12px rgba(66, 165, 245, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  background: #f0f0f0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   width: fit-content; /* 根据内容自适应宽度 */
   max-width: 100%; /* 不超过父容器 */
 }
 
 .message.user .message-text {
-  background: linear-gradient(135deg, #42a5f5 0%, #1976d2 100%);
-  color: white;
+  background: #f0f0f0;
+  color: #2d2d2d;
   position: relative;
   width: fit-content; /* 根据内容自适应宽度 */
   max-width: 100%; /* 不超过父容器 */
+  padding: 16px 20px; /* 简化后的内边距 */
 }
 
 .message.user .message-text::before {
   display: none;
 }
 
-.message.user .message-text::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.3), transparent);
-}
-
+/* 用户消息简化样式 */
 .message.user .message-text * {
-  color: white;
+  color: #2d2d2d;
 }
 
 .message.user .message-text h1,
 .message.user .message-text h2,
 .message.user .message-text h3,
 .message.user .message-text h4 {
-  color: white;
-  border-color: rgba(255, 255, 255, 0.2);
+  color: #1a1a1a;
+  border-color: rgba(0, 0, 0, 0.1);
 }
 
 .message.user .message-text :deep(a:not(.link-card)) {
-  color: white;
-  border-bottom-color: rgba(255, 255, 255, 0.5);
+  color: #2196f3;
+  border-bottom-color: rgba(33, 150, 243, 0.3);
 }
 
 .streaming-indicator {
@@ -2308,6 +2279,56 @@ document.addEventListener('click', (e) => {
     opacity: 1;
     transform: translateY(0) scale(1);
   }
+}
+
+/* 消息泡泡内的任务列表样式 */
+.message-task-list {
+  margin: 0;
+  border-radius: 0;
+  border: none;
+  max-width: 100%;
+  width: 100%;
+  box-shadow: none;
+}
+
+.message-task-list :deep(.message-task-box) {
+  margin: 0;
+  border-radius: 0;
+  border: none;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  max-width: 100%;
+  width: 100%;
+  box-shadow: none;
+  background: transparent;
+}
+
+/* 当消息泡泡内有任务列表时，调整任务列表的圆角 */
+.message-card.has-task-list .message-task-list :deep(.message-task-box) {
+  border-radius: 14px 14px 0 0; /* 只有顶部圆角 */
+  border-bottom: none; /* 移除底部边框，由复制按钮区域提供 */
+}
+
+/* 当消息泡泡内有任务列表时，复制按钮区域在中间 */
+.message-card.has-task-list .message-copy-wrapper.in-task-list {
+  border-top: none; /* 移除顶部边框，与任务列表连接 */
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+/* 当消息泡泡内有任务列表时，调整消息文本的顶部圆角 */
+.message-card.has-task-list .message-text {
+  border-radius: 0 0 14px 14px; /* 只有底部圆角 */
+  border-top: none; /* 移除顶部边框，与复制按钮区域连接 */
+}
+
+/* 任务列表头部样式调整 */
+.message-task-list :deep(.task-box-header) {
+  background: #f7f8fa;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+/* 任务列表内容区域样式调整 */
+.message-task-list :deep(.task-box-content) {
+  background: #ffffff;
 }
 </style>
 

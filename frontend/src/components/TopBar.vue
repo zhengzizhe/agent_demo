@@ -1,38 +1,23 @@
 <template>
   <div class="top-bar">
     <div class="top-bar-left">
-      <nav class="breadcrumb-nav" v-if="breadcrumbs.length > 0" aria-label="面包屑导航">
-        <ol class="breadcrumb-list">
-          <li
-            v-for="(crumb, index) in breadcrumbs"
-            :key="index"
-            class="breadcrumb-item"
+      <!-- 网站风格标签页 -->
+      <nav class="tabs-nav" aria-label="标签页导航">
+        <div class="tabs-container">
+          <button
+            v-for="tab in tabs"
+            :key="tab.id"
+            class="tab-item"
+            :class="{ active: currentView === tab.id }"
+            @click="handleTabClick(tab.id)"
+            :title="tab.title"
           >
-            <button
-              v-if="index < breadcrumbs.length - 1"
-              class="breadcrumb-link"
-              @click="handleBreadcrumbClick(crumb, index)"
-              :title="`返回 ${crumb}`"
-            >
-              {{ crumb }}
-            </button>
-            <span
-              v-else
-              class="breadcrumb-link current"
-            >
-              {{ crumb }}
-            </span>
-            <span
-              v-if="index < breadcrumbs.length - 1"
-              class="breadcrumb-separator"
-              aria-hidden="true"
-            >
-              /
-            </span>
-          </li>
-        </ol>
+            <span class="tab-icon" v-if="tab.icon">{{ tab.icon }}</span>
+            <span class="tab-label">{{ tab.label }}</span>
+            <span v-if="tab.badge" class="tab-badge">{{ tab.badge }}</span>
+          </button>
+        </div>
       </nav>
-      <h1 class="page-title">{{ pageTitle }}</h1>
     </div>
     
     <div class="top-bar-right">
@@ -55,21 +40,41 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
+
 const props = defineProps({
-  pageTitle: {
+  currentView: {
     type: String,
-    default: '页面标题'
-  },
-  breadcrumbs: {
-    type: Array,
-    default: () => []
+    default: 'chat'
   }
 })
 
-const emit = defineEmits(['breadcrumb-click'])
+const emit = defineEmits(['view-change'])
 
-const handleBreadcrumbClick = (crumb, index) => {
-  emit('breadcrumb-click', { crumb, index })
+// 标签页配置
+const tabs = computed(() => [
+  {
+    id: 'chat',
+    label: '对话',
+    icon: '💬',
+    title: '对话'
+  },
+  {
+    id: 'rag',
+    label: 'RAG知识库',
+    icon: '📚',
+    title: 'RAG知识库'
+  },
+  {
+    id: 'docs',
+    label: '文档库',
+    icon: '📄',
+    title: '文档库'
+  }
+])
+
+const handleTabClick = (viewId) => {
+  emit('view-change', viewId)
 }
 </script>
 
@@ -84,7 +89,11 @@ const handleBreadcrumbClick = (crumb, index) => {
   position: sticky;
   top: 0;
   z-index: 50;
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06);
+  border-bottom: 1px solid #e5e7eb; /* 更清晰的边框 */
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03); /* 更微妙的阴影 */
+  /* 客户端风格：更紧凑的顶部栏 */
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.95);
 }
 
 .top-bar-left {
@@ -95,95 +104,94 @@ const handleBreadcrumbClick = (crumb, index) => {
   min-width: 0;
 }
 
-/* 飞书风格面包屑 - 更友好自然 */
-.breadcrumb-nav {
+/* 网站风格标签页 */
+.tabs-nav {
   display: flex;
   align-items: center;
+  height: 100%;
 }
 
-.breadcrumb-list {
+.tabs-container {
   display: flex;
   align-items: center;
-  gap: 0;
-  flex-wrap: wrap;
-  margin: 0;
-  padding: 0;
-  list-style: none;
+  gap: 4px;
+  height: 100%;
+  padding: 0 4px;
 }
 
-.breadcrumb-item {
+.tab-item {
   display: flex;
   align-items: center;
-  list-style: none;
-}
-
-.breadcrumb-link {
-  display: inline-flex;
-  align-items: center;
-  padding: 6px 10px;
+  gap: 6px;
+  padding: 8px 16px;
   border: none;
   background: transparent;
   font-size: 14px;
-  font-weight: 400;
+  font-weight: 500;
   color: #86909c;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   white-space: nowrap;
-  border-radius: 6px;
+  border-radius: 8px;
+  position: relative;
+  height: 36px;
   line-height: 1.5;
 }
 
-.breadcrumb-link:hover {
+.tab-item:hover {
+  color: #1d2129;
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.tab-item.active {
   color: #165dff;
-  background: #f2f3f5;
+  background: rgba(22, 93, 255, 0.08);
+  font-weight: 600;
 }
 
-.breadcrumb-link:active {
-  background: #e5e6eb;
+.tab-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 24px;
+  height: 3px;
+  background: #165dff;
+  border-radius: 3px 3px 0 0;
 }
 
-.breadcrumb-link.current {
-  color: #1d2129;
-  font-weight: 500;
-  cursor: default;
-}
-
-.breadcrumb-link.current:hover {
-  background: transparent;
-  color: #1d2129;
-}
-
-.breadcrumb-separator {
-  display: inline-flex;
+.tab-icon {
+  font-size: 16px;
+  line-height: 1;
+  display: flex;
   align-items: center;
-  color: #c9cdd4;
-  margin: 0 6px;
-  font-size: 12px;
-  user-select: none;
-  flex-shrink: 0;
-  opacity: 0.6;
+  justify-content: center;
 }
 
-.page-title {
-  font-size: 20px;
-  font-weight: 500;
-  color: #1d2129;
-  margin: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.tab-label {
+  font-size: 14px;
   letter-spacing: -0.01em;
 }
 
-@keyframes titleFadeIn {
-  from {
-    opacity: 0;
-    transform: translateX(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+.tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 6px;
+  background: #f2f3f5;
+  color: #86909c;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 9px;
+  margin-left: 4px;
+}
+
+.tab-item.active .tab-badge {
+  background: rgba(22, 93, 255, 0.15);
+  color: #165dff;
 }
 
 .top-bar-right {

@@ -1,5 +1,5 @@
 <template>
-  <div class="input-container">
+  <div class="input-container" :class="{ centered: centered }">
     <!-- 生成计划提示框 -->
     <transition name="planning-fade">
       <div v-if="isPlanning" class="planning-indicator">
@@ -11,30 +11,46 @@
     </transition>
     
     <div class="input-wrapper">
-      <input 
-        type="number" 
-        v-model.number="form.orchestratorId"
-        placeholder="ID"
-        class="orchestrator-input"
-        :disabled="isExecuting"
-      />
-      <textarea 
-        v-model="form.message"
-        placeholder="输入您的任务描述..."
-        class="message-input"
-        :disabled="isExecuting"
-        @keydown.enter.exact.prevent="handleEnter"
-        @keydown.shift.enter.exact="handleShiftEnter"
-        rows="1"
-        ref="textareaRef"
-      ></textarea>
+      <div class="input-content">
+        <!-- 顶部：@ 添加背景信息 -->
+        <div class="input-header">
+          <span class="at-symbol">@</span>
+          <span class="context-hint">添加背景信息</span>
+        </div>
+        
+        <!-- 中间：输入区域 -->
+        <div class="input-main">
+          <input 
+            type="number" 
+            v-model.number="form.orchestratorId"
+            placeholder="ID"
+            class="orchestrator-input"
+            :disabled="isExecuting"
+          />
+          <textarea 
+            v-model="form.message"
+            placeholder="询问、搜索或制作任何内容..."
+            class="message-input"
+            :disabled="isExecuting"
+            @keydown.enter.exact.prevent="handleEnter"
+            @keydown.shift.enter.exact="handleShiftEnter"
+            rows="1"
+            ref="textareaRef"
+          ></textarea>
+        </div>
+        
+      </div>
+      
+      <!-- 右侧：发送按钮 -->
       <button 
         class="send-button"
         :disabled="!canSend || isExecuting"
         @click="$emit('send')"
+        title="发送"
       >
-        <span v-if="isExecuting">发送中...</span>
-        <span v-else>发送</span>
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <path d="M9 3L9 15M9 3L3 9M9 3L15 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
       </button>
     </div>
   </div>
@@ -57,6 +73,10 @@ const props = defineProps({
     default: false
   },
   canSend: {
+    type: Boolean,
+    default: false
+  },
+  centered: {
     type: Boolean,
     default: false
   }
@@ -95,6 +115,26 @@ watch(() => props.form.message, () => {
   padding: 20px 32px;
   position: relative;
   z-index: 10;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 居中显示（初始状态） */
+.input-container.centered {
+  position: static;
+  border-top: none;
+  background: transparent;
+  padding: 0;
+  width: 100%;
+  max-width: 100%;
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+}
+
+.input-container.centered .input-wrapper {
+  margin: 0;
+  width: 100%;
+  max-width: 100%;
 }
 
 /* 生成计划提示框 */
@@ -143,50 +183,94 @@ watch(() => props.form.message, () => {
 .input-wrapper {
   display: flex;
   gap: 12px;
-  align-items: flex-end;
-  max-width: 1200px;
+  align-items: flex-start;
+  max-width: 800px;
   margin: 0 auto;
   background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  padding: 12px 16px;
-  transition: all 0.15s ease-out;
+  border: 2px solid #2563eb;
+  border-radius: 16px;
+  padding: 16px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.1);
+}
+
+/* 居中状态时更宽 */
+.input-container.centered .input-wrapper {
+  max-width: 900px;
+  width: 100%;
 }
 
 .input-wrapper:focus-within {
   border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  box-shadow: 
+    0 4px 12px rgba(37, 99, 235, 0.15),
+    0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
+.input-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.input-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #6b7280;
+  padding-bottom: 4px;
+}
+
+.at-symbol {
+  color: #2563eb;
+  font-weight: 600;
+}
+
+.context-hint {
+  color: #9ca3af;
+}
+
+.input-main {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  min-height: 40px;
+}
+
+
 .orchestrator-input {
-  width: 70px;
-  padding: 8px 12px;
+  width: 60px;
+  padding: 8px 10px;
   background: transparent;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   color: #111827;
   font-size: 13px;
   font-weight: 500;
+  flex-shrink: 0;
 }
 
 .orchestrator-input:focus {
   outline: none;
-  background: #f3f4f6;
+  background: rgba(0, 0, 0, 0.04);
 }
 
 .message-input {
   flex: 1;
-  padding: 8px 12px;
+  padding: 8px 0;
   background: transparent;
   border: none;
-  border-radius: 6px;
+  border-radius: 0;
   color: #111827;
   font-size: 15px;
   font-family: inherit;
   resize: none;
   max-height: 200px;
   overflow-y: auto;
-  line-height: 1.5;
+  line-height: 1.6;
+  min-height: 24px;
 }
 
 .message-input:focus {
@@ -203,21 +287,31 @@ watch(() => props.form.message, () => {
 }
 
 .send-button {
-  padding: 10px 20px;
-  background: #2563eb;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--theme-accent, #165dff);
   color: white;
   border: none;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 500;
+  border-radius: 50%;
   cursor: pointer;
-  transition: background-color 0.15s ease-out;
-  white-space: nowrap;
-  min-width: 80px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
 }
 
 .send-button:hover:not(:disabled) {
-  background-color: #1d4ed8;
+  background-color: var(--theme-accent, #165dff);
+  opacity: 0.9;
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(37, 99, 235, 0.3);
+}
+
+.send-button svg {
+  width: 18px;
+  height: 18px;
 }
 
 .send-button:disabled {

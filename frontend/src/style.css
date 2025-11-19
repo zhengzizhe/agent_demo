@@ -4,10 +4,15 @@
   box-sizing: border-box;
 }
 
+:root {
+  --theme-background: #ffffff;
+  --theme-accent: #165dff;
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-  background: #1e1e1e;
-  color: #d4d4d4;
+  background: var(--theme-background, #ffffff);
+  color: #1d2129;
   line-height: 1.6;
 }
 

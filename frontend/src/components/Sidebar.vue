@@ -1,15 +1,7 @@
 <template>
   <div class="sidebar" :class="{ collapsed: isCollapsed }">
     <div class="sidebar-header">
-      <div class="sidebar-logo" @click="toggleCollapse">
-        <div class="logo-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <rect x="3" y="3" width="18" height="18" rx="3" fill="#2563eb"/>
-            <path d="M8 12l3 3 5-6" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </div>
-        <span v-if="!isCollapsed" class="logo-text">Agent</span>
-      </div>
+      <AnimatedLogo :collapsed="isCollapsed" />
     </div>
 
     <nav class="sidebar-nav">
@@ -61,6 +53,20 @@
         <div class="nav-section-title" v-if="!isCollapsed">工具</div>
         <button
           class="nav-item"
+          :class="{ active: showColorPalette }"
+          @click="$emit('color-palette-toggle')"
+          :title="isCollapsed ? '主题设置' : ''"
+        >
+          <svg class="nav-icon" width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <circle cx="10" cy="6" r="3" stroke="currentColor" stroke-width="1.5" fill="none"/>
+            <circle cx="6" cy="14" r="3" stroke="currentColor" stroke-width="1.5" fill="none"/>
+            <circle cx="14" cy="14" r="3" stroke="currentColor" stroke-width="1.5" fill="none"/>
+            <path d="M10 9v5M6 11l8 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          <span v-if="!isCollapsed" class="nav-text">主题设置</span>
+        </button>
+        <button
+          class="nav-item"
           :class="{ active: showDebugPanel }"
           @click="$emit('debug-toggle')"
           :title="isCollapsed ? '调试' : ''"
@@ -94,6 +100,7 @@
 
 <script setup>
 import { ref } from 'vue'
+import AnimatedLogo from './AnimatedLogo.vue'
 
 defineProps({
   currentView: {
@@ -103,10 +110,14 @@ defineProps({
   showDebugPanel: {
     type: Boolean,
     default: false
+  },
+  showColorPalette: {
+    type: Boolean,
+    default: false
   }
 })
 
-defineEmits(['view-change', 'debug-toggle'])
+defineEmits(['view-change', 'debug-toggle', 'color-palette-toggle'])
 
 const isCollapsed = ref(false)
 
@@ -119,14 +130,17 @@ const toggleCollapse = () => {
 .sidebar {
   width: 240px;
   height: 100vh;
-  background: #f7f8fa;
+  background: rgba(247, 248, 250, 0.75); /* 半透明背景 */
+  backdrop-filter: blur(24px) saturate(180%); /* 毛玻璃效果 */
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
   display: flex;
   flex-direction: column;
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
-  z-index: 100;
+  z-index: 10;
   will-change: width;
-  border-right: 1px solid #e5e6eb;
+  border-right: 1px solid rgba(229, 231, 235, 0.6); /* 半透明边框 */
+  box-shadow: 2px 0 20px rgba(0, 0, 0, 0.1);
 }
 
 .sidebar.collapsed {
@@ -138,7 +152,18 @@ const toggleCollapse = () => {
   min-height: 64px;
   display: flex;
   align-items: center;
-  background: transparent;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(229, 231, 235, 0.5);
+  position: relative;
+  z-index: 1;
+}
+
+.sidebar.collapsed .sidebar-header {
+  padding: 12px;
+  min-height: auto;
 }
 
 .sidebar-logo {
@@ -148,17 +173,18 @@ const toggleCollapse = () => {
   cursor: pointer;
   width: 100%;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  padding: 4px;
-  border-radius: 6px;
+  padding: 8px;
+  border-radius: 8px;
 }
 
 .sidebar-logo:hover {
-  background: #e5e6eb;
+  background: rgba(0, 0, 0, 0.04); /* 深色悬停效果 */
   transform: scale(0.98);
 }
 
 .sidebar-logo:active {
   transform: scale(0.95);
+  background: rgba(0, 0, 0, 0.06);
 }
 
 .logo-icon {
@@ -168,13 +194,16 @@ const toggleCollapse = () => {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  border-radius: 8px;
 }
 
 .logo-text {
   font-size: 18px;
   font-weight: 600;
-  color: #111827;
+  color: #1d2129; /* 深色文字，高对比度 */
   white-space: nowrap;
+  letter-spacing: -0.02em;
 }
 
 .sidebar-nav {
@@ -193,7 +222,7 @@ const toggleCollapse = () => {
 .nav-section-title {
   font-size: 11px;
   font-weight: 600;
-  color: #9ca3af;
+  color: #86909c; /* 中灰色，在浅色背景上可见 */
   text-transform: uppercase;
   letter-spacing: 0.5px;
   padding: 8px 12px 4px;
@@ -208,10 +237,10 @@ const toggleCollapse = () => {
   padding: 10px 12px;
   border: none;
   background: transparent;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  color: #4e5969;
+  color: #4e5969; /* 深色文字，高对比度 */
   font-size: 14px;
   font-weight: 400;
   text-align: left;
@@ -227,27 +256,31 @@ const toggleCollapse = () => {
   transform: translateY(-50%) scaleY(0);
   width: 3px;
   height: 0;
-  background: #2563eb;
+  background: var(--theme-accent, #165dff); /* 强调色指示条 */
   border-radius: 0 3px 3px 0;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .nav-item:hover {
-  background: #e5e6eb;
-  color: #1d2129;
+  background: rgba(0, 0, 0, 0.06); /* 深色悬停背景，毛玻璃效果 */
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: #1d2129; /* 悬停时文字更深 */
   transform: translateX(2px);
 }
 
 .nav-item.active {
-  background: #e8f3ff;
-  color: #165dff;
+  background: color-mix(in srgb, var(--theme-accent, #165dff) 15%, transparent); /* 激活状态背景，毛玻璃效果 */
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: var(--theme-accent, #165dff); /* 强调色文字 */
   font-weight: 500;
 }
 
 .nav-item.active::before {
   transform: translateY(-50%) scaleY(1);
-  height: 20px;
-  background: #165dff;
+  height: 24px;
+  background: var(--theme-accent, #165dff); /* 强调色指示条 */
 }
 
 .nav-icon {
@@ -281,10 +314,15 @@ const toggleCollapse = () => {
   padding: 12px;
   margin-top: auto;
   display: flex;
-  background: transparent;
+  background: rgba(255, 255, 255, 0.3); /* 半透明白色 */
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+  border-top: 1px solid rgba(229, 231, 235, 0.5);
+  position: relative;
+  z-index: 1;
 }
 
 .user-info {
@@ -298,8 +336,8 @@ const toggleCollapse = () => {
 .user-avatar {
   width: 32px;
   height: 32px;
-  border-radius: 6px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 8px;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
   color: white;
   display: flex;
   align-items: center;
@@ -307,6 +345,7 @@ const toggleCollapse = () => {
   font-weight: 600;
   font-size: 14px;
   flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
 }
 
 .user-details {
@@ -317,7 +356,7 @@ const toggleCollapse = () => {
 .user-name {
   font-size: 14px;
   font-weight: 500;
-  color: #111827;
+  color: #1d2129; /* 深色文字 */
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -325,7 +364,7 @@ const toggleCollapse = () => {
 
 .user-status {
   font-size: 12px;
-  color: #10b981;
+  color: #10b981; /* 绿色状态指示 */
   margin-top: 2px;
 }
 
@@ -337,21 +376,22 @@ const toggleCollapse = () => {
   justify-content: center;
   border: none;
   background: transparent;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
-  color: #6b7280;
+  color: #86909c; /* 中灰色图标 */
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   flex-shrink: 0;
 }
 
 .collapse-btn:hover {
-  background: #e5e6eb;
+  background: rgba(0, 0, 0, 0.04);
   color: #1d2129;
   transform: scale(1.1);
 }
 
 .collapse-btn:active {
   transform: scale(0.95);
+  background: rgba(0, 0, 0, 0.06);
 }
 
 .collapse-btn svg {
@@ -370,7 +410,7 @@ const toggleCollapse = () => {
   width: 100%;
 }
 
-/* 滚动条样式 */
+/* 滚动条样式 - 浅色主题 */
 .sidebar-nav::-webkit-scrollbar {
   width: 6px;
 }
@@ -380,12 +420,12 @@ const toggleCollapse = () => {
 }
 
 .sidebar-nav::-webkit-scrollbar-thumb {
-  background: #d1d5db;
+  background: #d1d5db; /* 浅色滚动条 */
   border-radius: 3px;
 }
 
 .sidebar-nav::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
+  background: #9ca3af; /* 悬停时更深 */
 }
 </style>
 

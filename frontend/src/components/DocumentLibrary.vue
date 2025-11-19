@@ -98,24 +98,7 @@
         </div>
         <div class="dl-actions">
           <!-- 搜索框 -->
-          <div class="search-wrapper">
-            <svg class="search-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5" fill="none"/>
-              <path d="M11 11l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            </svg>
-            <input 
-              v-model="searchQuery" 
-              type="text" 
-              class="search-input" 
-              placeholder="搜索文档..."
-              @input="handleSearch"
-            />
-            <button v-if="searchQuery" class="search-clear" @click="clearSearch">
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                <path d="M3 3l6 6M9 3l-6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-              </svg>
-            </button>
-          </div>
+          <SearchBox v-model="searchQuery" placeholder="搜索文档..." />
           <!-- 排序 -->
           <div class="sort-wrapper">
             <select v-model="sortBy" class="sort-select" @change="handleSort">
@@ -125,33 +108,9 @@
             </select>
           </div>
           <!-- 视图切换 -->
-          <div class="view-toggle">
-            <button 
-              class="view-btn" 
-              :class="{ active: viewMode === 'grid' }" 
-              @click="viewMode = 'grid'"
-              title="网格视图"
-            >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <rect x="2" y="2" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.5" fill="none"/>
-                <rect x="9" y="2" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.5" fill="none"/>
-                <rect x="2" y="9" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.5" fill="none"/>
-                <rect x="9" y="9" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.5" fill="none"/>
-              </svg>
-            </button>
-            <button 
-              class="view-btn" 
-              :class="{ active: viewMode === 'list' }" 
-              @click="viewMode = 'list'"
-              title="列表视图"
-            >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M2 4h12M2 8h12M2 12h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-              </svg>
-            </button>
-          </div>
+          <ViewToggle v-model="viewMode" />
           <!-- 新建文档按钮 -->
-          <button class="create-btn" @click="showCreateDialog = true" title="新建文档">
+          <button class="create-btn btn btn-primary" @click="showCreateDialog = true" title="新建文档">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
               <path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
             </svg>
@@ -163,26 +122,17 @@
       <!-- 文档列表 -->
       <div class="dl-content">
         <!-- 加载状态 -->
-        <div v-if="loading" class="dl-loading">
-          <div class="loading-spinner"></div>
-          <p>加载中...</p>
-        </div>
+        <LoadingState v-if="loading" />
 
         <!-- 空状态 -->
-        <div v-else-if="sortedAndFilteredDocuments.length === 0" class="dl-empty">
-          <svg class="empty-icon" width="64" height="64" viewBox="0 0 64 64" fill="none">
-            <rect x="12" y="8" width="40" height="48" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/>
-            <path d="M16 16h32M16 24h24M16 32h32M16 40h20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
-          <h3 class="empty-title">暂无文档</h3>
-          <p class="empty-desc">创建第一个文档开始使用</p>
-          <button class="empty-btn" @click="showCreateDialog = true">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="margin-right: 8px;">
-              <path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            </svg>
-            新建文档
-          </button>
-        </div>
+        <EmptyState 
+          v-else-if="sortedAndFilteredDocuments.length === 0"
+          title="暂无文档"
+          description="创建第一个文档开始使用"
+          :show-button="true"
+          button-text="新建文档"
+          @action="showCreateDialog = true"
+        />
 
         <!-- 网格视图 -->
         <div v-else-if="viewMode === 'grid'" class="dl-grid-view">
@@ -443,7 +393,12 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import SearchBox from './SearchBox.vue'
+import ViewToggle from './ViewToggle.vue'
+import LoadingState from './LoadingState.vue'
+import EmptyState from './EmptyState.vue'
+import { formatDate, formatSizeBytes } from '../utils/format.js'
 
 // 响应式数据
 const currentView = ref('home') // home, shared, favorites
@@ -604,14 +559,6 @@ const loadDocuments = async () => {
   } finally {
     loading.value = false
   }
-}
-
-const handleSearch = () => {
-  // 搜索逻辑已在computed中处理
-}
-
-const clearSearch = () => {
-  searchQuery.value = ''
 }
 
 const handleSort = () => {
@@ -803,35 +750,8 @@ const deleteDocument = async (doc) => {
   }
 }
 
-const formatDate = (timestamp) => {
-  if (!timestamp) return '-'
-  const date = new Date(timestamp)
-  const now = new Date()
-  const diff = now - date
-  const days = Math.floor(diff / 86400000)
-  
-  if (days === 0) {
-    const hours = Math.floor(diff / 3600000)
-    if (hours === 0) {
-      const minutes = Math.floor(diff / 60000)
-      return minutes <= 1 ? '刚刚' : `${minutes}分钟前`
-    }
-    return `${hours}小时前`
-  } else if (days === 1) {
-    return '昨天'
-  } else if (days < 7) {
-    return `${days}天前`
-  } else {
-    return date.toLocaleDateString('zh-CN', { year: 'numeric', month: 'short', day: 'numeric' })
-  }
-}
-
-const formatSize = (bytes) => {
-  if (!bytes) return '-'
-  if (bytes < 1024) return bytes + ' B'
-  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
-  return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
-}
+// 使用公共工具函数 formatDate 和 formatSizeBytes
+const formatSize = formatSizeBytes
 
 const getOwnerInitial = (owner) => {
   if (!owner || !owner.name) return '?'
@@ -848,15 +768,27 @@ const handleClickOutside = (event) => {
   }
 }
 
+// 刷新处理函数
+const handleRefresh = (event) => {
+  const { view } = event.detail || {}
+  if (view === 'docs') {
+    console.log('刷新文档库')
+    loadDocuments()
+    loadSpaces()
+  }
+}
+
 onMounted(() => {
   loadDocuments()
   loadSpaces()
   document.addEventListener('click', handleClickOutside)
+  // 监听刷新事件
+  window.addEventListener('tab-refresh', handleRefresh)
 })
 
 // 清理
-import { onUnmounted } from 'vue'
 onUnmounted(() => {
+  window.removeEventListener('tab-refresh', handleRefresh)
   document.removeEventListener('click', handleClickOutside)
 })
 </script>
@@ -1065,134 +997,7 @@ onUnmounted(() => {
   gap: 12px;
 }
 
-.search-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.search-icon {
-  position: absolute;
-  left: 12px;
-  color: #9ca3af;
-  pointer-events: none;
-}
-
-.search-input {
-  width: 240px;
-  padding: 8px 36px 8px 36px;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  font-size: 14px;
-  transition: all 0.15s;
-}
-
-.search-input:focus {
-  outline: none;
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-}
-
-.search-clear {
-  position: absolute;
-  right: 8px;
-  width: 20px;
-  height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  background: transparent;
-  color: #9ca3af;
-  cursor: pointer;
-  border-radius: 4px;
-  transition: all 0.15s;
-}
-
-.search-clear:hover {
-  background: #f3f4f6;
-  color: #111827;
-}
-
-.sort-wrapper {
-  position: relative;
-}
-
-.sort-select {
-  padding: 8px 32px 8px 12px;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  font-size: 14px;
-  background: #ffffff;
-  cursor: pointer;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 12 12' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3 4.5l3 3 3-3' stroke='%236b7280' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 8px center;
-  transition: all 0.15s;
-}
-
-.sort-select:focus {
-  outline: none;
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-}
-
-.view-toggle {
-  display: flex;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  overflow: hidden;
-}
-
-.view-btn {
-  padding: 8px 12px;
-  border: none;
-  background: #ffffff;
-  color: #6b7280;
-  cursor: pointer;
-  transition: all 0.15s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.view-btn:not(:last-child) {
-  border-right: 1px solid #d1d5db;
-}
-
-.view-btn:hover {
-  background: #f9fafb;
-  color: #111827;
-}
-
-.view-btn.active {
-  background: #2563eb;
-  color: #ffffff;
-}
-
-.create-btn {
-  padding: 8px 16px;
-  border: none;
-  background: #2563eb;
-  color: #ffffff;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  transition: all 0.15s;
-}
-
-.create-btn:hover {
-  background: #1d4ed8;
-}
-
-.create-btn svg {
-  flex-shrink: 0;
-}
+/* 搜索框、排序、视图切换样式已移至 common.css */
 
 /* 内容区 */
 .dl-content {
@@ -1201,72 +1006,7 @@ onUnmounted(() => {
   padding: 24px;
 }
 
-.dl-loading {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  color: #6b7280;
-}
-
-.loading-spinner {
-  width: 32px;
-  height: 32px;
-  border: 3px solid #e5e7eb;
-  border-top-color: #2563eb;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.dl-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  color: #6b7280;
-}
-
-.empty-icon {
-  margin-bottom: 16px;
-  color: #d1d5db;
-}
-
-.empty-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: #111827;
-  margin: 0 0 8px 0;
-}
-
-.empty-desc {
-  font-size: 14px;
-  color: #6b7280;
-  margin: 0 0 24px 0;
-}
-
-.empty-btn {
-  padding: 10px 20px;
-  border: none;
-  background: #2563eb;
-  color: #ffffff;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  transition: all 0.15s;
-}
-
-.empty-btn:hover {
-  background: #1d4ed8;
-}
+/* 加载状态和空状态样式已移至 common.css */
 
 /* 网格视图 */
 .dl-grid-view {
@@ -1537,91 +1277,7 @@ onUnmounted(() => {
   color: #111827;
 }
 
-/* 对话框 */
-.dialog-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  animation: fadeIn 0.2s;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-.dialog {
-  background: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  width: 90%;
-  max-width: 600px;
-  max-height: 90vh;
-  display: flex;
-  flex-direction: column;
-  animation: slideUp 0.2s;
-}
-
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.dialog-small {
-  max-width: 400px;
-}
-
-.dialog-header {
-  padding: 20px 24px;
-  border-bottom: 1px solid #e5e7eb;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.dialog-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: #111827;
-  margin: 0;
-}
-
-.dialog-close {
-  width: 32px;
-  height: 32px;
-  border: none;
-  background: transparent;
-  color: #6b7280;
-  cursor: pointer;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.15s;
-}
-
-.dialog-close:hover {
-  background: #f3f4f6;
-  color: #111827;
-}
-
-.dialog-content {
-  padding: 24px;
-  overflow-y: auto;
-}
+/* 对话框样式已移至 common.css */
 
 .create-options {
   display: grid;
@@ -1679,42 +1335,7 @@ onUnmounted(() => {
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
-.dialog-footer {
-  padding: 16px 24px;
-  border-top: 1px solid #e5e7eb;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 12px;
-}
-
-.btn {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.btn-secondary {
-  background: #f3f4f6;
-  color: #111827;
-}
-
-.btn-secondary:hover {
-  background: #e5e7eb;
-}
-
-.btn-primary {
-  background: #2563eb;
-  color: #ffffff;
-}
-
-.btn-primary:hover {
-  background: #1d4ed8;
-}
+/* 对话框footer和按钮样式已移至 common.css */
 
 /* 右键菜单 */
 .context-menu {

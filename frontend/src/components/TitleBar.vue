@@ -3,13 +3,7 @@
     <div class="title-bar-drag-region">
       <div class="title-bar-content">
         <div class="title-bar-left">
-          <div class="app-icon" v-if="showIcon">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <rect x="2" y="2" width="16" height="16" rx="2" fill="#2563eb"/>
-              <path d="M6 10l3 3 5-6" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </div>
-          <span class="app-title">{{ appTitle }}</span>
+          <!-- 左侧留空，与项目融为一体 -->
         </div>
         <div class="title-bar-right">
           <button 
@@ -124,15 +118,18 @@ onMounted(() => {
 
 <style scoped>
 .title-bar {
-  height: 40px;
-  background: #ffffff;
+  height: 36px;
+  background: rgba(247, 248, 250, 0.75);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
   display: flex;
   align-items: center;
   -webkit-app-region: drag;
   user-select: none;
   position: relative;
-  z-index: 1000;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  flex-shrink: 0;
+  border-bottom: 1px solid #e5e7eb;
+  border-right: 1px solid #e5e7eb;
 }
 
 .title-bar-drag-region {
@@ -147,34 +144,12 @@ onMounted(() => {
   height: 100%;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 0 8px;
+  justify-content: flex-end;
+  padding: 0;
 }
 
 .title-bar-left {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex: 1;
-  min-width: 0;
-}
-
-.app-icon {
-  width: 20px;
-  height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.app-title {
-  font-size: 13px;
-  font-weight: 500;
-  color: #111827;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  display: none;
 }
 
 .title-bar-right {
@@ -185,18 +160,18 @@ onMounted(() => {
 }
 
 .title-bar-button {
-  width: 46px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
   border: none;
   background: transparent;
-  color: #6b7280;
+  color: #86909c;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  border-radius: 4px;
-  margin-left: 2px;
+  transition: all 0.15s ease;
+  border-radius: 0;
+  margin-left: 0;
   position: relative;
 }
 
@@ -211,24 +186,22 @@ onMounted(() => {
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.title-bar-button:hover {
-  background: #f3f4f6;
-  color: #111827;
-  transform: scale(1.05);
+.title-bar-button:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.04);
+  color: #1d2129;
 }
 
-.title-bar-button:active {
-  transform: scale(0.95);
+.title-bar-button:active:not(:disabled) {
+  background: rgba(0, 0, 0, 0.06);
 }
 
 .title-bar-button.close-btn:hover {
-  background: #ef4444;
-  color: white;
-  transform: scale(1.1);
+  background: rgba(220, 38, 38, 0.1);
+  color: #dc2626;
 }
 
 .title-bar-button.close-btn:active {
-  transform: scale(0.9);
+  background: rgba(220, 38, 38, 0.15);
 }
 
 .title-bar-button svg {
@@ -236,35 +209,6 @@ onMounted(() => {
   height: 12px;
 }
 
-/* macOS 样式调整 */
-@media (prefers-color-scheme: dark) {
-  .title-bar {
-    background: #1f2937;
-    border-bottom-color: #374151;
-  }
-  
-  .app-title {
-    color: #f9fafb;
-  }
-  
-  .title-bar-button {
-    color: #9ca3af;
-  }
-  
-  .title-bar-button:hover {
-    background: #374151;
-    color: #f9fafb;
-  }
-}
-
-/* Windows/Linux 特定样式 */
-.title-bar:not(.is-maximized) {
-  border-radius: 8px 8px 0 0;
-}
-
-/* 最大化时的样式调整 */
-.title-bar.is-maximized {
-  border-radius: 0;
-}
+/* 移除所有圆角和暗色主题，保持与项目一致的浅色毛玻璃风格 */
 </style>
 

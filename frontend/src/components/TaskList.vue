@@ -767,46 +767,22 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-/* 任务列表小框（在AI消息上方）- 与消息气泡融合 */
+/* 任务列表容器 */
 .message-task-box {
-  background: linear-gradient(135deg, #ffffff 0%, #fafafa 50%, #ffffff 100%);
+  background: #ffffff;
   border: 1px solid rgba(0, 0, 0, 0.08);
-  border-bottom: none; /* 底部无边框，与消息气泡连接 */
-  border-radius: 14px 14px 0 0; /* 只有顶部圆角，底部直角 */
-  margin: 12px 0 -20px 0; /* 顶部有间距，底部负margin抵消dialog-messages的gap，紧贴消息 */
-  max-width: 70%; /* 与AI消息框一致 */
+  border-radius: 12px;
+  margin: 16px 0;
+  max-width: 75%;
   width: fit-content;
-  overflow: hidden; /* 改为hidden，确保连接区域不溢出 */
-  min-height: auto;
+  overflow: hidden;
   flex-shrink: 0;
-  animation: taskBoxSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
-  will-change: transform, opacity;
-  box-shadow: 
-    0 4px 16px rgba(0, 0, 0, 0.08),
-    0 2px 4px rgba(0, 0, 0, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  animation: taskBoxSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
   position: relative;
-  z-index: 2; /* 提高z-index，确保在消息气泡上方 */
   align-self: flex-start;
-  margin-left: 104px; /* 头像(40px) + gap(12px) + message.assistant的margin-left(52px) = 104px，与消息泡泡最左侧对齐 */
 }
 
-/* 添加连接区域，让过渡更自然 */
-.message-task-box::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, 
-    transparent 0%, 
-    rgba(0, 0, 0, 0.04) 20%, 
-    rgba(0, 0, 0, 0.06) 50%, 
-    rgba(0, 0, 0, 0.04) 80%, 
-    transparent 100%);
-  pointer-events: none;
-}
 
 /* 移除顶部渐变条 */
 
@@ -814,14 +790,12 @@ onBeforeUnmount(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 16px;
+  padding: 14px 18px;
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.6) 0%, rgba(250, 250, 250, 0.4) 100%);
+  background: #f7f8fa;
   font-size: 13px;
   font-weight: 600;
-  color: rgba(0, 0, 0, 0.65);
-  position: relative;
-  overflow: hidden;
+  color: #1d2129;
 }
 
 .task-box-header-right {
@@ -886,8 +860,8 @@ onBeforeUnmount(() => {
 }
 
 .task-box-content {
-  padding: 12px 16px 20px 16px; /* 底部增加padding，与消息气泡连接更自然 */
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(250, 250, 250, 0.3) 100%);
+  padding: 16px 18px;
+  background: #ffffff;
   min-height: auto;
   overflow: visible;
   position: relative;
@@ -895,8 +869,9 @@ onBeforeUnmount(() => {
 
 .task-list-view {
   display: flex;
-  gap: 8px;
   flex-wrap: wrap;
+  gap: 0;
+  margin: -4px;
 }
 
 .task-graph-view {
@@ -1331,117 +1306,54 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 8px;
   padding: 8px 14px;
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(16, 163, 127, 0.05); /* 浅绿色背景 */
+  border: 1px solid #10a37f; /* 绿色边框 */
   border-radius: 8px;
-  font-size: 12px;
-  font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
-  cursor: default;
-  transition: all 0.3s ease;
-  color: rgba(51, 51, 51, 0.85);
-  line-height: 1.5;
-  animation: chipPopIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
-  will-change: transform, opacity;
-  box-shadow: 
-    0 1px 3px rgba(0, 0, 0, 0.06),
-    0 1px 1px rgba(0, 0, 0, 0.03),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  font-size: 14px;
+  font-weight: 500;
+  color: #1d2129;
+  cursor: pointer;
+  transition: all 0.2s ease;
   position: relative;
-  overflow: visible;
-  font-weight: 400;
-}
-
-.task-chip::before {
-  content: '';
-  position: absolute;
-  top: -2px;
-  left: -2px;
-  right: -2px;
-  bottom: -2px;
-  background: linear-gradient(135deg, rgba(33, 150, 243, 0.3), rgba(66, 165, 245, 0.4), rgba(33, 150, 243, 0.3));
-  border-radius: 16px;
-  opacity: 0;
-  z-index: -1;
-  filter: blur(6px);
-  transition: opacity 0.3s;
-}
-
-.task-chip::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-  transition: left 0.8s;
-  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(16, 163, 127, 0.1);
+  margin: 4px;
+  white-space: nowrap;
+  max-width: 100%;
+  animation: chipPopIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .task-chip:hover {
-  background: linear-gradient(135deg, rgba(248, 249, 250, 0.9) 0%, rgba(255, 255, 255, 0.95) 100%);
-  border-color: rgba(33, 150, 243, 0.2);
-  transform: translateY(-2px) scale(1.01);
-  box-shadow: 
-    0 4px 12px rgba(33, 150, 243, 0.1),
-    0 2px 4px rgba(33, 150, 243, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8);
-}
-
-.task-chip:hover::before {
-  opacity: 0.15;
-}
-
-.task-chip:hover::after {
-  left: 100%;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(16, 163, 127, 0.2);
+  background: rgba(16, 163, 127, 0.1);
 }
 
 .task-chip.status-pending {
-  background: #f8f8f8;
-  border-color: #d1d1d1;
-  color: #666;
+  background: rgba(16, 163, 127, 0.05);
+  border-color: #10a37f;
+  color: #1d2129;
 }
 
 .task-chip.status-running {
-  background: linear-gradient(135deg, rgba(227, 242, 253, 0.7) 0%, rgba(187, 222, 251, 0.6) 50%, rgba(144, 202, 249, 0.5) 100%);
-  border-color: rgba(33, 150, 243, 0.4);
-  color: rgba(13, 71, 161, 0.75);
-  animation: statusPulse 3s ease-in-out infinite;
-  box-shadow: 
-    0 0 0 0 rgba(33, 150, 243, 0.2),
-    0 2px 6px rgba(33, 150, 243, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.4);
-  font-weight: 500;
-  opacity: 0.85;
+  background: rgba(16, 163, 127, 0.1);
+  border-color: #10a37f;
+  color: #1d2129;
+  box-shadow: 0 2px 6px rgba(16, 163, 127, 0.2);
 }
 
 .task-chip.status-done {
-  background: linear-gradient(135deg, rgba(232, 245, 233, 0.7) 0%, rgba(200, 230, 201, 0.6) 50%, rgba(165, 214, 167, 0.5) 100%);
-  border-color: rgba(76, 175, 80, 0.4);
-  color: rgba(27, 94, 32, 0.75);
-  animation: statusSuccess 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-  box-shadow: 
-    0 2px 8px rgba(76, 175, 80, 0.15),
-    0 1px 3px rgba(76, 175, 80, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.5);
-  font-weight: 500;
-  position: relative;
-  opacity: 0.85;
+  background: rgba(16, 163, 127, 0.1);
+  border-color: #10a37f;
+  color: #1d2129;
+  box-shadow: 0 2px 6px rgba(16, 163, 127, 0.2);
 }
 
-/* 移除绿色对勾点 */
-
 .task-chip.status-failed {
-  background: linear-gradient(135deg, rgba(255, 235, 238, 0.7) 0%, rgba(255, 205, 210, 0.6) 50%, rgba(239, 154, 154, 0.5) 100%);
-  border-color: rgba(244, 67, 54, 0.4);
-  color: rgba(183, 28, 28, 0.75);
-  animation: statusShake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97);
-  box-shadow: 
-    0 2px 8px rgba(244, 67, 54, 0.15),
-    0 1px 3px rgba(244, 67, 54, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.5);
-  font-weight: 500;
-  opacity: 0.85;
+  background: rgba(16, 163, 127, 0.05);
+  border-color: #10a37f;
+  color: #1d2129;
+  box-shadow: 0 2px 6px rgba(16, 163, 127, 0.15);
 }
 
 .chip-spinner {
@@ -1472,16 +1384,13 @@ onBeforeUnmount(() => {
 }
 
 @keyframes taskBoxSlideIn {
-  0% {
+  from {
     opacity: 0;
-    transform: translateY(-20px) scale(0.9) rotate(-1deg);
+    transform: translateY(10px);
   }
-  50% {
-    transform: translateY(-3px) scale(1.02) rotate(0.5deg);
-  }
-  100% {
+  to {
     opacity: 1;
-    transform: translateY(0) scale(1) rotate(0deg);
+    transform: translateY(0);
   }
 }
 
