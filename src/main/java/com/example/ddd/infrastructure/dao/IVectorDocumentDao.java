@@ -115,6 +115,25 @@ public class IVectorDocumentDao {
     }
 
     /**
+     * 根据embeddingId（String）查询向量文档
+     */
+    public VectorDocumentPO queryByEmbeddingId(DSLContext dslContext, String embeddingId) {
+        String sql = "SELECT * FROM vector_document WHERE embedding_id = ?::uuid";
+        
+        try (Connection connection = dslContext.configuration().connectionProvider().acquire()) {
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ps.setString(1, embeddingId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return mapResultSetToPO(rs);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("根据embeddingId查询向量文档失败", e);
+        }
+        return null;
+    }
+
+    /**
      * 根据RAG ID查询所有向量文档
      */
     public List<VectorDocumentPO> queryByRagId(DSLContext dslContext, Long ragId) {

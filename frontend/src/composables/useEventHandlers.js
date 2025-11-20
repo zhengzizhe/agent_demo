@@ -103,7 +103,7 @@ export function useEventHandlers(messagesManager) {
           // 如果最后一条消息不是 streaming 状态，说明是第一次 streaming，覆盖内容
           // 如果已经是 streaming 状态，说明是后续的 streaming，追加内容
           if (lastMessage && lastMessage.role === 'assistant' && lastMessage.streaming) {
-            // 已经是 streaming 状态，追加内容
+            // 已经是 streaming 状态，追加内容（使用优化的批量更新）
             messagesManager.appendToLastAssistantMessage(event.content)
           } else {
             // 第一次 streaming，覆盖内容（包括规划完成的 message）

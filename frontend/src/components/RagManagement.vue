@@ -139,7 +139,7 @@
 
         <!-- 知识图谱视图 -->
         <div v-if="currentView === 'knowledge-graph'" class="kb-content kg-content-full">
-          <KnowledgeGraph />
+          <KnowledgeGraph :ragId="selectedRagId" />
         </div>
 
         <!-- 文档列表 -->

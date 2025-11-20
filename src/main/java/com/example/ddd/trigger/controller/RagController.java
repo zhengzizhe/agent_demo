@@ -244,6 +244,60 @@ public class RagController {
     }
 
     /**
+     * 根据RAG ID获取文档及其关联实体列表
+     *
+     * @param ragId RAG ID
+     * @return 文档列表，每个文档包含docId和关联的实体列表
+     */
+    @Get("/{ragId}/documents/kg")
+    public Map<String, Object> getDocsWithEntitiesByRagId(@PathVariable Long ragId) {
+        List<Map<String, Object>> docs = ragService.getDocsWithEntitiesByRagId(ragId);
+        return Map.of(
+                "success", true,
+                "ragId", ragId,
+                "docs", docs,
+                "count", docs.size()
+        );
+    }
+
+    /**
+     * 根据文档ID获取关联的实体和句子
+     *
+     * @param docId 文档ID
+     * @return 实体列表，包含实体ID、名称、类型和句子
+     */
+    @Get("/kg/doc/{docId}/entities")
+    public Map<String, Object> getEntitiesByDocId(@PathVariable String docId) {
+        List<Map<String, Object>> entities = ragService.getEntitiesByDocId(docId);
+        return Map.of(
+                "success", true,
+                "docId", docId,
+                "entities", entities,
+                "count", entities.size()
+        );
+    }
+
+    /**
+     * 根据实体ID和文档ID查询该实体在该文档中的实体关系图谱
+     *
+     * @param entityId 实体ID
+     * @param docId 文档ID
+     * @return 包含节点和边的图谱数据
+     */
+    @Get("/kg/doc/{docId}/entity/{entityId}/graph")
+    public Map<String, Object> getEntityGraphInDoc(
+            @PathVariable String docId,
+            @PathVariable Long entityId) {
+        Map<String, Object> graphData = ragService.getEntityGraphInDoc(entityId, docId);
+        return Map.of(
+                "success", true,
+                "docId", docId,
+                "entityId", entityId,
+                "graph", graphData
+        );
+    }
+
+    /**
      * 健康检查
      *
      * @return 健康状态

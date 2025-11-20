@@ -37,48 +37,69 @@ export function useMessages() {
   }
 
   /**
-   * 更新最后一条助手消息
+   * 更新最后一条助手消息（优化版本：减少数组重建，但确保响应式更新）
    */
   const updateLastAssistantMessage = (content, streaming = false) => {
     const lastMessage = messages.value[messages.value.length - 1]
     if (lastMessage && lastMessage.role === 'assistant') {
-      // 创建新消息对象以确保响应式更新，同时保留 tasks
-      const newMessages = messages.value.map((msg, idx) => {
-        if (idx === messages.value.length - 1 && msg.role === 'assistant') {
-          return {
-            ...msg,
-            content: String(content || ''),
-            streaming: streaming,
-            tasks: msg.tasks ? [...msg.tasks] : [] // 保留并复制 tasks 数组
-          }
-        }
-        return msg
+      // 使用 Object.assign 确保响应式更新
+      Object.assign(lastMessage, {
+        content: String(content || ''),
+        streaming: streaming
       })
-      messages.value = newMessages
     } else {
       addAssistantMessage(content, streaming)
     }
   }
 
   /**
-   * 追加到最后一条助手消息
+   * 追加到最后一条助手消息（优化版本：使用批量更新，但确保响应式）
    */
+  let appendBuffer = ''
+  let appendTimer = null
+  let lastMessageRef = null
+  
   const appendToLastAssistantMessage = (content) => {
     const lastMessage = messages.value[messages.value.length - 1]
     if (lastMessage && lastMessage.role === 'assistant') {
-      // 创建新消息对象以确保响应式更新，同时保留 tasks
-      const newMessages = messages.value.map((msg, idx) => {
-        if (idx === messages.value.length - 1 && msg.role === 'assistant') {
-          return {
-            ...msg,
-            content: (msg.content || '') + String(content || ''),
-            tasks: msg.tasks ? [...msg.tasks] : [] // 保留并复制 tasks 数组
-          }
+      // 如果消息对象变化了，先处理之前的缓冲区
+      if (lastMessageRef && lastMessageRef !== lastMessage && appendBuffer) {
+        Object.assign(lastMessageRef, {
+          content: (lastMessageRef.content || '') + appendBuffer
+        })
+        appendBuffer = ''
+      }
+      
+      lastMessageRef = lastMessage
+      
+      // 累积内容到缓冲区
+      appendBuffer += String(content || '')
+      
+      // 清除之前的定时器
+      if (appendTimer) {
+        cancelAnimationFrame(appendTimer)
+      }
+      
+      // 使用 requestAnimationFrame 批量更新，减少重渲染次数
+      appendTimer = requestAnimationFrame(() => {
+        const currentLastMessage = messages.value[messages.value.length - 1]
+        if (appendBuffer && currentLastMessage && currentLastMessage.role === 'assistant') {
+          // 使用 Object.assign 确保响应式更新
+          Object.assign(currentLastMessage, {
+            content: (currentLastMessage.content || '') + appendBuffer
+          })
+          appendBuffer = ''
         }
-        return msg
+        appendTimer = null
       })
-      messages.value = newMessages
     } else {
+      // 如果消息不存在，先处理缓冲区
+      if (appendBuffer && lastMessageRef) {
+        Object.assign(lastMessageRef, {
+          content: (lastMessageRef.content || '') + appendBuffer
+        })
+        appendBuffer = ''
+      }
       addAssistantMessage(content)
     }
   }

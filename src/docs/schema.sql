@@ -215,6 +215,54 @@ CREATE TABLE IF NOT EXISTS public.agent_memory
 );
 
 -- ========================
+-- 14. 知识图谱实体表
+-- ========================
+CREATE TABLE IF NOT EXISTS public.kg_entity
+(
+    id          BIGSERIAL PRIMARY KEY,
+    name        TEXT NOT NULL,
+    type        TEXT NOT NULL,
+    description TEXT,
+    embedding   VECTOR(1536),
+    created_at  BIGINT DEFAULT (EXTRACT(EPOCH FROM CURRENT_TIMESTAMP))::BIGINT,
+    updated_at  BIGINT DEFAULT (EXTRACT(EPOCH FROM CURRENT_TIMESTAMP))::BIGINT
+);
+
+-- ========================
+-- 15. 文档表
+-- ========================
+CREATE TABLE IF NOT EXISTS public.doc
+(
+    id          VARCHAR(32) PRIMARY KEY,
+    name        VARCHAR(32),
+    owner       VARCHAR(32),
+    text        TEXT,
+    type        INTEGER
+);
+
+-- ========================
+-- 16. 文档-知识图谱实体关联表
+-- ========================
+CREATE TABLE IF NOT EXISTS public.doc_kg_entity
+(
+    doc_id      VARCHAR(32) NOT NULL,
+    kg_entity_id BIGINT NOT NULL,
+    created_at  BIGINT DEFAULT (EXTRACT(EPOCH FROM CURRENT_TIMESTAMP))::BIGINT,
+    CONSTRAINT pk_doc_kg_entity PRIMARY KEY (doc_id, kg_entity_id)
+);
+
+-- ========================
+-- 17. RAG-文档关联表
+-- ========================
+CREATE TABLE IF NOT EXISTS public.rag_doc
+(
+    rag_id     BIGINT NOT NULL,
+    doc_id     VARCHAR(32) NOT NULL,
+    created_at BIGINT DEFAULT (EXTRACT(EPOCH FROM CURRENT_TIMESTAMP))::BIGINT,
+    CONSTRAINT pk_rag_doc PRIMARY KEY (rag_id, doc_id)
+);
+
+-- ========================
 -- 初始数据
 -- ========================
 

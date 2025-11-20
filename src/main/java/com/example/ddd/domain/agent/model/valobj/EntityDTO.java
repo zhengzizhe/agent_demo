@@ -4,6 +4,8 @@ import io.micronaut.serde.annotation.Serdeable;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.List;
+
 @Serdeable
 @Getter
 @Setter
@@ -17,6 +19,9 @@ public class EntityDTO {
 
     // description: 实体简短描述
     private String description;
+
+    // sentences: 实体在文档中出现的句子列表（用于文档-实体关系）
+    private List<String> sentences;
 
     public EntityDTO() {
     }

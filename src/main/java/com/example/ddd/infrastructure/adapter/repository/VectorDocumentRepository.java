@@ -73,6 +73,14 @@ public class VectorDocumentRepository implements IVectorDocumentRepository {
         return vectorDocumentDao.deleteById(dslContext, embeddingId);
     }
 
+    /**
+     * 根据embeddingId查询向量文档
+     */
+    public VectorDocumentEntity queryByEmbeddingId(DSLContext dslContext, String embeddingId) {
+        VectorDocumentPO po = vectorDocumentDao.queryByEmbeddingId(dslContext, embeddingId);
+        return po != null ? convertToEntity(po) : null;
+    }
+
     // 转换方法
     private VectorDocumentPO convertToPO(VectorDocumentEntity entity) {
         if (entity == null) return null;

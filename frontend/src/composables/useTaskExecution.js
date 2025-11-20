@@ -108,6 +108,7 @@ export function useTaskExecution(messagesManager, eventHandlers, formRef, messag
           }
         }
 
+        // 减少滚动频率，只在必要时滚动
         scrollToBottom()
         return readStream()
       })
@@ -117,52 +118,68 @@ export function useTaskExecution(messagesManager, eventHandlers, formRef, messag
   }
 
   /**
-   * 滚动到底部（平滑滚动）
+   * 滚动到底部（优化版本，减少滚动频率）
    */
   let scrollTimer = null
   let lastScrollTime = 0
-  let isFirstScroll = true // 标记是否是首次滚动
+  let isFirstScroll = true
+  let rafId = null
+  let pendingScroll = false
   
   const scrollToBottom = (immediate = false) => {
-    nextTick(() => {
-      if (messagesContainerRef && messagesContainerRef.value) {
-        const container = messagesContainerRef.value
-        
-        // 清除之前的定时器（防抖）
-        if (scrollTimer) {
-          clearTimeout(scrollTimer)
-        }
-        
-        // 首次滚动使用立即执行，避免延迟
-        const delay = (immediate || isFirstScroll) ? 0 : 50
-        
-        scrollTimer = setTimeout(() => {
-          // 使用 requestAnimationFrame 确保 DOM 更新后再滚动
-          requestAnimationFrame(() => {
-            const now = Date.now()
-            
-            // 首次滚动使用 auto，避免动画计算导致的卡顿
-            if (isFirstScroll) {
-              container.scrollTop = container.scrollHeight
-              isFirstScroll = false
-              lastScrollTime = now
-              return
-            }
-            
-            // 如果距离上次滚动时间太短，使用平滑滚动；否则可以稍微快一点
-            const timeSinceLastScroll = now - lastScrollTime
-            const useSmooth = timeSinceLastScroll > 100 || !immediate
-            
-            container.scrollTo({
-              top: container.scrollHeight,
-              behavior: useSmooth ? 'smooth' : 'auto'
-            })
-            
-            lastScrollTime = now
-          })
-        }, delay)
+    if (messagesContainerRef && messagesContainerRef.value) {
+      const container = messagesContainerRef.value
+      
+      // 清除之前的定时器和动画帧
+      if (scrollTimer) {
+        clearTimeout(scrollTimer)
+        scrollTimer = null
       }
-    })
+      if (rafId) {
+        cancelAnimationFrame(rafId)
+        rafId = null
+      }
+      
+      // 立即滚动模式（用户发送消息时）
+      if (immediate) {
+        rafId = requestAnimationFrame(() => {
+          container.scrollTop = container.scrollHeight
+          lastScrollTime = Date.now()
+          isFirstScroll = false
+          rafId = null
+        })
+        return
+      }
+      
+      // 流式输出时的滚动：使用节流，减少滚动频率
+      pendingScroll = true
+      const now = Date.now()
+      const timeSinceLastScroll = now - lastScrollTime
+      
+      // 如果距离上次滚动超过 100ms，立即滚动；否则延迟滚动
+      if (timeSinceLastScroll > 100) {
+        rafId = requestAnimationFrame(() => {
+          if (pendingScroll) {
+            container.scrollTop = container.scrollHeight
+            lastScrollTime = Date.now()
+            pendingScroll = false
+          }
+          rafId = null
+        })
+      } else {
+        scrollTimer = setTimeout(() => {
+          rafId = requestAnimationFrame(() => {
+            if (pendingScroll) {
+              container.scrollTop = container.scrollHeight
+              lastScrollTime = Date.now()
+              pendingScroll = false
+            }
+            rafId = null
+          })
+          scrollTimer = null
+        }, 50) // 50ms 节流
+      }
+    }
   }
 
   return {

@@ -90,14 +90,14 @@ onMounted(() => {
   })
 })
 
-// 监听消息内容变化，重新初始化代码块交互
-watch(() => props.message, () => {
+// 监听消息内容变化，重新初始化代码块交互（优化：只在内容或streaming状态变化时触发）
+watch(() => [props.message.content, props.message.streaming], () => {
   nextTick(() => {
     initCodeBlockInteractions()
   })
-}, { deep: true })
+}, { flush: 'post' })
 
-// 格式化消息内容
+// 格式化消息内容（优化：减少不必要的重新渲染）
 const formattedContent = computed(() => {
   if (!md) {
     md = createMarkdownRenderer()
