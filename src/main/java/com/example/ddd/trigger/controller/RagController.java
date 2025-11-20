@@ -24,6 +24,7 @@ import java.util.Map;
 public class RagController {
     @Inject
     private RagService ragService;
+
     /**
      * 添加文档到RAG知识库
      *
@@ -32,7 +33,6 @@ public class RagController {
      * @return 添加结果
      */
     @Post("/{ragId}/documents")
-    @Status(HttpStatus.CREATED)
     public Map<String, Object> addDocument(@PathVariable Long ragId, @Body RagAddDocumentRequest request) {
         int documentCount = ragService.addDocument(
                 ragId,
@@ -55,7 +55,6 @@ public class RagController {
      * @return 导入结果
      */
     @Post(value = "/{ragId}/documents/upload", consumes = "multipart/form-data", produces = "application/json")
-    @Status(HttpStatus.CREATED)
     public Map<String, Object> uploadFile(
             @PathVariable Long ragId,
             @Part("file") CompletedFileUpload file) {
@@ -67,7 +66,6 @@ public class RagController {
                         "message", "文件不能为空"
                 );
             }
-
             String contentType = file.getContentType().map(ct -> ct.toString()).orElse("application/octet-stream");
             String fileName = file.getFilename();
             log.info("上传文件: ragId={}, fileName={}, contentType={}, size={}", ragId, fileName, contentType, file.getSize());
@@ -78,14 +76,12 @@ public class RagController {
             metadata.put("contentType", contentType);
             metadata.put("fileSize", file.getSize());
             metadata.put("source", "file_upload");
-
             // 添加到RAG
             int documentCount = ragService.addDocument(
                     ragId,
                     fileContent,
                     metadata
             );
-
             return Map.of(
                     "success", true,
                     "ragId", ragId,
@@ -93,7 +89,6 @@ public class RagController {
                     "documentCount", documentCount,
                     "message", "文件导入成功"
             );
-
         } catch (IOException e) {
             log.error("文件上传处理失败", e);
             return Map.of(
@@ -176,6 +171,75 @@ public class RagController {
                 "embeddingId", embeddingId,
                 "deletedCount", deletedCount,
                 "message", "文档删除成功"
+        );
+    }
+
+
+    @Post("/{ragId}/documents/import")
+    public Map<String, Object> importDocument(
+            @PathVariable Long ragId,
+            @Body Map<String, String> request) {
+        String docId = request.get("docId");
+
+        ragService.importDocument(
+                ragId,
+                docId
+        );
+
+        return Map.of(
+                "success", true,
+                "ragId", ragId,
+                "docId", docId != null ? docId : "",
+                "message", "文档导入成功"
+        );
+    }
+
+    /**
+     * KG知识图谱搜索
+     *
+     * @param queryText 查询文本
+     * @param limit 向量匹配返回数量（默认10）
+     * @param similarityThreshold 相似度阈值（默认0.6）
+     * @param maxDepth Neo4j查询深度（默认1）
+     * @return 图谱数据（包含节点和边）
+     */
+    @Post("/kg/search")
+    public Map<String, Object> searchKnowledgeGraph(
+            @Body Map<String, Object> request) {
+        String queryText = (String) request.get("queryText");
+        Integer limit = request.get("limit") != null ? (Integer) request.get("limit") : 10;
+        Double similarityThreshold = request.get("similarityThreshold") != null ? 
+                ((Number) request.get("similarityThreshold")).doubleValue() : 0.6;
+        Integer maxDepth = request.get("maxDepth") != null ? (Integer) request.get("maxDepth") : 1;
+        
+        Map<String, Object> graphData = ragService.searchKnowledgeGraph(
+                queryText,
+                limit,
+                similarityThreshold,
+                maxDepth
+        );
+        
+        return Map.of(
+                "success", true,
+                "queryText", queryText != null ? queryText : "",
+                "graph", graphData
+        );
+    }
+
+    /**
+     * 获取全部知识图谱
+     *
+     * @param maxDepth Neo4j查询深度（默认1）
+     * @return 图谱数据（包含节点和边）
+     */
+    @Get("/kg/all")
+    public Map<String, Object> getAllKnowledgeGraph(
+            @QueryValue(value = "maxDepth", defaultValue = "1") Integer maxDepth) {
+        Map<String, Object> graphData = ragService.getAllKnowledgeGraph(maxDepth);
+        
+        return Map.of(
+                "success", true,
+                "graph", graphData
         );
     }
 

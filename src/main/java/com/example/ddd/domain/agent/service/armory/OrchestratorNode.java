@@ -50,7 +50,7 @@ public class OrchestratorNode extends AbstractArmorySupport {
                 log.warn("多agent构建中 orchestratorId={} 没有Worker节点，无法构建Orchestrator", orchestratorId);
                 return router(armoryCommandEntity, dynamicContext);
             }
-            Orchestrator orchestrator = new Orchestrator(orchestratorId,supervisorNode, workerNodes);
+            Orchestrator orchestrator = new Orchestrator(orchestratorId, supervisorNode, workerNodes);
             beanUtil.registerOrchestrator(orchestratorId, orchestrator);
             log.info("多agent构建中 Orchestrator构建成功: orchestratorId={}, supervisor={}, workers={}",
                     orchestratorId, supervisorNode.getRole(), workerNodes.size());

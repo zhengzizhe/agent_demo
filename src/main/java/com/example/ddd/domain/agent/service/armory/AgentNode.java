@@ -29,6 +29,8 @@ import static com.example.ddd.common.constant.IAgentConstant.*;
 public class AgentNode extends AbstractArmorySupport {
     @Inject
     BeanUtil beanUtil;
+    @Inject
+    private OrchestratorNode orchestratorNode;
 
     @Override
     public String handle(ArmoryCommandEntity armoryCommandEntity, DynamicContext dynamicContext) {
@@ -219,9 +221,6 @@ public class AgentNode extends AbstractArmorySupport {
     private ToolProvider createMcpToolProvider(List<McpClient> mcpClients) {
         return request -> McpToolProvider.builder().mcpClients(mcpClients).build().provideTools(request);
     }
-
-    @Inject
-    private OrchestratorNode orchestratorNode;
 
     @Override
     public ILogicHandler<ArmoryCommandEntity, DynamicContext, String> getNextHandler() {

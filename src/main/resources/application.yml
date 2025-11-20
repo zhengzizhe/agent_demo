@@ -61,3 +61,9 @@ openai:
     url: https://api.bianxie.ai/v1
     key: sk-LjKtJWPQJI73Cxl3Qa373SUzshCQWaR7JBJVFMQbUnIOEEkZ
     model: gpt-4o
+
+# Neo4j配置
+neo4j:
+  uri: bolt://localhost:7687
+  username: neo4j
+  password: neo4j123

@@ -32,15 +32,16 @@ public interface IVectorDocumentRepository {
 
     /**
      * 向量相似度搜索
-     * @param ragId RAG ID
-     * @param queryEmbedding 查询向量
-     * @param limit 返回结果数量限制
+     *
+     * @param ragId               RAG ID
+     * @param queryEmbedding      查询向量
+     * @param limit               返回结果数量限制
      * @param similarityThreshold 相似度阈值（0-1之间）
      * @return 相似文档列表，按相似度降序排列
      */
-    List<VectorDocumentEntity> similaritySearch(DSLContext dslContext, Long ragId, 
-                                                 float[] queryEmbedding, int limit, 
-                                                 double similarityThreshold);
+    List<VectorDocumentEntity> similaritySearch(DSLContext dslContext, Long ragId,
+                                                float[] queryEmbedding, int limit,
+                                                double similarityThreshold);
 
     /**
      * 根据RAG ID删除所有向量文档

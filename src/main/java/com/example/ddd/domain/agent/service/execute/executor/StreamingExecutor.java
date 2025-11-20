@@ -28,10 +28,8 @@ public class StreamingExecutor extends BaseTaskExecutor {
     public StreamingExecutor(Task task, ServiceNode serviceNode, UserContext userContext) {
         super(task, serviceNode, userContext);
     }
-
     @Override
     public Map<String, Object> apply(WorkspaceState state) {
-
         log.info("流式输出执行器执行任务: taskId={}, title={}", task.getId(), task.getTitle());
         UserContext userContext = getUserContext();
         if (userContext != null) {
@@ -56,7 +54,6 @@ public class StreamingExecutor extends BaseTaskExecutor {
             }
             throw new IllegalStateException("ServiceNode的AiService为空: taskId=" + task.getId());
         }
-
         try {
             TokenStream tokenStream = aiService.chat(JSON.toJSON(taskInput));
             StringBuilder resultBuilder = new StringBuilder();
@@ -119,24 +116,19 @@ public class StreamingExecutor extends BaseTaskExecutor {
             String result = resultBuilder.toString();
             Map<String, Object> stateUpdate = saveTaskResult(state, result);
             log.info("流式输出执行器完成: taskId={}, resultLength={}", task.getId(), result.length());
-            
             // 保存对话到 InMemory（用户输入和最终回答）
             if (userContext != null && userContext.getUserId() != null && userContext.getSessionId() != null) {
-                com.example.ddd.domain.agent.service.execute.memory.InMemory memory = 
+                com.example.ddd.domain.agent.service.execute.memory.InMemory memory =
                         com.example.ddd.domain.agent.service.execute.memory.InMemory.getInstance();
-                
-                // 获取用户输入
                 String userInput = getUserInput(state);
                 if (userInput != null && !userInput.trim().isEmpty()) {
                     memory.addMessage(userContext.getUserId(), userContext.getSessionId(), "USER", userInput);
                 }
-                
                 // 保存最终回答
                 if (result != null && !result.trim().isEmpty()) {
                     memory.addMessage(userContext.getUserId(), userContext.getSessionId(), "ASSISTANT", result);
                 }
             }
-            
             return stateUpdate;
         } catch (Exception e) {
             log.error("流式输出执行器运行时异常: taskId={}, error={}", task.getId(), e.getMessage(), e);

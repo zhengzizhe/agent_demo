@@ -10,8 +10,8 @@ public interface AiService {
 
     /**
      * 聊天方法（带额外的systemPrompt，会与配置的systemPrompt拼接）
-     * 
-     * @param user 用户输入
+     *
+     * @param user              用户输入
      * @param extraSystemPrompt 额外的系统提示词（会与配置的systemPrompt拼接）
      */
     TokenStream chat(String user, String extraSystemPrompt);

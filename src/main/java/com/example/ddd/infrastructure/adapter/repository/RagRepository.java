@@ -11,11 +11,10 @@ import org.jooq.DSLContext;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
-import static org.jooq.impl.DSL.table;
-import static org.jooq.impl.DSL.field;
+import static com.example.jooq.tables.AgentRag.AGENT_RAG;
+import static com.example.jooq.tables.OrchestratorAgent.ORCHESTRATOR_AGENT;
 
 /**
  * Rag仓储实现
@@ -56,13 +55,10 @@ public class RagRepository implements IRagRepository {
     @Override
     public List<RagEntity> queryByAgentId(DSLContext dslContext, Long agentId) {
         // 直接通过agentId查询agent_rag关联表
-        List<Long> ragIds = dslContext.select(field("rag_id"))
-                .from(table("agent_rag"))
-                .where(field("agent_id").eq(agentId))
-                .fetch()
-                .stream()
-                .map(record -> (Long) record.get("rag_id"))
-                .collect(Collectors.toList());
+        List<Long> ragIds = dslContext.select(AGENT_RAG.RAG_ID)
+                .from(AGENT_RAG)
+                .where(AGENT_RAG.AGENT_ID.eq(agentId))
+                .fetchInto(Long.class);
         
         if (ragIds.isEmpty()) {
             return new ArrayList<>();
@@ -88,13 +84,10 @@ public class RagRepository implements IRagRepository {
     @Override
     public List<RagEntity> queryByOrchestratorId(DSLContext dslContext, Long orchestratorId) {
         // 先查询orchestrator关联的agent IDs
-        List<Long> agentIds = dslContext.select(field("agent_id"))
-                .from(table("orchestrator_agent"))
-                .where(field("orchestrator_id").eq(orchestratorId))
-                .fetch()
-                .stream()
-                .map(record -> (Long) record.get("agent_id"))
-                .collect(Collectors.toList());
+        List<Long> agentIds = dslContext.select(ORCHESTRATOR_AGENT.AGENT_ID)
+                .from(ORCHESTRATOR_AGENT)
+                .where(ORCHESTRATOR_AGENT.ORCHESTRATOR_ID.eq(orchestratorId))
+                .fetchInto(Long.class);
         
         if (agentIds.isEmpty()) {
             return new ArrayList<>();

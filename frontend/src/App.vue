@@ -115,20 +115,10 @@
 
                   <!-- 消息列表 -->
                   <template v-for="(msg, index) in messages" :key="`msg-${index}-${msg.timestamp?.getTime() || index}`">
-                    <!-- 任务列表（先显示任务列表） -->
-                    <TaskList 
-                      v-if="msg.role === 'assistant' && msg.tasks && Array.isArray(msg.tasks) && msg.tasks.length > 0" 
-                      :key="`tasklist-${index}-${msg.tasks?.length || 0}-${msg.tasks?.map(t => t.id).join('-') || index}-${msg.timestamp?.getTime() || index}`"
-                      :tasks="msg.tasks"
-                      :animation-delay="index * 0.08"
-                    />
-
-                    <!-- 消息内容（在任务列表之后显示，如果有任务列表则延迟显示） -->
+                    <!-- 消息内容 -->
                     <MessageItem 
                       :message="msg"
-                      :animation-delay="msg.role === 'assistant' && msg.tasks && Array.isArray(msg.tasks) && msg.tasks.length > 0 
-                        ? index * 0.08 + 0.3 
-                        : index * 0.08"
+                      :animation-delay="index * 0.08"
                     />
 
                     <!-- 用户消息后的等待动画（三个点跳动） -->
@@ -227,7 +217,6 @@
 
 <script setup>
 import { reactive, ref, computed, watch, nextTick } from 'vue'
-import TaskList from './components/TaskList.vue'
 import MessageItem from './components/MessageItem.vue'
 import InputArea from './components/InputArea.vue'
 import RagManagement from './components/RagManagement.vue'
@@ -443,6 +432,9 @@ const canSend = computed(() => {
   flex-direction: column;
   overflow: hidden;
   background: var(--theme-background, #ffffff);
+  margin: 8px;
+  border: 1px solid rgba(229, 231, 235, 0.4);
+  border-radius: 12px;
 }
 
 /* 内容区域 */
@@ -595,7 +587,7 @@ const canSend = computed(() => {
 .dialog-messages {
   flex: 1;
   overflow-y: auto;
-  padding: 48px 120px;
+  padding: 40px 100px;
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -606,6 +598,7 @@ const canSend = computed(() => {
   position: relative;
   min-height: 0;
   align-items: flex-start; /* 确保消息左对齐 */
+  border-radius: 12px;
 }
 
 /* 当有消息时，恢复正常的消息布局 */
@@ -620,46 +613,6 @@ const canSend = computed(() => {
 
 .dialog-messages > * {
   flex-shrink: 0;
-}
-
-/* 当任务列表后面跟着消息时，调整消息气泡的样式，形成一体效果 */
-.dialog-messages > .message-task-box + .message.assistant {
-  margin-top: 0; /* 移除顶部间距 */
-}
-
-.dialog-messages > .message-task-box + .message.assistant .message-card {
-  border-radius: 0 0 14px 14px; /* 只有底部圆角，顶部直角，与任务列表连接 */
-  border-top: none; /* 移除顶部边框，与任务列表无缝连接 */
-  box-shadow: 
-    0 4px 16px rgba(0, 0, 0, 0.08),
-    0 2px 4px rgba(0, 0, 0, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.02); /* 统一阴影效果，与任务列表一致 */
-  margin-top: 0;
-  background: var(--theme-background, #ffffff); /* 使用主题背景色 */
-}
-
-.dialog-messages > .message-task-box + .message.assistant .message-text {
-  border-radius: 0 0 14px 14px; /* 文本区域也使用相同的圆角 */
-  background: var(--theme-background, #ffffff); /* 使用主题背景色 */
-}
-
-/* 添加连接过渡效果 - 微妙的连接线 */
-.dialog-messages > .message-task-box + .message.assistant .message-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, 
-    transparent 0%, 
-    rgba(0, 0, 0, 0.04) 20%, 
-    rgba(0, 0, 0, 0.06) 50%, 
-    rgba(0, 0, 0, 0.04) 80%, 
-    transparent 100%);
-  pointer-events: none;
-  z-index: 1;
 }
 
 .welcome-container {

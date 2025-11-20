@@ -9,7 +9,6 @@ import com.example.ddd.domain.agent.model.entity.ChatModelEntity;
 import com.example.ddd.domain.agent.model.entity.McpEntity;
 import com.example.ddd.domain.agent.model.entity.RagEntity;
 import com.example.ddd.domain.agent.service.execute.role.AgentRole;
-import com.example.ddd.infrastructure.dao.IClientDao;
 import com.example.ddd.infrastructure.dao.po.AgentPO;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
@@ -19,11 +18,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
-import static org.jooq.impl.DSL.field;
-import static org.jooq.impl.DSL.table;
 import static com.example.jooq.tables.Agent.AGENT;
+import static com.example.jooq.tables.OrchestratorAgent.ORCHESTRATOR_AGENT;
 
 /**
  * Agent仓储实现（原Client仓储）
@@ -31,8 +28,6 @@ import static com.example.jooq.tables.Agent.AGENT;
 @Singleton
 public class AgentRepository implements IAgentRepository {
 
-    @Inject
-    private IClientDao clientDao;
     @Inject
     private IChatModelRepository chatModelRepository;
     @Inject
@@ -43,18 +38,14 @@ public class AgentRepository implements IAgentRepository {
     @Override
     public List<AgentEntity> queryByOrchestratorId(DSLContext dslContext, Long orchestratorId) {
         // 先查询orchestrator关联的agent IDs
-        List<Long> agentIds = dslContext.select(field("agent_id"))
-                .from(table("orchestrator_agent"))
-                .where(field("orchestrator_id").eq(orchestratorId))
-                .fetch()
-                .stream()
-                .map(record -> (Long) record.get("agent_id"))
-                .collect(Collectors.toList());
+        List<Long> agentIds = dslContext.select(ORCHESTRATOR_AGENT.AGENT_ID)
+                .from(ORCHESTRATOR_AGENT)
+                .where(ORCHESTRATOR_AGENT.ORCHESTRATOR_ID.eq(orchestratorId))
+                .fetchInto(Long.class);
 
         if (agentIds.isEmpty()) {
             return new ArrayList<>();
         }
-
         // 查询这些agent IDs对应的Agent实体，同时查询role和system_prompt
         List<AgentEntity> agents = new ArrayList<>();
         for (Long agentId : agentIds) {
@@ -66,13 +57,13 @@ public class AgentRepository implements IAgentRepository {
                     AGENT.STATUS,
                     AGENT.CREATED_AT,
                     AGENT.UPDATED_AT,
-                    field("system_prompt", String.class),
-                    field("role", Long.class).as("agent_role")
+                    AGENT.SYSTEM_PROMPT,
+                    ORCHESTRATOR_AGENT.ROLE.as("agent_role")
             )
             .from(AGENT)
-            .leftJoin(table("orchestrator_agent"))
-                .on(field("orchestrator_agent.agent_id").eq(AGENT.ID))
-                .and(field("orchestrator_agent.orchestrator_id").eq(orchestratorId))
+            .leftJoin(ORCHESTRATOR_AGENT)
+                .on(ORCHESTRATOR_AGENT.AGENT_ID.eq(AGENT.ID))
+                .and(ORCHESTRATOR_AGENT.ORCHESTRATOR_ID.eq(orchestratorId))
             .where(AGENT.ID.eq(agentId))
             .fetchOne();
             
@@ -87,8 +78,8 @@ public class AgentRepository implements IAgentRepository {
                 
                 AgentEntity entity = convertToEntity(agentPO);
                 entity.setOrchestratorId(orchestratorId);
-                // 设置 system_prompt（如果 jOOQ 已生成该字段，否则从 result 获取）
-                String systemPrompt = result.get("system_prompt", String.class);
+                // 设置 system_prompt
+                String systemPrompt = result.get(AGENT.SYSTEM_PROMPT);
                 if (systemPrompt != null) {
                     entity.setSystemPrompt(systemPrompt);
                 }
@@ -107,13 +98,10 @@ public class AgentRepository implements IAgentRepository {
     @Override
     public Map<Long, ChatModelEntity> queryModelMapByOrchestratorId(DSLContext dslContext, Long orchestratorId) {
         // 先查询orchestrator关联的agent IDs
-        List<Long> agentIds = dslContext.select(field("agent_id"))
-                .from(table("orchestrator_agent"))
-                .where(field("orchestrator_id").eq(orchestratorId))
-                .fetch()
-                .stream()
-                .map(record -> (Long) record.get("agent_id"))
-                .collect(Collectors.toList());
+        List<Long> agentIds = dslContext.select(ORCHESTRATOR_AGENT.AGENT_ID)
+                .from(ORCHESTRATOR_AGENT)
+                .where(ORCHESTRATOR_AGENT.ORCHESTRATOR_ID.eq(orchestratorId))
+                .fetchInto(Long.class);
 
         if (agentIds.isEmpty()) {
             return new HashMap<>();
@@ -135,13 +123,10 @@ public class AgentRepository implements IAgentRepository {
     @Override
     public Map<Long, List<RagEntity>> queryRagMapByOrchestratorId(DSLContext dslContext, Long orchestratorId) {
         // 先查询orchestrator关联的agent IDs
-        List<Long> agentIds = dslContext.select(field("agent_id"))
-                .from(table("orchestrator_agent"))
-                .where(field("orchestrator_id").eq(orchestratorId))
-                .fetch()
-                .stream()
-                .map(record -> (Long) record.get("agent_id"))
-                .collect(Collectors.toList());
+        List<Long> agentIds = dslContext.select(ORCHESTRATOR_AGENT.AGENT_ID)
+                .from(ORCHESTRATOR_AGENT)
+                .where(ORCHESTRATOR_AGENT.ORCHESTRATOR_ID.eq(orchestratorId))
+                .fetchInto(Long.class);
 
         if (agentIds.isEmpty()) {
             return new HashMap<>();
@@ -162,13 +147,10 @@ public class AgentRepository implements IAgentRepository {
     @Override
     public Map<Long, List<McpEntity>> queryMcpMapByOrchestratorId(DSLContext dslContext, Long orchestratorId) {
         // 先查询orchestrator关联的agent IDs
-        List<Long> agentIds = dslContext.select(field("agent_id"))
-                .from(table("orchestrator_agent"))
-                .where(field("orchestrator_id").eq(orchestratorId))
-                .fetch()
-                .stream()
-                .map(record -> (Long) record.get("agent_id"))
-                .collect(Collectors.toList());
+        List<Long> agentIds = dslContext.select(ORCHESTRATOR_AGENT.AGENT_ID)
+                .from(ORCHESTRATOR_AGENT)
+                .where(ORCHESTRATOR_AGENT.ORCHESTRATOR_ID.eq(orchestratorId))
+                .fetchInto(Long.class);
 
         if (agentIds.isEmpty()) {
             return new HashMap<>();

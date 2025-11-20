@@ -16,7 +16,7 @@ public class UserContext {
     private final AtomicBoolean running = new AtomicBoolean(false);
     private Thread dispatcherThread;
     private FluxSink<TaskStatusEvent> emitter;
-    
+
     // 用户ID和会话ID
     private String userId;
     private String sessionId;
@@ -24,21 +24,21 @@ public class UserContext {
     public UserContext() {
         this.eventQueue = new LinkedBlockingQueue<>();
     }
-    
-    public void setUserId(String userId) {
-        this.userId = userId;
-    }
-    
+
     public String getUserId() {
         return userId;
     }
-    
-    public void setSessionId(String sessionId) {
-        this.sessionId = sessionId;
+
+    public void setUserId(String userId) {
+        this.userId = userId;
     }
-    
+
     public String getSessionId() {
         return sessionId;
+    }
+
+    public void setSessionId(String sessionId) {
+        this.sessionId = sessionId;
     }
 
     /**
@@ -92,6 +92,7 @@ public class UserContext {
         this.dispatcherThread.start();
         log.debug("事件分发器守护线程已启动");
     }
+
     /**
      * 停止事件分发器
      */
@@ -103,6 +104,7 @@ public class UserContext {
             }
         }
     }
+
     /**
      * 发送事件到队列（线程安全）
      *
@@ -166,6 +168,13 @@ public class UserContext {
         private String content;
         private String error;
 
+        /**
+         * 创建事件构建器
+         */
+        public static Builder builder() {
+            return new Builder();
+        }
+
         public EventType getType() {
             return type;
         }
@@ -173,14 +182,14 @@ public class UserContext {
         public void setType(EventType type) {
             this.type = type;
         }
-        
+
         /**
          * 获取事件类型的字符串值（用于序列化）
          */
         public String getTypeValue() {
             return type != null ? type.getValue() : null;
         }
-        
+
         /**
          * 获取事件类型的状态码（用于前端判断）
          */
@@ -221,13 +230,6 @@ public class UserContext {
         }
 
         /**
-         * 创建事件构建器
-         */
-        public static Builder builder() {
-            return new Builder();
-        }
-
-        /**
          * 事件构建器
          */
         public static class Builder {
@@ -237,7 +239,7 @@ public class UserContext {
                 event.setType(type);
                 return this;
             }
-            
+
             public Builder type(String type) {
                 event.setType(EventType.fromValue(type));
                 return this;

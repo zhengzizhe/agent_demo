@@ -11,12 +11,12 @@ import java.util.Map;
  * 对应数据库表：public.mcp
  * 对应JSON格式：
  * {
- *   "type": "sse",
- *   "description": "...",
- *   "isActive": true,
- *   "name": "...",
- *   "baseUrl": "...",
- *   "headers": { "Authorization": "Bearer ..." }
+ * "type": "sse",
+ * "description": "...",
+ * "isActive": true,
+ * "name": "...",
+ * "baseUrl": "...",
+ * "headers": { "Authorization": "Bearer ..." }
  * }
  */
 @Getter

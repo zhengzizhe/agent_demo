@@ -28,12 +28,10 @@ import static com.example.ddd.common.constant.IAgentConstant.COLON;
 @Slf4j
 @Singleton
 public class BeanUtil {
+    private final Map<Long, List<ServiceNode>> agentServiceNodes = new ConcurrentHashMap<>();
+    private final Map<Long, Orchestrator> agentOrchestrators = new ConcurrentHashMap<>();
     @Inject
     private ApplicationContext applicationContext;
-
-    private final Map<Long, List<ServiceNode>> agentServiceNodes = new ConcurrentHashMap<>();
-
-    private final Map<Long, Orchestrator> agentOrchestrators = new ConcurrentHashMap<>();
     /**
      * 注册Bean（不带qualifier）
      *
@@ -262,7 +260,7 @@ public class BeanUtil {
     /**
      * 注册MCP
      *
-     * @param mcpId    MCP ID
+     * @param mcpId     MCP ID
      * @param mcpEntity MCP实体
      * @return 是否注册成功
      */
@@ -296,7 +294,7 @@ public class BeanUtil {
      */
     public boolean registerMcpClient(Long orchestratorId, Long mcpId, McpClient mcpClient) {
         String qualifier = "Orchestrator" + COLON + orchestratorId + COLON + "McpClient" + COLON + mcpId;
-       McpClient existing = getBean(McpClient.class, qualifier);
+        McpClient existing = getBean(McpClient.class, qualifier);
         if (existing != null) {
             return true;
         }

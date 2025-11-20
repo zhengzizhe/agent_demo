@@ -22,7 +22,6 @@ public abstract class BaseTaskExecutor implements TaskExecutor {
     protected final Task task;
     protected final ServiceNode serviceNode;
     protected final UserContext userContext;
-
     public BaseTaskExecutor(Task task, ServiceNode serviceNode, UserContext userContext) {
         this.task = task;
         this.serviceNode = serviceNode;

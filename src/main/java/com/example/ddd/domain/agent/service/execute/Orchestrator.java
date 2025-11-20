@@ -34,10 +34,10 @@ import java.util.stream.Collectors;
 @Getter
 @Setter
 public class Orchestrator {
-    private Long orchestratorId;
     private final ServiceNode supervisorNode;      // 主管节点配置（但不会放进执行图）
     private final List<ServiceNode> workerNodes;   // 子 Agent 节点列表
     private final Map<Long, ServiceNode> workersByID;
+    private Long orchestratorId;
 
     public Orchestrator(Long orchestratorId, ServiceNode supervisorNode, List<ServiceNode> workerNodes) {
         if (supervisorNode.getRole() != AgentRole.SUPERVISOR) {

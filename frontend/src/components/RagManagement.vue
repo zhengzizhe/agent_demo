@@ -37,6 +37,18 @@
           <div class="nav-section-title">发现</div>
           <div 
             class="nav-item" 
+            :class="{ active: currentView === 'knowledge-graph' }"
+            @click="switchView('knowledge-graph')"
+          >
+            <svg class="nav-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5" fill="none"/>
+              <path d="M8 2v6M8 8v6M2 8h6M8 8h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            <span class="nav-text">知识图谱</span>
+          </div>
+          
+          <div 
+            class="nav-item" 
             :class="{ active: currentView === 'square' }"
             @click="switchView('square')"
           >
@@ -125,8 +137,13 @@
         </div>
       </div>
 
+        <!-- 知识图谱视图 -->
+        <div v-if="currentView === 'knowledge-graph'" class="kb-content kg-content-full">
+          <KnowledgeGraph />
+        </div>
+
         <!-- 文档列表 -->
-        <div class="kb-content">
+        <div v-else class="kb-content">
           <!-- 加载状态 -->
           <LoadingState v-if="loading" />
 
@@ -210,6 +227,9 @@
               <button class="upload-tab" :class="{ active: uploadMode === 'file' }" @click="uploadMode = 'file'">
                 文件上传
               </button>
+              <button class="upload-tab" :class="{ active: uploadMode === 'import' }" @click="uploadMode = 'import'">
+                导入文档
+              </button>
             </div>
 
             <!-- 文本输入 -->
@@ -251,6 +271,55 @@
                 <button class="btn-secondary" @click="showUploadDialog = false">取消</button>
                 <button class="btn-primary" @click="uploadFiles" :disabled="selectedFiles.length === 0 || loading">
                   上传文件
+                </button>
+              </div>
+            </div>
+
+            <!-- 导入文档 -->
+            <div v-if="uploadMode === 'import'" class="upload-content">
+              <div v-if="importDocsLoading" class="loading-container">
+                <div class="loading-spinner"></div>
+                <p>加载文档列表...</p>
+              </div>
+              <div v-else-if="importDocuments.length === 0" class="empty-import-docs">
+                <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+                  <rect x="8" y="8" width="32" height="32" rx="2" stroke="currentColor" stroke-width="2" fill="none"/>
+                  <path d="M16 18h16M16 24h12M16 30h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                <p>暂无文档可导入</p>
+              </div>
+              <div v-else class="import-docs-list">
+                <div 
+                  v-for="doc in importDocuments" 
+                  :key="doc.id" 
+                  class="import-doc-item"
+                  :class="{ selected: selectedImportDocs.includes(doc.id) }"
+                  @click="toggleImportDoc(doc.id)"
+                >
+                  <div class="doc-item-checkbox">
+                    <input 
+                      type="checkbox" 
+                      :checked="selectedImportDocs.includes(doc.id)"
+                      @change.stop="toggleImportDoc(doc.id)"
+                    />
+                  </div>
+                  <div class="doc-item-info">
+                    <div class="doc-item-name">{{ doc.name || '未命名文档' }}</div>
+                    <div class="doc-item-meta">
+                      <span v-if="doc.text">{{ doc.text.length }} 字符</span>
+                      <span v-else>空文档</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="upload-actions">
+                <button class="btn-secondary" @click="showUploadDialog = false">取消</button>
+                <button 
+                  class="btn-primary" 
+                  @click="importDocumentsToRag" 
+                  :disabled="selectedImportDocs.length === 0 || loading"
+                >
+                  导入文档 ({{ selectedImportDocs.length }})
                 </button>
               </div>
             </div>
@@ -375,7 +444,12 @@ import SearchBox from './SearchBox.vue'
 import ViewToggle from './ViewToggle.vue'
 import LoadingState from './LoadingState.vue'
 import EmptyState from './EmptyState.vue'
+import KnowledgeGraph from './KnowledgeGraph.vue'
 import { formatTime, formatSize } from '../utils/format.js'
+import { useSession } from '../composables/useSession.js'
+
+// 会话管理
+const session = useSession()
 
 const selectedRagId = ref(1)
 const ragList = ref([
@@ -391,8 +465,11 @@ const uploadMode = ref('text')
 const documentText = ref('')
 const selectedFiles = ref([])
 const fileInput = ref(null)
+const importDocuments = ref([])
+const importDocsLoading = ref(false)
+const selectedImportDocs = ref([])
 const filterMode = ref('uploaded')
-const currentView = ref('personal') // 'personal', 'shared', 'square', 'recent', 'favorites', 'tags'
+const currentView = ref('personal') // 'personal', 'shared', 'square', 'recent', 'favorites', 'tags', 'knowledge-graph'
 const searchQuery = ref('')
 const sortBy = ref('time')
 const viewMode = ref('grid')
@@ -491,6 +568,9 @@ const switchView = (view) => {
 
 // 获取视图标题
 const getViewTitle = () => {
+  if (currentView.value === 'knowledge-graph') {
+    return '知识图谱'
+  }
   const titles = {
     personal: '个人知识库',
     shared: '共享知识库',
@@ -753,6 +833,79 @@ const uploadFiles = async () => {
   }
 }
 
+// 加载文档库文档列表
+const loadImportDocuments = async () => {
+  importDocsLoading.value = true
+  try {
+    // 从session获取userId
+    const userId = session.userId?.value || '1'
+    const response = await fetch(`/doc/list/${userId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    
+    if (!response.ok) {
+      throw new Error('加载文档列表失败')
+    }
+    
+    const docList = await response.json()
+    importDocuments.value = docList || []
+  } catch (error) {
+    console.error('加载文档列表失败:', error)
+    importDocuments.value = []
+    showMessage('加载文档列表失败: ' + error.message, 'error')
+  } finally {
+    importDocsLoading.value = false
+  }
+}
+
+// 切换导入文档选择
+const toggleImportDoc = (docId) => {
+  const index = selectedImportDocs.value.indexOf(docId)
+  if (index > -1) {
+    selectedImportDocs.value.splice(index, 1)
+  } else {
+    selectedImportDocs.value.push(docId)
+  }
+}
+
+// 导入文档到RAG
+const importDocumentsToRag = async () => {
+  if (selectedImportDocs.value.length === 0) return
+  
+  loading.value = true
+  try {
+    for (const docId of selectedImportDocs.value) {
+      const response = await fetch(`/rag/${selectedRagId.value}/documents/import`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          docId: docId
+        })
+      })
+      
+      const result = await response.json()
+      if (!result.success) {
+        showMessage(`文档 ${docId} 导入失败: ${result.message}`, 'error')
+      }
+    }
+    
+    selectedImportDocs.value = []
+    showUploadDialog.value = false
+    showMessage('文档导入完成', 'success')
+    loadDocuments()
+  } catch (error) {
+    console.error('导入文档失败:', error)
+    showMessage('导入失败: ' + error.message, 'error')
+  } finally {
+    loading.value = false
+  }
+}
+
 // 加载文档列表
 const loadDocuments = async () => {
   loading.value = true
@@ -888,6 +1041,13 @@ const handleRefresh = (event) => {
 }
 
 // 初始化
+// 监听上传模式变化，切换到导入文档时加载文档列表
+watch(uploadMode, (newMode) => {
+  if (newMode === 'import' && importDocuments.value.length === 0) {
+    loadImportDocuments()
+  }
+})
+
 onMounted(() => {
   console.log('RagManagement mounted, selectedRagId:', selectedRagId.value)
   loadDocuments()
@@ -1172,6 +1332,14 @@ onUnmounted(() => {
   overflow-y: auto;
   padding: 24px 32px;
   background: var(--theme-background, #ffffff);
+}
+
+.kg-content-full {
+  padding: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 /* 加载状态和空状态样式已移至 common.css */
@@ -1547,6 +1715,102 @@ onUnmounted(() => {
   display: flex;
   gap: 8px;
   justify-content: flex-end;
+}
+
+/* 导入文档样式 */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  color: #9b9a97;
+}
+
+.loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #e5e5e5;
+  border-top-color: var(--theme-accent, #165dff);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: 12px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.empty-import-docs {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  color: #9b9a97;
+}
+
+.empty-import-docs svg {
+  margin-bottom: 12px;
+  color: #d1d5db;
+}
+
+.empty-import-docs p {
+  margin: 0;
+  font-size: 14px;
+}
+
+.import-docs-list {
+  max-height: 400px;
+  overflow-y: auto;
+  margin-bottom: 16px;
+}
+
+.import-doc-item {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid #e5e5e5;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.import-doc-item:hover {
+  border-color: var(--theme-accent, #165dff);
+  background: color-mix(in srgb, var(--theme-accent, #165dff) 5%, transparent);
+}
+
+.import-doc-item.selected {
+  border-color: var(--theme-accent, #165dff);
+  background: color-mix(in srgb, var(--theme-accent, #165dff) 10%, transparent);
+}
+
+.doc-item-checkbox {
+  margin-right: 12px;
+}
+
+.doc-item-checkbox input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.doc-item-info {
+  flex: 1;
+}
+
+.doc-item-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #202123;
+  margin-bottom: 4px;
+}
+
+.doc-item-meta {
+  font-size: 12px;
+  color: #9b9a97;
 }
 
 /* 按钮样式已移至 common.css */

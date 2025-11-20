@@ -13,6 +13,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static com.example.jooq.tables.AgentMcp.AGENT_MCP;
+
 /**
  * Mcp仓储实现
  */
@@ -45,13 +47,10 @@ public class McpRepository implements IMcpRepository {
     @Override
     public List<McpEntity> queryByAgentId(DSLContext dslContext, Long agentId) {
         // 通过agent_mcp关联表查询MCP ID列表
-        List<Long> mcpIds = dslContext.select(org.jooq.impl.DSL.field("mcp_id"))
-                .from(org.jooq.impl.DSL.table("agent_mcp"))
-                .where(org.jooq.impl.DSL.field("agent_id").eq(agentId))
-                .fetch()
-                .stream()
-                .map(record -> (Long) record.get("mcp_id"))
-                .collect(Collectors.toList());
+        List<Long> mcpIds = dslContext.select(AGENT_MCP.MCP_ID)
+                .from(AGENT_MCP)
+                .where(AGENT_MCP.AGENT_ID.eq(agentId))
+                .fetchInto(Long.class);
         
         if (mcpIds.isEmpty()) {
             return new java.util.ArrayList<>();

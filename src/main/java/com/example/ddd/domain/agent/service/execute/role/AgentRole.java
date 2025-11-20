@@ -13,37 +13,41 @@ public enum AgentRole {
      * 主管 / 路由器
      */
     SUPERVISOR(1L, "主管"),
-    
+
     /**
      * 拆解需求、结构化分析
      */
     ANALYST(2L, "分析师"),
-    
+
     /**
      * 工作者
      */
     WORKER(3L, "工作者"),
-    
+
     /**
      * 检索资料（结合 RAG）
      */
     RESEARCHER(4L, "研究员"),
-    
+
     /**
      * 生成自然语言内容（报告、总结、说明）
      */
     WRITER(5L, "写作者"),
-    
+
     /**
      * 检查整体结果、给出修改建议
      */
     REVIEWER(6L, "审阅者");
 
     /**
+     * 代码到枚举值的映射缓存
+     */
+    private static final Map<Long, AgentRole> CODE_MAP = Arrays.stream(values())
+            .collect(Collectors.toMap(AgentRole::getCode, Function.identity()));
+    /**
      * 角色代码
      */
     private final Long code;
-
     /**
      * 角色名称
      */
@@ -58,24 +62,6 @@ public enum AgentRole {
     AgentRole(Long code, String name) {
         this.code = code;
         this.name = name;
-    }
-
-    /**
-     * 获取角色代码
-     *
-     * @return 角色代码
-     */
-    public Long getCode() {
-        return code;
-    }
-
-    /**
-     * 获取角色名称
-     *
-     * @return 角色名称
-     */
-    public String getName() {
-        return name;
     }
 
     /**
@@ -104,8 +90,20 @@ public enum AgentRole {
     }
 
     /**
-     * 代码到枚举值的映射缓存
+     * 获取角色代码
+     *
+     * @return 角色代码
      */
-    private static final Map<Long, AgentRole> CODE_MAP = Arrays.stream(values())
-            .collect(Collectors.toMap(AgentRole::getCode, Function.identity()));
+    public Long getCode() {
+        return code;
+    }
+
+    /**
+     * 获取角色名称
+     *
+     * @return 角色名称
+     */
+    public String getName() {
+        return name;
+    }
 }

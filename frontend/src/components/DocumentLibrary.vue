@@ -274,38 +274,68 @@
 
     <!-- 新建文档对话框 -->
     <div v-if="showCreateDialog" class="dialog-overlay" @click="showCreateDialog = false">
-      <div class="dialog" @click.stop>
+      <div class="dialog create-doc-dialog" @click.stop>
         <div class="dialog-header">
           <h3 class="dialog-title">新建文档</h3>
-          <button class="dialog-close" @click="showCreateDialog = false">
+          <button class="dialog-close" @click="closeCreateDialog">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
               <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
             </svg>
           </button>
         </div>
         <div class="dialog-content">
-          <div class="create-options">
-            <div class="create-option" @click="createDocument('text')">
-              <div class="option-icon">
-                <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-                  <rect x="6" y="6" width="20" height="20" rx="2" stroke="currentColor" stroke-width="2" fill="none"/>
-                  <path d="M10 12h12M10 16h12M10 20h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <div class="form-group">
+            <label class="form-label">文档名称</label>
+            <input
+              v-model="createDocName"
+              type="text"
+              class="form-input"
+              placeholder="输入文档名称"
+              @keyup.enter="handleCreateDocument"
+              ref="createNameInputRef"
+            />
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">文档类型</label>
+            <div class="type-options">
+              <button
+                :class="['type-option', { active: createDocType === 'text' }]"
+                @click="createDocType = 'text'"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <rect x="4" y="4" width="16" height="16" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                  <path d="M8 8h8M8 12h8M8 16h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
                 </svg>
-              </div>
-              <h4>空白文档</h4>
-              <p>创建一个新的空白文档</p>
-            </div>
-            <div class="create-option" @click="createDocument('markdown')">
-              <div class="option-icon">
-                <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-                  <rect x="6" y="6" width="20" height="20" rx="2" stroke="currentColor" stroke-width="2" fill="none"/>
-                  <path d="M10 12h12M10 16h8M10 20h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                文本文档
+              </button>
+              <button
+                :class="['type-option', { active: createDocType === 'markdown' }]"
+                @click="createDocType = 'markdown'"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <rect x="4" y="4" width="16" height="16" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                  <path d="M8 8h8M8 12h8M8 16h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
                 </svg>
-              </div>
-              <h4>Markdown文档</h4>
-              <p>使用Markdown格式创建文档</p>
+                Markdown
+              </button>
             </div>
           </div>
+
+          <div class="form-group">
+            <label class="form-label">文档内容</label>
+            <textarea
+              v-model="createDocContent"
+              class="form-textarea"
+              placeholder="输入文档内容（可选）"
+              rows="8"
+              ref="createContentInputRef"
+            ></textarea>
+          </div>
+        </div>
+        <div class="dialog-footer">
+          <button class="btn btn-secondary" @click="closeCreateDialog">取消</button>
+          <button class="btn btn-primary" @click="handleCreateDocument">创建</button>
         </div>
       </div>
     </div>
@@ -389,16 +419,38 @@
         </div>
       </div>
     </div>
+
+    <!-- 消息提示 Toast -->
+    <MessageToast
+      :visible="showToast"
+      :message="toastMessage"
+      :type="toastType"
+      @close="showToast = false"
+    />
+
+    <!-- 错误对话框 -->
+    <ErrorDialog
+      :visible="showErrorDialog"
+      :title="errorDialogTitle"
+      :message="errorDialogMessage"
+      @close="showErrorDialog = false"
+    />
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import SearchBox from './SearchBox.vue'
 import ViewToggle from './ViewToggle.vue'
 import LoadingState from './LoadingState.vue'
 import EmptyState from './EmptyState.vue'
+import MessageToast from './MessageToast.vue'
+import ErrorDialog from './ErrorDialog.vue'
 import { formatDate, formatSizeBytes } from '../utils/format.js'
+import { useSession } from '../composables/useSession.js'
+
+// 会话管理
+const session = useSession()
 
 // 响应式数据
 const currentView = ref('home') // home, shared, favorites
@@ -415,12 +467,34 @@ const showCreateDialog = ref(false)
 const showRenameDialog = ref(false)
 const renameValue = ref('')
 const renameInputRef = ref(null)
+const createDocName = ref('')
+const createDocContent = ref('')
+const createDocType = ref('text') // 'text' or 'markdown'
+const createNameInputRef = ref(null)
+const createContentInputRef = ref(null)
 const contextMenu = ref({
   show: false,
   x: 0,
   y: 0,
   doc: null
 })
+
+// 消息提示相关
+const showToast = ref(false)
+const toastMessage = ref('')
+const toastType = ref('info') // 'info', 'success'
+
+// 错误对话框相关
+const showErrorDialog = ref(false)
+const errorDialogTitle = ref('操作失败')
+const errorDialogMessage = ref('')
+
+// 获取userId（返回字符串）
+const getUserId = () => {
+  const userIdStr = session.userId?.value
+  if (!userIdStr) return '1'
+  return userIdStr
+}
 
 // 计算属性
 const userInitial = computed(() => {
@@ -496,11 +570,17 @@ const loadSpaces = async () => {
     // const response = await fetch('/api/spaces')
     // spaces.value = await response.json()
     
-    // 模拟数据
-    spaces.value = [
-      { id: '1', name: '个人空间', type: 'personal' },
-      { id: '2', name: '工作空间', type: 'work' }
-    ]
+    // 初始化空间列表，默认包含个人空间
+    if (spaces.value.length === 0) {
+      spaces.value = [
+        { id: 'personal', name: '个人空间', type: 'personal' }
+      ]
+      
+      // 如果没有当前空间，默认设置为个人空间
+      if (!currentSpace.value) {
+        currentSpace.value = spaces.value[0]
+      }
+    }
   } catch (error) {
     console.error('加载空间列表失败:', error)
   }
@@ -509,53 +589,42 @@ const loadSpaces = async () => {
 const loadDocuments = async () => {
   loading.value = true
   try {
-    // TODO: 根据currentView和currentSpace调用不同的API
-    // const endpoint = currentView.value === 'shared' 
-    //   ? '/api/documents/shared' 
-    //   : currentView.value === 'favorites'
-    //   ? '/api/documents/favorites'
-    //   : '/api/documents'
-    // const response = await fetch(endpoint)
-    // documents.value = await response.json()
+    // 确保有当前空间，默认使用个人空间
+    if (!currentSpace.value) {
+      currentSpace.value = { id: 'personal', name: '个人空间', type: 'personal' }
+    }
     
-    // 模拟数据
-    documents.value = [
-      {
-        id: '1',
-        name: '项目计划文档',
-        description: '2024年Q1项目计划',
-        createdAt: Date.now() - 86400000 * 7,
-        updatedAt: Date.now() - 86400000 * 2,
-        size: 1024 * 50,
-        favorite: false,
-        shared: false,
-        owner: { id: '1', name: '张三' }
-      },
-      {
-        id: '2',
-        name: '技术方案',
-        description: '系统架构设计文档',
-        createdAt: Date.now() - 86400000 * 5,
-        updatedAt: Date.now() - 86400000 * 1,
-        size: 1024 * 120,
-        favorite: true,
-        shared: true,
-        owner: { id: '2', name: '李四' }
-      },
-      {
-        id: '3',
-        name: '会议纪要',
-        description: '周会记录',
-        createdAt: Date.now() - 86400000 * 3,
-        updatedAt: Date.now() - 3600000,
-        size: 1024 * 30,
-        favorite: false,
-        shared: false,
-        owner: { id: '1', name: '张三' }
+    const userId = getUserId()
+    const response = await fetch(`/doc/list/${userId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
       }
-    ]
+    })
+    
+    if (!response.ok) {
+      throw new Error('加载文档列表失败')
+    }
+    
+    const docList = await response.json()
+    
+    // 转换后端返回的数据格式为前端需要的格式
+    documents.value = docList.map(doc => ({
+      id: doc.id,
+      name: doc.name || '未命名文档',
+      description: doc.text || '',
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      size: (doc.text || '').length,
+      favorite: false,
+      shared: false,
+      owner: { id: doc.owner || userId, name: '当前用户' },
+      spaceId: currentSpace.value.id
+    }))
   } catch (error) {
     console.error('加载文档列表失败:', error)
+    // 如果API调用失败，使用空数组
+    documents.value = []
   } finally {
     loading.value = false
   }
@@ -589,34 +658,91 @@ const openDocument = (doc) => {
   // emit('open-document', doc)
 }
 
+// 关闭创建对话框并重置表单
+const closeCreateDialog = () => {
+  showCreateDialog.value = false
+  createDocName.value = ''
+  createDocContent.value = ''
+  createDocType.value = 'text'
+}
+
+// 处理创建文档
+const handleCreateDocument = async () => {
+  await createDocument(createDocType.value)
+}
+
 const createDocument = async (type) => {
   try {
-    // TODO: 调用API创建文档
-    // const response = await fetch('/api/documents', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({ type, name: '未命名文档', spaceId: currentSpace.value?.id })
-    // })
-    // const newDoc = await response.json()
+    // 确保在个人空间创建文档
+    if (!currentSpace.value) {
+      currentSpace.value = { id: 'personal', name: '个人空间', type: 'personal' }
+    }
     
-    // 模拟创建
+    const userId = getUserId()
+    const docName = createDocName.value.trim() || '未命名文档'
+    const docContent = createDocContent.value || ''
+    
+    const response = await fetch('/doc/add', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        name: docName,
+        text: docContent,
+        type: type === 'text' ? 0 : (type === 'markdown' ? 1 : 0),
+        userId: userId
+      })
+    })
+    
+    if (!response.ok) {
+      let errorMessage = '创建文档失败'
+      try {
+        const errorData = await response.json()
+        errorMessage = errorData.message || errorData.error || errorMessage
+      } catch (e) {
+        errorMessage = `创建文档失败: ${response.status} ${response.statusText}`
+      }
+      throw new Error(errorMessage)
+    }
+    
+    const doc = await response.json()
+    
+    // 转换后端返回的数据格式为前端需要的格式
     const newDoc = {
-      id: Date.now().toString(),
-      name: '未命名文档',
-      type,
+      id: doc.id,
+      name: doc.name || '未命名文档',
+      description: doc.text || '',
       createdAt: Date.now(),
       updatedAt: Date.now(),
-      size: 0,
+      size: (doc.text || '').length,
       favorite: false,
       shared: false,
-      owner: { id: '1', name: '当前用户' }
+      owner: { id: doc.owner || userId, name: '当前用户' },
+      spaceId: currentSpace.value.id
     }
     
     documents.value.unshift(newDoc)
-    showCreateDialog.value = false
+    closeCreateDialog()
+    showMessage('文档创建成功', 'success')
     openDocument(newDoc)
   } catch (error) {
     console.error('创建文档失败:', error)
+    showMessage(error.message || '创建文档失败', 'error')
+  }
+}
+
+// 显示消息提示
+const showMessage = (message, type = 'info') => {
+  if (type === 'error') {
+    // 错误使用错误对话框
+    errorDialogMessage.value = message
+    showErrorDialog.value = true
+  } else {
+    // 成功和信息使用右上角 Toast
+    toastMessage.value = message
+    toastType.value = type
+    showToast.value = true
   }
 }
 
@@ -778,9 +904,27 @@ const handleRefresh = (event) => {
   }
 }
 
+// 监听创建对话框打开，自动聚焦到名称输入框
+watch(showCreateDialog, (newVal) => {
+  if (newVal) {
+    nextTick(() => {
+      createNameInputRef.value?.focus()
+    })
+  }
+})
+
 onMounted(() => {
-  loadDocuments()
+  // 先加载空间，确保个人空间存在
   loadSpaces()
+  
+  // 确保默认选中个人空间
+  if (!currentSpace.value) {
+    currentSpace.value = { id: 'personal', name: '个人空间', type: 'personal' }
+  }
+  
+  // 加载文档列表
+  loadDocuments()
+  
   document.addEventListener('click', handleClickOutside)
   // 监听刷新事件
   window.addEventListener('tab-refresh', handleRefresh)
@@ -1323,6 +1467,92 @@ onUnmounted(() => {
   font-size: 13px;
   color: #6b7280;
   margin: 0;
+}
+
+/* 创建文档表单样式 */
+.create-doc-dialog {
+  max-width: 600px;
+  width: 90%;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group:last-child {
+  margin-bottom: 0;
+}
+
+.form-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #111827;
+  margin-bottom: 8px;
+}
+
+.form-input,
+.form-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+  transition: all 0.15s;
+  background: var(--theme-background, #ffffff);
+  color: var(--theme-text, #111827);
+  box-sizing: border-box;
+}
+
+.form-input:focus,
+.form-textarea:focus {
+  outline: none;
+  border-color: var(--theme-accent, #165dff);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--theme-accent, #165dff) 15%, transparent);
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 120px;
+  line-height: 1.5;
+}
+
+.type-options {
+  display: flex;
+  gap: 12px;
+}
+
+.type-option {
+  flex: 1;
+  padding: 12px 16px;
+  border: 2px solid #e5e7eb;
+  border-radius: 6px;
+  background: var(--theme-background, #ffffff);
+  color: #6b7280;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.type-option:hover {
+  border-color: var(--theme-accent, #165dff);
+  color: var(--theme-accent, #165dff);
+}
+
+.type-option.active {
+  border-color: var(--theme-accent, #165dff);
+  background: color-mix(in srgb, var(--theme-accent, #165dff) 10%, transparent);
+  color: var(--theme-accent, #165dff);
+}
+
+.type-option svg {
+  flex-shrink: 0;
 }
 
 .rename-input {

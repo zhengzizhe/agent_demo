@@ -9,6 +9,8 @@ import com.example.jooq.tables.AgentMcp;
 import com.example.jooq.tables.AgentMemory;
 import com.example.jooq.tables.AgentModel;
 import com.example.jooq.tables.AgentRag;
+import com.example.jooq.tables.Doc;
+import com.example.jooq.tables.KgEntity;
 import com.example.jooq.tables.Mcp;
 import com.example.jooq.tables.Model;
 import com.example.jooq.tables.Orchestrator;
@@ -40,67 +42,77 @@ public class Public extends SchemaImpl {
     public static final Public PUBLIC = new Public();
 
     /**
-     * Agent表（智能体）
+     * The table <code>public.agent</code>.
      */
     public final Agent AGENT = Agent.AGENT;
 
     /**
-     * Agent与MCP的关联表
+     * The table <code>public.agent_mcp</code>.
      */
     public final AgentMcp AGENT_MCP = AgentMcp.AGENT_MCP;
 
     /**
-     * Agent共享记忆表，支持会话级和全局级别的记忆存储
+     * The table <code>public.agent_memory</code>.
      */
     public final AgentMemory AGENT_MEMORY = AgentMemory.AGENT_MEMORY;
 
     /**
-     * Agent与Model的关联表
+     * The table <code>public.agent_model</code>.
      */
     public final AgentModel AGENT_MODEL = AgentModel.AGENT_MODEL;
 
     /**
-     * Agent与RAG的关联表
+     * The table <code>public.agent_rag</code>.
      */
     public final AgentRag AGENT_RAG = AgentRag.AGENT_RAG;
 
     /**
-     * MCP表（Model Context Protocol）
+     * The table <code>public.doc</code>.
+     */
+    public final Doc DOC = Doc.DOC;
+
+    /**
+     * The table <code>public.kg_entity</code>.
+     */
+    public final KgEntity KG_ENTITY = KgEntity.KG_ENTITY;
+
+    /**
+     * The table <code>public.mcp</code>.
      */
     public final Mcp MCP = Mcp.MCP;
 
     /**
-     * Model表
+     * The table <code>public.model</code>.
      */
     public final Model MODEL = Model.MODEL;
 
     /**
-     * Orchestrator表（编排器）
+     * The table <code>public.orchestrator</code>.
      */
     public final Orchestrator ORCHESTRATOR = Orchestrator.ORCHESTRATOR;
 
     /**
-     * Orchestrator与Agent的关联表
+     * The table <code>public.orchestrator_agent</code>.
      */
     public final OrchestratorAgent ORCHESTRATOR_AGENT = OrchestratorAgent.ORCHESTRATOR_AGENT;
 
     /**
-     * Orchestrator消息记录表，记录所有Agent间的交互信息
+     * The table <code>public.orchestrator_message</code>.
      */
     public final OrchestratorMessage ORCHESTRATOR_MESSAGE = OrchestratorMessage.ORCHESTRATOR_MESSAGE;
 
     /**
-     * Orchestrator执行会话表，记录每次Orchestrator执行的完整信息
+     * The table <code>public.orchestrator_run</code>.
      */
     public final OrchestratorRun ORCHESTRATOR_RUN = OrchestratorRun.ORCHESTRATOR_RUN;
 
     /**
-     * RAG表（Retrieval-Augmented Generation）
+     * The table <code>public.rag</code>.
      */
     public final Rag RAG = Rag.RAG;
 
     /**
-     * 存储向量嵌入数据的表
+     * The table <code>public.vector_document</code>.
      */
     public final VectorDocument VECTOR_DOCUMENT = VectorDocument.VECTOR_DOCUMENT;
 
@@ -125,6 +137,8 @@ public class Public extends SchemaImpl {
             AgentMemory.AGENT_MEMORY,
             AgentModel.AGENT_MODEL,
             AgentRag.AGENT_RAG,
+            Doc.DOC,
+            KgEntity.KG_ENTITY,
             Mcp.MCP,
             Model.MODEL,
             Orchestrator.ORCHESTRATOR,

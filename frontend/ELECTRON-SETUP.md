@@ -42,7 +42,7 @@ npm run electron:build:win
 
 **macOS:**
 ```bash
-npm run electron:build:mac
+sudo npm run electron:build:mac
 ```
 
 **Linux:**
@@ -179,4 +179,6 @@ npm run electron:build
 - [ ] 添加系统托盘
 - [ ] 自定义应用菜单
 - [ ] 配置代码签名（生产环境）
+
+
 

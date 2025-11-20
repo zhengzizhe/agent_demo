@@ -11,11 +11,10 @@ import org.jooq.DSLContext;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
-import static org.jooq.impl.DSL.table;
-import static org.jooq.impl.DSL.field;
+import static com.example.jooq.tables.AgentModel.AGENT_MODEL;
+import static com.example.jooq.tables.OrchestratorAgent.ORCHESTRATOR_AGENT;
 
 /**
  * ChatModel仓储实现
@@ -64,13 +63,10 @@ public class ChatModelRepository implements IChatModelRepository {
     @Override
     public List<ChatModelEntity> queryByAgentId(DSLContext dslContext, Long agentId) {
         // 直接通过agentId查询agent_model关联表
-        List<Long> modelIds = dslContext.select(field("model_id"))
-                .from(table("agent_model"))
-                .where(field("agent_id").eq(agentId))
-                .fetch()
-                .stream()
-                .map(record -> (Long) record.get("model_id"))
-                .collect(Collectors.toList());
+        List<Long> modelIds = dslContext.select(AGENT_MODEL.MODEL_ID)
+                .from(AGENT_MODEL)
+                .where(AGENT_MODEL.AGENT_ID.eq(agentId))
+                .fetchInto(Long.class);
         
         if (modelIds.isEmpty()) {
             return new ArrayList<>();
@@ -103,13 +99,10 @@ public class ChatModelRepository implements IChatModelRepository {
     @Override
     public List<ChatModelEntity> queryByOrchestratorId(DSLContext dslContext, Long orchestratorId) {
         // 先查询orchestrator关联的agent IDs
-        List<Long> agentIds = dslContext.select(field("agent_id"))
-                .from(table("orchestrator_agent"))
-                .where(field("orchestrator_id").eq(orchestratorId))
-                .fetch()
-                .stream()
-                .map(record -> (Long) record.get("agent_id"))
-                .collect(Collectors.toList());
+        List<Long> agentIds = dslContext.select(ORCHESTRATOR_AGENT.AGENT_ID)
+                .from(ORCHESTRATOR_AGENT)
+                .where(ORCHESTRATOR_AGENT.ORCHESTRATOR_ID.eq(orchestratorId))
+                .fetchInto(Long.class);
         
         if (agentIds.isEmpty()) {
             return new ArrayList<>();

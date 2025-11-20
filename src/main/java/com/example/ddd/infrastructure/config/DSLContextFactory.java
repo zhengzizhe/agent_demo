@@ -11,11 +11,9 @@ import java.sql.Connection;
 
 @Singleton
 public class DSLContextFactory {
+    public final SQLDialect sqlDialect = SQLDialect.POSTGRES;
     @Inject
     private DataSource dataSource;
-
-    public final SQLDialect sqlDialect = SQLDialect.POSTGRES;
-
 
     public AgentDSL createDsl() {
         try {

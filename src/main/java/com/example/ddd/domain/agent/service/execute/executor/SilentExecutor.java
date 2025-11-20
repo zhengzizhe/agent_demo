@@ -91,7 +91,6 @@ public class SilentExecutor extends BaseTaskExecutor {
 
                 latch.countDown();
             });
-
             tokenStream.start();
             try {
                 latch.await();

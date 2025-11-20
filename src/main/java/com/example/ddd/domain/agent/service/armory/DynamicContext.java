@@ -10,12 +10,13 @@ import java.util.Map;
 @Getter
 @Setter
 @Serdeable
-public class    DynamicContext {
+public class DynamicContext {
     private Map<String, String> context = new HashMap<>();
 
     void put(String key, String value) {
         context.put(key, value);
     }
+
     String get(String key) {
         return context.get(key);
     }

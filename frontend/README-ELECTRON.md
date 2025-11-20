@@ -100,3 +100,5 @@ npm run electron:build:linux
 - 确保 `dist` 目录存在且包含构建文件
 - 查看控制台错误信息
 
+
+

@@ -12,7 +12,7 @@ public enum ExecutionStrategy {
      * - 适用于：数据预处理、中间计算、后台任务
      */
     SILENT,
-    
+
     /**
      * 流式输出
      * - 将结果保存到state
@@ -20,7 +20,7 @@ public enum ExecutionStrategy {
      * - 适用于：生成报告、总结、说明等需要用户看到的内容
      */
     STREAMING,
-    
+
 
 }
 

@@ -20,6 +20,7 @@ public class JSON {
         objectMapper.registerModule(javaTimeModule);
         objectMapper.configure(com.fasterxml.jackson.databind.DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_AS_NULL, true);
     }
+
     public static String toJSON(Object obj) {
         try {
             return objectMapper.writeValueAsString(obj);
@@ -27,6 +28,7 @@ public class JSON {
             throw new RuntimeException("JSON序列化失败: " + e.getMessage(), e);
         }
     }
+
     public static <T> T parseObject(String json, Class<T> clazz) {
         try {
             return objectMapper.readValue(json, clazz);

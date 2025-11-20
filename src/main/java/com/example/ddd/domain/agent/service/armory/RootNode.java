@@ -1,8 +1,8 @@
 package com.example.ddd.domain.agent.service.armory;
 
 import com.example.ddd.common.utils.ILogicHandler;
-import com.example.ddd.domain.agent.adapter.repository.IOrchestratorRepository;
 import com.example.ddd.domain.agent.adapter.repository.IAgentRepository;
+import com.example.ddd.domain.agent.adapter.repository.IOrchestratorRepository;
 import com.example.ddd.domain.agent.model.entity.*;
 import com.example.ddd.infrastructure.config.DSLContextFactory;
 import dev.langchain4j.internal.Json;
@@ -22,14 +22,13 @@ import static com.example.ddd.common.constant.IAgentConstant.*;
 public class RootNode extends AbstractArmorySupport {
 
     @Inject
+    McpNode mcpNode;
+    @Inject
     private IAgentRepository agentRepository;
     @Inject
     private DSLContextFactory dslContextFactory;
     @Inject
     private IOrchestratorRepository orchestratorRepository;
-    @Inject
-    McpNode mcpNode;
-
 
     @Override
     public String handle(ArmoryCommandEntity armoryCommandEntity, DynamicContext dynamicContext) {
