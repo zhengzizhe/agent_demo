@@ -128,133 +128,104 @@ let network = null
 let entityGraphNetwork = null
 
 // ==================== 常量配置 ====================
-// 节点类型颜色映射
+// 节点类型颜色映射 - 飞书风格
 const typeColors = {
   tech: { 
-    background: '#e0e7ff', 
-    border: '#818cf8', 
-    gradient: ['#e0e7ff', '#f3f4f6'],
-    iconColor: '#6366f1',
-    highlight: { background: '#c7d2fe', border: '#6366f1' } 
+    background: '#E8F4FF', 
+    border: '#3370FF', 
+    iconColor: '#3370FF',
+    highlight: { background: '#D4E8FF', border: '#3370FF' } 
   },
   system: { 
-    background: '#fce7f3', 
-    border: '#f472b6', 
-    gradient: ['#fce7f3', '#fdf2f8'],
-    iconColor: '#ec4899',
-    highlight: { background: '#fbcfe8', border: '#ec4899' } 
+    background: '#F0F5FF', 
+    border: '#4D5DFF', 
+    iconColor: '#4D5DFF',
+    highlight: { background: '#E0EBFF', border: '#4D5DFF' } 
   },
   service: { 
-    background: '#dbeafe', 
-    border: '#60a5fa', 
-    gradient: ['#dbeafe', '#eff6ff'],
-    iconColor: '#3b82f6',
-    highlight: { background: '#bfdbfe', border: '#3b82f6' } 
+    background: '#E8F4FF', 
+    border: '#3370FF', 
+    iconColor: '#3370FF',
+    highlight: { background: '#D4E8FF', border: '#3370FF' } 
   },
   api: { 
-    background: '#fef3c7', 
-    border: '#fbbf24', 
-    gradient: ['#fef3c7', '#fffbeb'],
-    iconColor: '#f59e0b',
-    highlight: { background: '#fde68a', border: '#f59e0b' } 
+    background: '#FFF4E6', 
+    border: '#FF9500', 
+    iconColor: '#FF9500',
+    highlight: { background: '#FFE8CC', border: '#FF9500' } 
   },
   db: { 
-    background: '#fee2e2', 
-    border: '#f87171', 
-    gradient: ['#fee2e2', '#fef2f2'],
-    iconColor: '#ef4444',
-    highlight: { background: '#fecaca', border: '#ef4444' } 
+    background: '#FFE8E8', 
+    border: '#F53F3F', 
+    iconColor: '#F53F3F',
+    highlight: { background: '#FFD1D1', border: '#F53F3F' } 
   },
   person: { 
-    background: '#dbeafe', 
-    border: '#60a5fa', 
-    gradient: ['#dbeafe', '#e0f2fe'],
-    iconColor: '#3b82f6',
-    highlight: { background: '#bfdbfe', border: '#3b82f6' } 
+    background: '#E8F4FF', 
+    border: '#3370FF', 
+    iconColor: '#3370FF',
+    highlight: { background: '#D4E8FF', border: '#3370FF' } 
   },
   org: { 
-    background: '#e0e7ff', 
-    border: '#818cf8', 
-    gradient: ['#e0e7ff', '#f3f4f6'],
-    iconColor: '#6366f1',
-    highlight: { background: '#c7d2fe', border: '#6366f1' } 
+    background: '#F0F5FF', 
+    border: '#4D5DFF', 
+    iconColor: '#4D5DFF',
+    highlight: { background: '#E0EBFF', border: '#4D5DFF' } 
   },
   concept: { 
-    background: '#dcfce7', 
-    border: '#86efac', 
-    gradient: ['#dcfce7', '#f0fdf4'],
-    iconColor: '#22c55e',
-    highlight: { background: '#bbf7d0', border: '#22c55e' } 
+    background: '#E6F7FF', 
+    border: '#00A6FB', 
+    iconColor: '#00A6FB',
+    highlight: { background: '#CCEFFF', border: '#00A6FB' } 
   },
   event: { 
-    background: '#ffedd5', 
-    border: '#fdba74', 
-    gradient: ['#ffedd5', '#fff7ed'],
-    iconColor: '#f97316',
-    highlight: { background: '#fed7aa', border: '#f97316' } 
+    background: '#FFF4E6', 
+    border: '#FF9500', 
+    iconColor: '#FF9500',
+    highlight: { background: '#FFE8CC', border: '#FF9500' } 
   },
   module: {
-    background: '#dcfce7',
-    border: '#86efac',
-    gradient: ['#dcfce7', '#f0fdf4'],
-    iconColor: '#22c55e',
-    highlight: { background: '#bbf7d0', border: '#22c55e' }
+    background: '#E6F7FF',
+    border: '#00A6FB',
+    iconColor: '#00A6FB',
+    highlight: { background: '#CCEFFF', border: '#00A6FB' }
   },
   document: { 
-    background: '#ffffff', 
-    border: '#e5e7eb', 
-    highlight: { background: '#f9fafb', border: '#6366f1' }, 
+    background: '#FFFFFF', 
+    border: '#E8EAED', 
+    highlight: { background: '#F7F8FA', border: '#3370FF' }, 
     shape: 'box' 
   },
   default: { 
-    background: '#f3f4f6', 
-    border: '#9ca3af', 
-    gradient: ['#f3f4f6', '#ffffff'],
-    iconColor: '#6b7280',
-    highlight: { background: '#e5e7eb', border: '#6b7280' } 
+    background: '#F7F8FA', 
+    border: '#E8EAED', 
+    iconColor: '#86909C',
+    highlight: { background: '#E8EAED', border: '#86909C' } 
   }
 }
 
-// 网络配置常量
+// 网络配置常量 - 飞书风格
 const NETWORK_CONFIG = {
   nodes: {
     shape: 'dot',
     size: 12,
     font: {
       size: 11,
-      color: '#374151',
+      color: '#1D2129',
       face: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
       bold: { size: 12 }
     },
-    borderWidth: 2,
-    borderColor: '#ffffff',
+    borderWidth: 1.5,
+    borderColor: '#FFFFFF',
     shadow: {
-      enabled: true,
-      color: 'rgba(0, 0, 0, 0.08)',
-      size: 4,
-      x: 0,
-      y: 1
+      enabled: false
     },
     chosen: {
       node: function(values, id, selected, hovering) {
         if (selected) {
-          values.borderWidth = 3
-          values.shadow = {
-            enabled: true,
-            color: 'rgba(99, 102, 241, 0.2)',
-            size: 8,
-            x: 0,
-            y: 2
-          }
+          values.borderWidth = 2
         } else if (hovering) {
-          values.borderWidth = 2.5
-          values.shadow = {
-            enabled: true,
-            color: 'rgba(0, 0, 0, 0.12)',
-            size: 6,
-            x: 0,
-            y: 1
-          }
+          values.borderWidth = 2
         }
       }
     },
@@ -265,27 +236,27 @@ const NETWORK_CONFIG = {
   edges: {
     width: 1.5,
     color: {
-      color: '#3b82f6',
-      highlight: '#2563eb',
-      hover: '#60a5fa',
-      opacity: 0.7
+      color: '#E8EAED',
+      highlight: '#3370FF',
+      hover: '#4D5DFF',
+      opacity: 0.6
     },
     arrows: { to: { enabled: false } },
     smooth: {
       type: 'continuous',
-      roundness: 0.3
+      roundness: 0.2
     },
     shadow: { enabled: false },
     font: {
       size: 10,
-      color: '#6b7280',
+      color: '#86909C',
       align: 'middle',
-      background: '#ffffff',
+      background: '#FFFFFF',
       strokeWidth: 2,
-      strokeColor: '#ffffff'
+      strokeColor: '#FFFFFF'
     },
     labelHighlightBold: false,
-    selectionWidth: 2.5,
+    selectionWidth: 2,
     endPointOffset: { from: 0, to: 0 },
     length: 200
   },
@@ -417,7 +388,7 @@ const generateEntityIcon = (typeKey, iconColor) => {
   return icons[typeKey] || `<circle cx="5" cy="5" r="2.5" fill="${iconColor}"/>`
 }
 
-// 生成文档节点SVG
+// 生成文档节点SVG - 飞书风格
 const createDocNodeSvg = (docId, docName, docOwner) => {
   const { width, height, iconSize, iconMargin } = DOC_NODE_CONFIG
   const textStartX = iconMargin + iconSize + 2
@@ -429,41 +400,27 @@ const createDocNodeSvg = (docId, docName, docOwner) => {
   const displayOwner = docOwner && docOwner.length > maxOwnerChars ? docOwner.substring(0, maxOwnerChars) + '...' : docOwner
   
   return `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <filter id="docShadow-${docId}">
-        <feGaussianBlur in="SourceAlpha" stdDeviation="0.5"/>
-        <feOffset dx="0" dy="0.5" result="offsetblur"/>
-        <feComponentTransfer>
-          <feFuncA type="linear" slope="0.15"/>
-        </feComponentTransfer>
-        <feMerge>
-          <feMergeNode/>
-          <feMergeNode in="SourceGraphic"/>
-        </feMerge>
-      </filter>
-    </defs>
     <rect x="0" y="0" width="${width}" height="${height}" 
-          rx="2" ry="2" fill="#ffffff" 
-          stroke="#e5e7eb" stroke-width="0.25" 
-          filter="url(#docShadow-${docId})"/>
+          rx="4" ry="4" fill="#FFFFFF" 
+          stroke="#E8EAED" stroke-width="1"/>
     <g transform="translate(${iconMargin}, ${iconMargin + 1})">
-      <rect x="0" y="0" width="${iconSize}" height="${iconSize}" rx="1" fill="#e0e7ff"/>
+      <rect x="0" y="0" width="${iconSize}" height="${iconSize}" rx="2" fill="#E8F4FF"/>
       <g transform="translate(1.5, 2)">
-        <rect x="0" y="0" width="4" height="0.5" rx="0.25" fill="#6366f1"/>
-        <rect x="0" y="1.2" width="4" height="0.5" rx="0.25" fill="#6366f1"/>
-        <rect x="0" y="2.4" width="4" height="0.5" rx="0.25" fill="#6366f1"/>
+        <rect x="0" y="0" width="4" height="0.5" rx="0.25" fill="#3370FF"/>
+        <rect x="0" y="1.2" width="4" height="0.5" rx="0.25" fill="#3370FF"/>
+        <rect x="0" y="2.4" width="4" height="0.5" rx="0.25" fill="#3370FF"/>
       </g>
     </g>
     <g transform="translate(${textStartX}, 2)">
       <text x="0" y="4.5" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" 
-            font-size="2" font-weight="700" fill="#000000">${displayName}</text>
+            font-size="2" font-weight="500" fill="#1D2129">${displayName}</text>
       ${displayOwner ? `<text x="0" y="9.5" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" 
-            font-size="1.8" fill="#000000">${displayOwner}</text>` : ''}
+            font-size="1.8" fill="#86909C">${displayOwner}</text>` : ''}
     </g>
   </svg>`
 }
 
-// 生成实体节点SVG
+// 生成实体节点SVG - 飞书风格
 const createEntityNodeSvg = (entityId, entityName, entityType) => {
   const { maxWidth, height, iconSize, iconMargin, maxChars } = ENTITY_NODE_CONFIG
   const typeKey = (entityType || 'default').toLowerCase()
@@ -474,29 +431,18 @@ const createEntityNodeSvg = (entityId, entityName, entityType) => {
   const textStartX = iconMargin + iconSize + 2
   
   const iconColor = colorConfig.iconColor || colorConfig.border
-  const iconSvg = generateEntityIcon(typeKey, iconColor)
-  const gradientColors = colorConfig.gradient || [colorConfig.background, '#ffffff']
-  const gradientId = `grad-${entityId}`
   
   return `<svg width="${labelWidth}" height="${height}" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <linearGradient id="${gradientId}" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" style="stop-color:${gradientColors[0]};stop-opacity:1" />
-        <stop offset="100%" style="stop-color:${gradientColors[1]};stop-opacity:1" />
-      </linearGradient>
-    </defs>
     <rect x="0.5" y="0.5" width="${labelWidth - 1}" height="${height - 1}" 
           rx="4" ry="4" 
-          fill="url(#${gradientId})" 
+          fill="${colorConfig.background}" 
           stroke="${colorConfig.border}" 
-          stroke-width="0.5"/>
-    <g transform="translate(${iconMargin}, ${(height - iconSize) / 2}) scale(0.6)">
-      ${iconSvg}
-    </g>
+          stroke-width="1"/>
+    <circle cx="${iconMargin + iconSize / 2}" cy="${height / 2}" r="2.5" fill="${iconColor}"/>
     <text x="${textStartX}" y="${height/2 + 0.5}" 
           font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" 
-          font-size="1.8" font-weight="500" 
-          fill="#1f2937" 
+          font-size="1.8" font-weight="400" 
+          fill="#1D2129" 
           text-anchor="start" 
           dominant-baseline="middle">${displayName}</text>
   </svg>`
@@ -633,12 +579,12 @@ const resetHighlight = () => {
   // 恢复节点样式
   nodes.value.forEach(n => {
     const updateData = {
-      borderWidth: n.nodeType === 'document' ? 1.5 : 2
+      borderWidth: n.nodeType === 'document' ? 1 : 1.5
     }
     
     if (n.nodeType === 'document') {
       updateData.color = {
-        border: '#e5e7eb',
+        border: '#E8EAED',
         highlight: n.color?.highlight || {}
       }
     } else {
@@ -657,11 +603,11 @@ const resetHighlight = () => {
   // 恢复边样式
   edges.value.forEach(e => {
     network.updateEdge(e.id, {
-      width: 2,
+      width: 1.5,
       color: {
-        color: 'rgba(156, 163, 175, 0.4)',
-        highlight: '#6366f1',
-        hover: '#818cf8',
+        color: '#E8EAED',
+        highlight: '#3370FF',
+        hover: '#4D5DFF',
         opacity: 0.6
       }
     })
@@ -688,18 +634,18 @@ const highlightDocRelated = (docId) => {
   nodes.value.forEach(n => {
     const updateData = {}
     if (n.id === docId) {
-      // 文档节点：红色高亮
-      updateData.borderWidth = 4
+      // 文档节点：蓝色高亮
+      updateData.borderWidth = 2
       updateData.color = { 
-        border: '#ff0000',
-        highlight: { border: '#ff0000', background: n.color?.background || '#ffffff' }
+        border: '#3370FF',
+        highlight: { border: '#3370FF', background: n.color?.background || '#ffffff' }
       }
     } else if (relatedEntityIds.has(n.id)) {
       // 相关实体节点：蓝色高亮
-      updateData.borderWidth = 4
+      updateData.borderWidth = 2
       updateData.color = { 
-        border: '#0066ff',
-        highlight: { border: '#0066ff', background: n.color?.background || '#ffffff' }
+        border: '#3370FF',
+        highlight: { border: '#3370FF', background: n.color?.background || '#ffffff' }
       }
     } else {
       // 其他节点：淡化
@@ -717,19 +663,20 @@ const highlightDocRelated = (docId) => {
     const updateData = {}
     if (e.from === docId || e.docId === docId) {
       // 相关边：蓝色高亮
-      updateData.width = 3
+      updateData.width = 2
       updateData.color = { 
-        color: '#0066ff',
-        highlight: '#0066ff',
-        hover: '#0066ff'
+        color: '#3370FF',
+        highlight: '#3370FF',
+        hover: '#4D5DFF'
       }
     } else {
       // 其他边：淡化
       updateData.width = 1
       updateData.color = { 
-        color: '#cccccc',
-        highlight: '#cccccc',
-        hover: '#cccccc'
+        color: '#E8EAED',
+        highlight: '#E8EAED',
+        hover: '#E8EAED',
+        opacity: 0.3
       }
     }
     network.updateEdge(e.id, updateData)
@@ -835,8 +782,8 @@ const renderEntityGraph = (graphData) => {
         label: edge.type || '',
         title: edge.evidence || edge.type || '',
         color: {
-          color: '#60a5fa',
-          highlight: '#93c5fd'
+          color: '#3370FF',
+          highlight: '#4D5DFF'
         }
       }))
       
@@ -849,12 +796,12 @@ const renderEntityGraph = (graphData) => {
         nodes: {
           shape: 'dot',
           size: 7,
-          font: { size: 9, color: '#e2e8f0' }
+          font: { size: 9, color: '#1D2129' }
         },
         edges: {
           width: 1.5,
           arrows: { to: { enabled: true } },
-          color: { color: '#60a5fa' }
+          color: { color: '#3370FF' }
         },
         physics: {
           enabled: true,
@@ -874,7 +821,6 @@ const renderEntityGraph = (graphData) => {
       }
     })
   }
-}
 
 // ==================== 图谱数据更新 ====================
 // 更新图谱数据
@@ -975,10 +921,10 @@ const createDocEntityEdge = (docId, entityId, sentences) => {
     docId: docId,
     entityId: entityId,
     color: {
-      color: '#3b82f6',
-      highlight: '#2563eb',
-      hover: '#60a5fa',
-      opacity: 1
+      color: '#3370FF',
+      highlight: '#4D5DFF',
+      hover: '#4D5DFF',
+      opacity: 0.8
     },
     dashes: false,
     width: 2,
@@ -1113,15 +1059,6 @@ const resetView = () => {
   entityInfoData.value = null
   resetHighlight()
 }
-
-onUnmounted(() => {
-  if (network) {
-    network.destroy()
-  }
-  if (entityGraphNetwork) {
-    entityGraphNetwork.destroy()
-  }
-})
 </script>
 
 <style scoped>
@@ -1130,15 +1067,15 @@ onUnmounted(() => {
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: #ffffff;
+  background: #FFFFFF;
   border-radius: 8px;
   overflow: hidden;
 }
 
 .kg-header {
-  padding: 16px;
-  background: #ffffff;
-  border-bottom: 1px solid #e5e7eb;
+  padding: 16px 20px;
+  background: #FFFFFF;
+  border-bottom: 1px solid #E8EAED;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -1148,9 +1085,9 @@ onUnmounted(() => {
 
 .kg-title {
   margin: 0;
-  font-size: 18px;
-  font-weight: 600;
-  color: #1f2937;
+  font-size: 16px;
+  font-weight: 500;
+  color: #1D2129;
 }
 
 .kg-controls {
@@ -1160,20 +1097,21 @@ onUnmounted(() => {
 }
 
 .kg-reset-btn {
-  padding: 8px 16px;
-  background: #f3f4f6;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  color: #374151;
+  padding: 6px 12px;
+  background: #F7F8FA;
+  border: 1px solid #E8EAED;
+  border-radius: 4px;
+  color: #1D2129;
   font-size: 14px;
   cursor: pointer;
   transition: all 0.2s;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .kg-reset-btn:hover {
-  background: #e5e7eb;
-  border-color: #9ca3af;
+  background: #E8EAED;
+  border-color: #D1D5DB;
+  color: #3370FF;
 }
 
 .kg-canvas {
@@ -1181,7 +1119,7 @@ onUnmounted(() => {
   width: 100%;
   min-height: 500px;
   position: relative;
-  background: #f5f5f5; /* 浅灰色背景（参考图样式） */
+  background: #F7F8FA;
   border-radius: 0 0 8px 8px;
   overflow: hidden;
 }
@@ -1193,15 +1131,15 @@ onUnmounted(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: #6b7280;
+  color: #86909C;
   gap: 16px;
 }
 
 .loading-spinner {
   width: 40px;
   height: 40px;
-  border: 3px solid #e5e7eb;
-  border-top-color: #3b82f6;
+  border: 3px solid #E8EAED;
+  border-top-color: #3370FF;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -1217,10 +1155,10 @@ onUnmounted(() => {
   right: 20px;
   width: 320px;
   max-height: calc(100% - 100px);
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
+  background: #FFFFFF;
+  border: 1px solid #E8EAED;
   border-radius: 8px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   z-index: 1000;
   overflow-y: auto;
   padding: 16px;
@@ -1233,11 +1171,11 @@ onUnmounted(() => {
   width: 400px;
   max-height: 80vh;
   overflow-y: auto;
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
+  background: #FFFFFF;
+  border: 1px solid #E8EAED;
   border-radius: 8px;
   padding: 16px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   z-index: 1000;
   animation: slideIn 0.3s ease-out;
 }
@@ -1260,28 +1198,28 @@ onUnmounted(() => {
   align-items: center;
   margin-bottom: 12px;
   padding-bottom: 12px;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid #E8EAED;
 }
 
 .card-header h4 {
   margin: 0;
-  color: #1f2937;
-  font-size: 16px;
-  font-weight: 600;
+  color: #1D2129;
+  font-size: 15px;
+  font-weight: 500;
 }
 
 .detail-header h4 {
   margin: 0;
-  color: #1f2937;
-  font-size: 16px;
-  font-weight: 600;
+  color: #1D2129;
+  font-size: 15px;
+  font-weight: 500;
 }
 
 .close-btn {
   background: none;
   border: none;
-  color: #6b7280;
-  font-size: 24px;
+  color: #86909C;
+  font-size: 20px;
   cursor: pointer;
   padding: 0;
   width: 24px;
@@ -1291,10 +1229,12 @@ onUnmounted(() => {
   justify-content: center;
   transition: color 0.2s;
   line-height: 1;
+  border-radius: 4px;
 }
 
 .close-btn:hover {
-  color: #374151;
+  color: #1D2129;
+  background: #F7F8FA;
 }
 
 .detail-content,
@@ -1312,15 +1252,15 @@ onUnmounted(() => {
 
 .card-label {
   font-size: 12px;
-  color: #6b7280;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  font-weight: 500;
+  color: #86909C;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 400;
 }
 
 .card-value {
   font-size: 14px;
-  color: #1f2937;
+  color: #1D2129;
 }
 
 .sentences-list {
@@ -1330,39 +1270,39 @@ onUnmounted(() => {
   max-height: 200px;
   overflow-y: auto;
   padding: 8px;
-  background: #f9fafb;
+  background: #F7F8FA;
   border-radius: 6px;
 }
 
 .sentence-item {
   font-size: 13px;
-  color: #374151;
+  color: #1D2129;
   line-height: 1.6;
   padding: 8px;
-  background: #ffffff;
-  border-left: 3px solid #3b82f6;
+  background: #FFFFFF;
+  border-left: 2px solid #3370FF;
   border-radius: 4px;
 }
 
 .card-graph {
   margin-top: 16px;
   padding-top: 16px;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid #E8EAED;
 }
 
 .card-graph h5 {
   margin: 0 0 12px 0;
-  color: #1f2937;
+  color: #1D2129;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .entity-graph-canvas {
   width: 100%;
   height: 300px;
-  background: #f9fafb;
+  background: #F7F8FA;
   border-radius: 6px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #E8EAED;
 }
 
 .detail-item {
@@ -1373,27 +1313,27 @@ onUnmounted(() => {
 
 .detail-label {
   font-size: 12px;
-  color: #6b7280;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  font-weight: 500;
+  color: #86909C;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 400;
 }
 
 .detail-value {
   font-size: 14px;
-  color: #1f2937;
+  color: #1D2129;
 }
 
 .detail-text-content {
   font-size: 13px;
-  color: #374151;
+  color: #1D2129;
   line-height: 1.6;
   max-height: 300px;
   overflow-y: auto;
   padding: 12px;
-  background: #f9fafb;
+  background: #F7F8FA;
   border-radius: 6px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #E8EAED;
   white-space: pre-wrap;
   word-wrap: break-word;
   margin-top: 4px;
@@ -1407,13 +1347,13 @@ onUnmounted(() => {
   font-weight: 500;
 }
 
-.type-tech { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
-.type-system { background: rgba(139, 92, 246, 0.2); color: #a78bfa; }
-.type-service { background: rgba(16, 185, 129, 0.2); color: #34d399; }
-.type-api { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
-.type-db { background: rgba(239, 68, 68, 0.2); color: #f87171; }
-.type-person { background: rgba(236, 72, 153, 0.2); color: #f472b6; }
-.type-org { background: rgba(6, 182, 212, 0.2); color: #22d3ee; }
-.type-concept { background: rgba(99, 102, 241, 0.2); color: #818cf8; }
-.type-event { background: rgba(249, 115, 22, 0.2); color: #fb923c; }
+.type-tech { background: #E8F4FF; color: #3370FF; }
+.type-system { background: #F0F5FF; color: #4D5DFF; }
+.type-service { background: #E8F4FF; color: #3370FF; }
+.type-api { background: #FFF4E6; color: #FF9500; }
+.type-db { background: #FFE8E8; color: #F53F3F; }
+.type-person { background: #E8F4FF; color: #3370FF; }
+.type-org { background: #F0F5FF; color: #4D5DFF; }
+.type-concept { background: #E6F7FF; color: #00A6FB; }
+.type-event { background: #FFF4E6; color: #FF9500; }
 </style>

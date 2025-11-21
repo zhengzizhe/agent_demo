@@ -137,31 +137,23 @@ public class IKgEntityDao {
         if (list == null || list.isEmpty()) {
             return;
         }
-        
-        // 使用原生SQL处理pgvector类型
         String sql = "INSERT INTO kg_entity (id, name, type, description, embedding) " +
                 "VALUES (?, ?, ?, ?, ?::vector)";
-        
         try (var connection = dsl.configuration().connectionProvider().acquire()) {
             PreparedStatement ps = connection.prepareStatement(sql);
-            
             for (KgEntityPO po : list) {
                 ps.setLong(1, po.getId());
                 ps.setString(2, po.getName());
                 ps.setString(3, po.getType());
                 ps.setString(4, po.getDescription());
-                
-                // 将float[]转换为pgvector格式的字符串: "[0.1,0.2,0.3]"
                 Object embeddingObj = po.getEmbedding();
                 if (embeddingObj != null && embeddingObj instanceof float[]) {
                     ps.setString(5, arrayToString((float[]) embeddingObj));
                 } else {
                     ps.setString(5, null);
                 }
-                
                 ps.addBatch();
             }
-            
             ps.executeBatch();
         } catch (SQLException e) {
             throw new RuntimeException("批量插入知识图谱实体失败", e);
