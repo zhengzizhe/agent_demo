@@ -1,12 +1,10 @@
 package com.example.ddd.domain.agent.model.valobj;
 
-import io.micronaut.serde.annotation.Serdeable;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.util.List;
 
-@Serdeable
 @Getter
 @Setter
 public class EntityDTO {

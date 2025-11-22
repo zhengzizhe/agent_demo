@@ -110,12 +110,14 @@ watch(() => props.form.message, () => {
 <style scoped>
 /* 输入区域 */
 .input-container {
-  border-top: 1px solid #e5e7eb;
-  background: var(--theme-background, #ffffff);
-  padding: 20px 32px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(30px) saturate(180%);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  padding: 24px 40px;
   position: relative;
   z-index: 10;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* 居中显示（初始状态） */
@@ -186,12 +188,16 @@ watch(() => props.form.message, () => {
   align-items: flex-start;
   max-width: 800px;
   margin: 0 auto;
-  background: var(--theme-background, #ffffff);
-  border: 2px solid var(--theme-accent, #165dff);
-  border-radius: 16px;
-  padding: 16px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 2px 8px color-mix(in srgb, var(--theme-accent, #165dff) 20%, transparent);
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1.5px solid rgba(22, 93, 255, 0.2);
+  border-radius: 18px;
+  padding: 18px 20px;
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 
+    0 2px 12px rgba(22, 93, 255, 0.08),
+    0 0 0 1px rgba(0, 0, 0, 0.02) inset;
 }
 
 /* 居中状态时更宽 */
@@ -201,11 +207,13 @@ watch(() => props.form.message, () => {
 }
 
 .input-wrapper:focus-within {
-  background: var(--theme-background, #ffffff);
+  background: rgba(255, 255, 255, 0.95);
   border-color: var(--theme-accent, #165dff);
   box-shadow: 
-    0 4px 12px color-mix(in srgb, var(--theme-accent, #165dff) 25%, transparent),
-    0 0 0 3px color-mix(in srgb, var(--theme-accent, #165dff) 15%, transparent);
+    0 4px 20px rgba(22, 93, 255, 0.12),
+    0 0 0 4px rgba(22, 93, 255, 0.08),
+    0 0 0 1px rgba(0, 0, 0, 0.02) inset;
+  transform: translateY(-1px);
 }
 
 .input-content {
@@ -288,26 +296,51 @@ watch(() => props.form.message, () => {
 }
 
 .send-button {
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--theme-accent, #165dff);
+  background: linear-gradient(135deg, var(--theme-accent, #165dff) 0%, #0e42d2 100%);
   color: white;
   border: none;
-  border-radius: 50%;
+  border-radius: 12px;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   flex-shrink: 0;
-  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+  box-shadow: 
+    0 2px 8px rgba(22, 93, 255, 0.25),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+  position: relative;
+  overflow: hidden;
+}
+
+.send-button::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, transparent 100%);
+  opacity: 0;
+  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .send-button:hover:not(:disabled) {
-  background-color: var(--theme-accent, #165dff);
-  opacity: 0.9;
-  transform: scale(1.05);
-  box-shadow: 0 4px 8px rgba(37, 99, 235, 0.3);
+  background: linear-gradient(135deg, #0e42d2 0%, #0a35b8 100%);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 
+    0 4px 16px rgba(22, 93, 255, 0.35),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+}
+
+.send-button:hover:not(:disabled)::before {
+  opacity: 1;
+}
+
+.send-button:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+  box-shadow: 
+    0 2px 8px rgba(22, 93, 255, 0.25),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset;
 }
 
 .send-button svg {

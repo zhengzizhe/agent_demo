@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.ddd.infrastructure.dao.mapper.EmailVerificationMapper">
+
+    <resultMap id="BaseResultMap" type="com.example.ddd.infrastructure.dao.po.EmailVerificationPO">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="email" property="email" jdbcType="VARCHAR"/>
+        <result column="code" property="code" jdbcType="VARCHAR"/>
+        <result column="purpose" property="purpose" jdbcType="VARCHAR"/>
+        <result column="status" property="status" jdbcType="SMALLINT"/>
+        <result column="expire_at" property="expireAt" jdbcType="BIGINT"/>
+        <result column="created_at" property="createdAt" jdbcType="BIGINT"/>
+        <result column="used_at" property="usedAt" jdbcType="BIGINT"/>
+        <result column="client_ip" property="clientIp" jdbcType="VARCHAR"/>
+        <result column="user_agent" property="userAgent" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, email, code, purpose, status, expire_at, created_at, used_at, client_ip, user_agent
+    </sql>
+
+    <insert id="insert" parameterType="com.example.ddd.infrastructure.dao.po.EmailVerificationPO">
+        INSERT INTO email_verification (
+            id, email, code, purpose, status, expire_at, created_at, used_at, client_ip, user_agent
+        )
+        VALUES (
+            #{id}, #{email}, #{code}, #{purpose}, #{status}, #{expireAt}, #{createdAt}, #{usedAt}, #{clientIp}, #{userAgent}
+        )
+    </insert>
+
+    <select id="queryById" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM email_verification
+        WHERE id = #{id}
+    </select>
+
+    <select id="queryLatestByEmailAndCodeAndPurpose" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM email_verification
+        WHERE email = #{email} AND code = #{code} AND purpose = #{purpose}
+        ORDER BY created_at DESC
+        LIMIT 1
+    </select>
+
+    <select id="queryLatestByEmailAndPurpose" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM email_verification
+        WHERE email = #{email} AND purpose = #{purpose}
+        ORDER BY created_at DESC
+        LIMIT 1
+    </select>
+
+    <select id="queryByEmailAndPurpose" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM email_verification
+        WHERE email = #{email} AND purpose = #{purpose}
+        ORDER BY created_at DESC
+    </select>
+
+    <update id="updateStatus">
+        UPDATE email_verification
+        SET status = #{status}
+            <if test="usedAt != null">, used_at = #{usedAt}</if>
+        WHERE id = #{id}
+    </update>
+
+    <update id="markAsUsed">
+        UPDATE email_verification
+        SET status = 1, used_at = #{usedAt}
+        WHERE id = #{id}
+    </update>
+
+    <update id="markAsExpired">
+        UPDATE email_verification
+        SET status = 2
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteExpired">
+        DELETE FROM email_verification
+        WHERE expire_at &lt; #{currentTime} AND status = 0
+    </delete>
+
+</mapper>
+

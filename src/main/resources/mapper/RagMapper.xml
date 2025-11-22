@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.ddd.infrastructure.dao.mapper.RagMapper">
+
+    <resultMap id="BaseResultMap" type="com.example.ddd.infrastructure.dao.po.RagPO">
+        <id column="id" property="id" jdbcType="VARCHAR"/>
+        <result column="name" property="name" jdbcType="VARCHAR"/>
+        <result column="vector_store_type" property="vectorStoreType" jdbcType="VARCHAR"/>
+        <result column="embedding_model" property="embeddingModel" jdbcType="VARCHAR"/>
+        <result column="chunk_size" property="chunkSize" jdbcType="INTEGER"/>
+        <result column="chunk_overlap" property="chunkOverlap" jdbcType="INTEGER"/>
+        <result column="database_type" property="databaseType" jdbcType="VARCHAR"/>
+        <result column="database_host" property="databaseHost" jdbcType="VARCHAR"/>
+        <result column="database_port" property="databasePort" jdbcType="INTEGER"/>
+        <result column="database_name" property="databaseName" jdbcType="VARCHAR"/>
+        <result column="database_user" property="databaseUser" jdbcType="VARCHAR"/>
+        <result column="database_password" property="databasePassword" jdbcType="VARCHAR"/>
+        <result column="table_name" property="tableName" jdbcType="VARCHAR"/>
+        <result column="dimension" property="dimension" jdbcType="INTEGER"/>
+        <result column="use_index" property="useIndex" jdbcType="BOOLEAN"/>
+        <result column="index_list_size" property="indexListSize" jdbcType="INTEGER"/>
+        <result column="config" property="config" jdbcType="VARCHAR"/>
+        <result column="status" property="status" jdbcType="VARCHAR"/>
+        <result column="created_at" property="createdAt" jdbcType="BIGINT"/>
+        <result column="updated_at" property="updatedAt" jdbcType="BIGINT"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, name, vector_store_type, embedding_model, chunk_size, chunk_overlap,
+        database_type, database_host, database_port, database_name, database_user,
+        database_password, table_name, dimension, use_index, index_list_size,
+        config, status, created_at, updated_at
+    </sql>
+
+    <insert id="insert" parameterType="com.example.ddd.infrastructure.dao.po.RagPO">
+        INSERT INTO rag (id, name, vector_store_type, embedding_model, chunk_size, chunk_overlap,
+                database_type, database_host, database_port, database_name, database_user,
+                database_password, table_name, dimension, use_index, index_list_size,
+                config, status, created_at, updated_at)
+        VALUES (#{id}, #{name}, #{vectorStoreType}, #{embeddingModel}, #{chunkSize}, #{chunkOverlap},
+                #{databaseType}, #{databaseHost}, #{databasePort}, #{databaseName}, #{databaseUser},
+                #{databasePassword}, #{tableName}, #{dimension}, #{useIndex}, #{indexListSize},
+                #{config}, #{status}, #{createdAt}, #{updatedAt})
+    </insert>
+
+    <select id="queryById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM rag
+        WHERE id = #{id}
+    </select>
+
+    <select id="queryByName" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM rag
+        WHERE name = #{name}
+    </select>
+
+    <select id="queryByVectorStoreType" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM rag
+        WHERE vector_store_type = #{vectorStoreType}
+    </select>
+
+    <select id="queryAll" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM rag
+    </select>
+
+    <select id="queryByStatus" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM rag
+        WHERE status = #{status}
+    </select>
+
+    <select id="queryByAgentId" resultMap="BaseResultMap">
+        SELECT r.<include refid="Base_Column_List"/>
+        FROM rag r
+        INNER JOIN agent_rag ar ON r.id = ar.rag_id
+        WHERE ar.agent_id = #{agentId}
+    </select>
+
+    <select id="queryByClientId" resultMap="BaseResultMap">
+        SELECT DISTINCT r.<include refid="Base_Column_List"/>
+        FROM rag r
+        INNER JOIN agent_rag ar ON r.id = ar.rag_id
+        WHERE ar.agent_id = #{clientId}
+    </select>
+
+    <select id="queryByClientIds" resultMap="BaseResultMap">
+        SELECT DISTINCT r.<include refid="Base_Column_List"/>
+        FROM rag r
+        INNER JOIN agent_rag ar ON r.id = ar.rag_id
+        WHERE ar.agent_id IN
+        <foreach collection="clientIds" item="clientId" open="(" separator="," close=")">
+            #{clientId}
+        </foreach>
+    </select>
+
+    <update id="update" parameterType="com.example.ddd.infrastructure.dao.po.RagPO">
+        UPDATE rag
+        SET name = #{name},
+            vector_store_type = #{vectorStoreType},
+            embedding_model = #{embeddingModel},
+            chunk_size = #{chunkSize},
+            chunk_overlap = #{chunkOverlap},
+            database_type = #{databaseType},
+            database_host = #{databaseHost},
+            database_port = #{databasePort},
+            database_name = #{databaseName},
+            database_user = #{databaseUser},
+            database_password = #{databasePassword},
+            table_name = #{tableName},
+            dimension = #{dimension},
+            use_index = #{useIndex},
+            index_list_size = #{indexListSize},
+            config = #{config},
+            status = #{status},
+            updated_at = #{updatedAt}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM rag WHERE id = #{id}
+    </delete>
+
+    <delete id="deleteByIds">
+        DELETE FROM rag WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+</mapper>
+

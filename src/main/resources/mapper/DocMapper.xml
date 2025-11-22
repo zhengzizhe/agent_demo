@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.ddd.infrastructure.dao.mapper.DocMapper">
+
+    <resultMap id="BaseResultMap" type="com.example.ddd.infrastructure.dao.po.DocPO">
+        <id column="id" property="id" jdbcType="VARCHAR"/>
+        <result column="name" property="name" jdbcType="VARCHAR"/>
+        <result column="owner" property="owner" jdbcType="VARCHAR"/>
+        <result column="text" property="text" jdbcType="VARCHAR"/>
+        <result column="type" property="type" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, name, owner, text, type
+    </sql>
+
+    <insert id="insert" parameterType="com.example.ddd.infrastructure.dao.po.DocPO">
+        INSERT INTO doc (id, name, owner, text, type)
+        VALUES (#{id}, #{name}, #{owner}, #{text}, #{type})
+    </insert>
+
+    <select id="queryById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM doc
+        WHERE id = #{id}
+    </select>
+
+    <select id="queryByUserId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM doc
+        WHERE owner = #{userId}
+    </select>
+
+    <update id="update" parameterType="com.example.ddd.infrastructure.dao.po.DocPO">
+        UPDATE doc
+        SET name = #{name},
+            owner = #{owner},
+            text = #{text},
+            type = #{type}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM doc WHERE id = #{id}
+    </delete>
+
+</mapper>
+

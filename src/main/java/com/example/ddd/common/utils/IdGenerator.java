@@ -1,7 +1,7 @@
 package com.example.ddd.common.utils;
 
-import jakarta.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 import java.net.NetworkInterface;
 import java.nio.ByteBuffer;
@@ -20,7 +20,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * 5. 时间戳ID - 简单时间戳ID
  */
 @Slf4j
-@Singleton
+@Component
 public class IdGenerator {
 
     // ==================== Snowflake ID ====================
@@ -236,8 +236,14 @@ public class IdGenerator {
             while (interfaces.hasMoreElements()) {
                 NetworkInterface networkInterface = interfaces.nextElement();
                 byte[] mac = networkInterface.getHardwareAddress();
-                if (mac != null && mac.length > 0) {
-                    ByteBuffer buffer = ByteBuffer.wrap(mac);
+                if (mac != null && mac.length >= 6) {
+                    // MAC地址是6字节，需要转换为long
+                    // 使用前6字节，填充到8字节
+                    ByteBuffer buffer = ByteBuffer.allocate(8);
+                    buffer.put((byte) 0); // 填充前2字节
+                    buffer.put((byte) 0);
+                    buffer.put(mac, 0, Math.min(6, mac.length)); // 添加MAC地址
+                    buffer.flip();
                     return Math.abs(buffer.getLong()) % 32;
                 }
             }
@@ -363,6 +369,16 @@ public class IdGenerator {
      */
     public String nextDocId() {
         return "doc_" + nextUlid();
+    }
+    
+    /**
+     * 生成通用ID（String类型，使用ULID）
+     * 推荐用于所有需要String类型ID的场景
+     * 
+     * @return String类型的唯一ID
+     */
+    public String nextId() {
+        return nextUlid();
     }
     
     /**

@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.ddd.infrastructure.dao.mapper.LoginLogMapper">
+
+    <resultMap id="BaseResultMap" type="com.example.ddd.infrastructure.dao.po.LoginLogPO">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="user_id" property="userId" jdbcType="BIGINT"/>
+        <result column="provider" property="provider" jdbcType="VARCHAR"/>
+        <result column="login_type" property="loginType" jdbcType="VARCHAR"/>
+        <result column="success" property="success" jdbcType="SMALLINT"/>
+        <result column="fail_reason" property="failReason" jdbcType="VARCHAR"/>
+        <result column="ip_address" property="ipAddress" jdbcType="VARCHAR"/>
+        <result column="user_agent" property="userAgent" jdbcType="VARCHAR"/>
+        <result column="created_at" property="createdAt" jdbcType="BIGINT"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, user_id, provider, login_type, success, fail_reason, ip_address, user_agent, created_at
+    </sql>
+
+    <insert id="insert" parameterType="com.example.ddd.infrastructure.dao.po.LoginLogPO">
+        INSERT INTO login_log (
+            id, user_id, provider, login_type, success, fail_reason, ip_address, user_agent, created_at
+        )
+        VALUES (
+            #{id}, #{userId}, #{provider}, #{loginType}, #{success}, #{failReason}, #{ipAddress}, #{userAgent}, #{createdAt}
+        )
+    </insert>
+
+    <select id="queryById" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM login_log
+        WHERE id = #{id}
+    </select>
+
+    <select id="queryByUserId" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM login_log
+        WHERE user_id = #{userId}
+        ORDER BY created_at DESC
+        <if test="limit != null and limit > 0">
+            LIMIT #{limit}
+        </if>
+    </select>
+
+    <select id="queryByUserIdAndSuccess" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM login_log
+        WHERE user_id = #{userId} AND success = #{success}
+        ORDER BY created_at DESC
+        <if test="limit != null and limit > 0">
+            LIMIT #{limit}
+        </if>
+    </select>
+
+    <select id="queryByIpAddress" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM login_log
+        WHERE ip_address = #{ipAddress}
+        ORDER BY created_at DESC
+        <if test="limit != null and limit > 0">
+            LIMIT #{limit}
+        </if>
+    </select>
+
+    <select id="queryByTimeRange" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM login_log
+        WHERE created_at &gt;= #{startTime} AND created_at &lt;= #{endTime}
+        ORDER BY created_at DESC
+        <if test="limit != null and limit > 0">
+            LIMIT #{limit}
+        </if>
+    </select>
+
+    <select id="countByUserId" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM login_log
+        WHERE user_id = #{userId}
+    </select>
+
+    <select id="countSuccessByUserId" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM login_log
+        WHERE user_id = #{userId} AND success = 1
+    </select>
+
+    <select id="countFailByUserId" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM login_log
+        WHERE user_id = #{userId} AND success = 0
+    </select>
+
+</mapper>
+

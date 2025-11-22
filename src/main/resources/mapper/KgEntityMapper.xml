@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.ddd.infrastructure.dao.mapper.KgEntityMapper">
+
+    <resultMap id="BaseResultMap" type="com.example.ddd.infrastructure.dao.po.KgEntityPO">
+        <id column="id" property="id" jdbcType="VARCHAR"/>
+        <result column="name" property="name" jdbcType="VARCHAR"/>
+        <result column="type" property="type" jdbcType="VARCHAR"/>
+        <result column="description" property="description" jdbcType="VARCHAR"/>
+        <result column="embedding" property="embedding" jdbcType="OTHER" typeHandler="com.example.ddd.infrastructure.dao.typehandler.VectorTypeHandler"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, name, type, description, embedding
+    </sql>
+
+    <insert id="insert" parameterType="com.example.ddd.infrastructure.dao.po.KgEntityPO">
+        INSERT INTO kg_entity (id, name, type, description, embedding)
+        VALUES (#{id}, #{name}, #{type}, #{description}, #{embedding,typeHandler=com.example.ddd.infrastructure.dao.typehandler.VectorTypeHandler}::vector)
+    </insert>
+
+    <select id="queryById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM kg_entity
+        WHERE id = #{id}
+    </select>
+
+    <select id="queryAll" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM kg_entity
+    </select>
+
+    <select id="queryByType" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM kg_entity
+        WHERE type = #{type}
+    </select>
+
+    <select id="queryByNameLike" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM kg_entity
+        WHERE name LIKE CONCAT('%', #{name}, '%')
+    </select>
+
+    <update id="update" parameterType="com.example.ddd.infrastructure.dao.po.KgEntityPO">
+        UPDATE kg_entity
+        SET name = #{name},
+            type = #{type},
+            description = #{description},
+            embedding = #{embedding,typeHandler=com.example.ddd.infrastructure.dao.typehandler.VectorTypeHandler}::vector
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM kg_entity WHERE id = #{id}
+    </delete>
+
+    <insert id="batchInsert" parameterType="list">
+        INSERT INTO kg_entity (id, name, type, description, embedding)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.id}, #{item.name}, #{item.type}, #{item.description}, 
+             #{item.embedding,typeHandler=com.example.ddd.infrastructure.dao.typehandler.VectorTypeHandler}::vector)
+        </foreach>
+        ON CONFLICT (id) DO NOTHING
+    </insert>
+
+    <select id="similaritySearch" resultMap="BaseResultMap">
+        SELECT *, 1 - (embedding &lt;=&gt; #{queryEmbedding}::vector) as similarity
+        FROM kg_entity
+        WHERE (1 - (embedding &lt;=&gt; #{queryEmbedding}::vector)) &gt;= #{similarityThreshold}
+        ORDER BY embedding &lt;=&gt; #{queryEmbedding}::vector
+        LIMIT #{limit}
+    </select>
+
+</mapper>
+

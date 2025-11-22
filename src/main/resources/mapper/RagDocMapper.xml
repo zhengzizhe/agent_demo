@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.ddd.infrastructure.dao.mapper.RagDocMapper">
+
+    <insert id="insert">
+        INSERT INTO rag_doc (rag_id, doc_id)
+        VALUES (#{ragId}, #{docId})
+        ON CONFLICT (rag_id, doc_id) DO NOTHING
+    </insert>
+
+    <select id="queryDocIdsByRagId" resultType="string">
+        SELECT doc_id FROM rag_doc WHERE rag_id = #{ragId}
+    </select>
+
+    <select id="queryRagIdsByDocId" resultType="string">
+        SELECT rag_id FROM rag_doc WHERE doc_id = #{docId}
+    </select>
+
+    <delete id="deleteByRagId">
+        DELETE FROM rag_doc WHERE rag_id = #{ragId}
+    </delete>
+
+    <delete id="deleteByDocId">
+        DELETE FROM rag_doc WHERE doc_id = #{docId}
+    </delete>
+
+    <delete id="delete">
+        DELETE FROM rag_doc WHERE rag_id = #{ragId} AND doc_id = #{docId}
+    </delete>
+
+</mapper>
+

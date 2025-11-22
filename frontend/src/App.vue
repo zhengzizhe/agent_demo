@@ -1,5 +1,9 @@
 <template>
-  <div class="app" :class="{ 'electron-app': isElectron }">
+  <!-- 登录页面 -->
+  <LoginPage v-if="!isLoggedIn" @login-success="handleLoginSuccess" />
+  
+  <!-- 主应用 -->
+  <div v-else class="app" :class="{ 'electron-app': isElectron }">
     <!-- 主布局容器 -->
     <div class="app-layout">
       <!-- 左侧边栏 -->
@@ -226,14 +230,43 @@ import Sidebar from './components/Sidebar.vue'
 import TabsBar from './components/TabsBar.vue'
 import ColorPalette from './components/ColorPalette.vue'
 import AnimatedLogo from './components/AnimatedLogo.vue'
+import LoginPage from './components/LoginPage.vue'
 import { useMessages } from './composables/useMessages.js'
 import { useEventHandlers } from './composables/useEventHandlers.js'
 import { useTaskExecution } from './composables/useTaskExecution.js'
 import { useSession } from './composables/useSession.js'
 import { useTabs } from './composables/useTabs.js'
+import { useAuth } from './composables/useAuth.js'
+import { getToken } from './utils/api.js'
 
 // 检测是否在 Electron 环境中
 const isElectron = ref(typeof window !== 'undefined' && window.electronAPI !== undefined)
+
+// 使用认证
+const { initAuth } = useAuth()
+
+// 登录状态
+const isLoggedIn = ref((() => {
+  // 检查是否有登录 token
+  if (typeof window !== 'undefined') {
+    const token = getToken()
+    return !!token
+  }
+  return false
+})())
+
+// 初始化认证（检查 token 是否有效）
+if (typeof window !== 'undefined') {
+  initAuth().then(() => {
+    const token = getToken()
+    isLoggedIn.value = !!token
+  })
+}
+
+// 处理登录成功
+const handleLoginSuccess = (data) => {
+  isLoggedIn.value = true
+}
 
 // 标签页管理
 const tabsManager = useTabs()
@@ -404,7 +437,7 @@ const canSend = computed(() => {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background: var(--theme-background, #ffffff);
+  background: #f5f5f7;
   color: #111827;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   position: relative;
@@ -431,10 +464,37 @@ const canSend = computed(() => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: var(--theme-background, #ffffff);
-  margin: 8px;
-  border: 1px solid rgba(229, 231, 235, 0.4);
-  border-radius: 12px;
+  background: rgba(249, 250, 251, 0.95);
+  margin: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 16px;
+  box-shadow: 
+    0 0 0 1px rgba(0, 0, 0, 0.03) inset,
+    0 2px 8px rgba(0, 0, 0, 0.06),
+    0 8px 24px rgba(0, 0, 0, 0.03);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+/* 标签栏和内容区域的融合 */
+.main-content::before {
+  content: '';
+  position: absolute;
+  top: 40px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(to right, 
+    transparent 0%, 
+    rgba(0, 0, 0, 0.04) 20%, 
+    rgba(0, 0, 0, 0.04) 80%, 
+    transparent 100%);
+  z-index: 5;
+  pointer-events: none;
 }
 
 /* 内容区域 */
@@ -443,7 +503,8 @@ const canSend = computed(() => {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  background: var(--theme-background, #ffffff);
+  background: rgba(249, 250, 251, 0.6);
+  border-radius: 16px;
 }
 
 /* 视图容器 */
@@ -455,23 +516,25 @@ const canSend = computed(() => {
   height: 100%;
 }
 
-/* 页面切换动画 - Notion/飞书风格 */
+/* 页面切换动画 - Craft 风格 */
 .view-transition-enter-active {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .view-transition-leave-active {
-  transition: all 0.25s cubic-bezier(0.4, 0, 1, 1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 1, 1);
 }
 
 .view-transition-enter-from {
   opacity: 0;
-  transform: translateX(20px) scale(0.98);
+  transform: translateY(8px) scale(0.98);
+  filter: blur(4px);
 }
 
 .view-transition-leave-to {
   opacity: 0;
-  transform: translateX(-20px) scale(0.98);
+  transform: translateY(-4px) scale(0.99);
+  filter: blur(2px);
 }
 
 .tab-icon {
@@ -555,7 +618,7 @@ const canSend = computed(() => {
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(to right, transparent, #e5e5e6, transparent);
+  background: linear-gradient(to right, transparent, rgba(0, 0, 0, 0.04), transparent);
   z-index: 1;
 }
 
@@ -567,10 +630,11 @@ const canSend = computed(() => {
   right: 0;
   bottom: 0;
   background: 
-    radial-gradient(circle at 10% 20%, rgba(33, 150, 243, 0.02) 0%, transparent 40%),
-    radial-gradient(circle at 90% 60%, rgba(66, 165, 245, 0.02) 0%, transparent 40%);
+    radial-gradient(circle at 10% 20%, rgba(22, 93, 255, 0.015) 0%, transparent 50%),
+    radial-gradient(circle at 90% 60%, rgba(99, 102, 241, 0.015) 0%, transparent 50%);
   pointer-events: none;
   z-index: 0;
+  opacity: 0.6;
 }
 
 /* 对话框容器 */
@@ -579,26 +643,28 @@ const canSend = computed(() => {
   flex-direction: column;
   flex: 1;
   overflow: hidden;
-  background: var(--theme-background, #ffffff);
+  background: rgba(249, 250, 251, 0.4);
   position: relative;
   z-index: 1;
+  border-radius: 16px;
 }
 
 .dialog-messages {
   flex: 1;
   overflow-y: auto;
-  padding: 40px 100px;
+  padding: 48px 120px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 24px;
   max-width: 1800px;
   margin: 0 auto;
   width: 100%;
   scroll-behavior: smooth;
   position: relative;
   min-height: 0;
-  align-items: flex-start; /* 确保消息左对齐 */
-  border-radius: 12px;
+  align-items: flex-start;
+  border-radius: 16px;
+  transition: padding 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* 当有消息时，恢复正常的消息布局 */

@@ -1,7 +1,6 @@
 package com.example.ddd.domain.agent.model.entity;
 
-import com.example.ddd.domain.agent.service.execute.role.AgentRole;
-import io.micronaut.serde.annotation.Serdeable;
+import com.example.ddd.application.agent.service.execute.role.AgentRole;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -10,10 +9,9 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-@Serdeable
 public class AgentEntity {
-    private Long id;
-    private Long orchestratorId;
+    private String id;
+    private String orchestratorId;
     private String name;
     private String description;
     private String status;

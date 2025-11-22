@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.ddd.infrastructure.dao.mapper.VectorDocumentMapper">
+
+    <resultMap id="BaseResultMap" type="com.example.ddd.infrastructure.dao.po.VectorDocumentPO">
+        <id column="embedding_id" property="embeddingId" jdbcType="VARCHAR"/>
+        <result column="rag_id" property="ragId" jdbcType="VARCHAR"/>
+        <result column="text" property="content" jdbcType="VARCHAR"/>
+        <result column="embedding" property="embedding" jdbcType="OTHER" typeHandler="com.example.ddd.infrastructure.dao.typehandler.VectorTypeHandler"/>
+        <result column="metadata" property="metadata" jdbcType="VARCHAR"/>
+        <result column="chunk_index" property="chunkIndex" jdbcType="INTEGER"/>
+        <result column="created_at" property="createdAt" jdbcType="BIGINT"/>
+        <result column="updated_at" property="updatedAt" jdbcType="BIGINT"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        embedding_id, rag_id, text, embedding, metadata, chunk_index, created_at, updated_at
+    </sql>
+
+    <insert id="insert" parameterType="com.example.ddd.infrastructure.dao.po.VectorDocumentPO">
+        INSERT INTO vector_document (rag_id, text, embedding, metadata, chunk_index)
+        VALUES (#{ragId}, #{content}, #{embedding,typeHandler=com.example.ddd.infrastructure.dao.typehandler.VectorTypeHandler}::vector, 
+                #{metadata}::jsonb, #{chunkIndex})
+        RETURNING embedding_id, rag_id, text, embedding, metadata, chunk_index, created_at, updated_at
+    </insert>
+
+    <insert id="batchInsert" parameterType="list">
+        INSERT INTO vector_document (rag_id, text, embedding, metadata, chunk_index)
+        VALUES
+        <foreach collection="documents" item="doc" separator=",">
+            (#{doc.ragId}, #{doc.content}, 
+             #{doc.embedding,typeHandler=com.example.ddd.infrastructure.dao.typehandler.VectorTypeHandler}::vector,
+             #{doc.metadata}::jsonb, #{doc.chunkIndex})
+        </foreach>
+    </insert>
+
+    <select id="queryById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM vector_document
+        WHERE embedding_id = #{id}::uuid
+    </select>
+
+    <select id="queryByRagId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM vector_document
+        WHERE rag_id = #{ragId}
+        ORDER BY chunk_index
+    </select>
+
+    <select id="similaritySearch" resultMap="BaseResultMap">
+        SELECT *, 1 - (embedding &lt;=&gt; #{queryEmbedding}::vector) as similarity
+        FROM vector_document
+        WHERE rag_id = #{ragId} AND (1 - (embedding &lt;=&gt; #{queryEmbedding}::vector)) &gt;= #{similarityThreshold}
+        ORDER BY embedding &lt;=&gt; #{queryEmbedding}::vector
+        LIMIT #{limit}
+    </select>
+
+    <delete id="deleteByRagId">
+        DELETE FROM vector_document WHERE rag_id = #{ragId}
+    </delete>
+
+    <delete id="deleteById">
+        DELETE FROM vector_document WHERE embedding_id = #{embeddingId}::uuid
+    </delete>
+
+    <select id="queryByEmbeddingId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM vector_document
+        WHERE embedding_id = #{embeddingId}::uuid
+    </select>
+
+</mapper>
+

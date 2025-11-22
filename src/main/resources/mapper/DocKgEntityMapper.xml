@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.ddd.infrastructure.dao.mapper.DocKgEntityMapper">
+
+    <insert id="batchInsert">
+        INSERT INTO doc_kg_entity (doc_id, kg_entity_id)
+        VALUES
+        <foreach collection="entityIds" item="entityId" separator=",">
+            (#{docId}, #{entityId})
+        </foreach>
+        ON CONFLICT (doc_id, kg_entity_id) DO NOTHING
+    </insert>
+
+    <select id="queryEntityIdsByDocId" resultType="string">
+        SELECT kg_entity_id FROM doc_kg_entity WHERE doc_id = #{docId}
+    </select>
+
+    <select id="queryDocIdsByEntityId" resultType="string">
+        SELECT doc_id FROM doc_kg_entity WHERE kg_entity_id = #{entityId}
+    </select>
+
+    <delete id="deleteByDocId">
+        DELETE FROM doc_kg_entity WHERE doc_id = #{docId}
+    </delete>
+
+    <delete id="deleteByEntityId">
+        DELETE FROM doc_kg_entity WHERE kg_entity_id = #{entityId}
+    </delete>
+
+</mapper>
+

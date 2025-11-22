@@ -15,11 +15,13 @@
     "electron:build:linux": "npm run build && electron-builder --linux"
   },
   "dependencies": {
+    "@vueuse/core": "^14.0.0",
     "highlight.js": "^11.11.1",
     "html2canvas": "^1.4.1",
     "html2pdf.js": "^0.12.1",
     "jspdf": "^3.0.3",
     "markdown-it": "^14.1.0",
+    "motion": "^12.23.24",
     "vis-network": "^10.0.2",
     "vue": "^3.4.21"
   },
@@ -67,4 +69,3 @@
     }
   }
 }
-

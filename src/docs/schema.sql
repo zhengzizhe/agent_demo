@@ -19,7 +19,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- ========================
 CREATE TABLE IF NOT EXISTS public.orchestrator
 (
-    id          BIGSERIAL PRIMARY KEY,
+    id          VARCHAR(64) PRIMARY KEY,
     name        VARCHAR(255) NOT NULL,
     description TEXT,
     status      VARCHAR(50) DEFAULT 'ACTIVE',
@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS public.orchestrator
 -- ========================
 CREATE TABLE IF NOT EXISTS public.model
 (
-    id           BIGSERIAL PRIMARY KEY,
+    id           VARCHAR(64) PRIMARY KEY,
     name         VARCHAR(255) NOT NULL,
     provider     VARCHAR(100) NOT NULL,
     model_type   VARCHAR(100),
@@ -50,7 +50,7 @@ CREATE TABLE IF NOT EXISTS public.model
 -- ========================
 CREATE TABLE IF NOT EXISTS public.mcp
 (
-    id          BIGSERIAL PRIMARY KEY,
+    id          VARCHAR(64) PRIMARY KEY,
     name        VARCHAR(255) NOT NULL,
     type        VARCHAR(100) NOT NULL,
     description TEXT,
@@ -66,7 +66,7 @@ CREATE TABLE IF NOT EXISTS public.mcp
 -- ========================
 CREATE TABLE IF NOT EXISTS public.rag
 (
-    id                BIGSERIAL PRIMARY KEY,
+    id                VARCHAR(64) PRIMARY KEY,
     name              VARCHAR(255) NOT NULL,
     vector_store_type VARCHAR(100),
     embedding_model   VARCHAR(255),
@@ -93,7 +93,7 @@ CREATE TABLE IF NOT EXISTS public.rag
 -- ========================
 CREATE TABLE IF NOT EXISTS public.agent
 (
-    id            BIGSERIAL PRIMARY KEY,
+    id            VARCHAR(64) PRIMARY KEY,
     name          VARCHAR(255) NOT NULL,
     description   TEXT,
     status        VARCHAR(50) DEFAULT 'ACTIVE',
@@ -107,10 +107,10 @@ CREATE TABLE IF NOT EXISTS public.agent
 -- ========================
 CREATE TABLE IF NOT EXISTS public.orchestrator_agent
 (
-    orchestrator_id BIGINT NOT NULL,
-    agent_id        BIGINT NOT NULL,
+    orchestrator_id VARCHAR(64) NOT NULL,
+    agent_id        VARCHAR(64) NOT NULL,
     seq             INTEGER,
-    role            BIGINT,
+    role            INTEGER,
     CONSTRAINT pk_orchestrator_agent PRIMARY KEY (orchestrator_id, agent_id)
 );
 
@@ -119,8 +119,8 @@ CREATE TABLE IF NOT EXISTS public.orchestrator_agent
 -- ========================
 CREATE TABLE IF NOT EXISTS public.agent_model
 (
-    agent_id BIGINT NOT NULL,
-    model_id BIGINT NOT NULL,
+    agent_id VARCHAR(64) NOT NULL,
+    model_id VARCHAR(64) NOT NULL,
     CONSTRAINT pk_agent_model PRIMARY KEY (agent_id, model_id)
 );
 
@@ -129,8 +129,8 @@ CREATE TABLE IF NOT EXISTS public.agent_model
 -- ========================
 CREATE TABLE IF NOT EXISTS public.agent_rag
 (
-    agent_id BIGINT NOT NULL,
-    rag_id   BIGINT NOT NULL,
+    agent_id VARCHAR(64) NOT NULL,
+    rag_id   VARCHAR(64) NOT NULL,
     CONSTRAINT pk_agent_rag PRIMARY KEY (agent_id, rag_id)
 );
 
@@ -139,8 +139,8 @@ CREATE TABLE IF NOT EXISTS public.agent_rag
 -- ========================
 CREATE TABLE IF NOT EXISTS public.agent_mcp
 (
-    agent_id BIGINT NOT NULL,
-    mcp_id   BIGINT NOT NULL,
+    agent_id VARCHAR(64) NOT NULL,
+    mcp_id   VARCHAR(64) NOT NULL,
     CONSTRAINT pk_agent_mcp PRIMARY KEY (agent_id, mcp_id)
 );
 
@@ -153,7 +153,7 @@ CREATE TABLE IF NOT EXISTS public.vector_document
     embedding    VECTOR(1536),
     text         TEXT,
     metadata     JSONB,
-    rag_id       BIGINT NOT NULL,
+    rag_id       VARCHAR(64) NOT NULL,
     chunk_index  INTEGER DEFAULT 0,
     created_at   BIGINT DEFAULT (EXTRACT(EPOCH FROM CURRENT_TIMESTAMP))::BIGINT,
     updated_at   BIGINT DEFAULT (EXTRACT(EPOCH FROM CURRENT_TIMESTAMP))::BIGINT
@@ -164,8 +164,8 @@ CREATE TABLE IF NOT EXISTS public.vector_document
 -- ========================
 CREATE TABLE IF NOT EXISTS public.orchestrator_run
 (
-    id             BIGSERIAL PRIMARY KEY,
-    orchestrator_id BIGINT NOT NULL,
+    id             VARCHAR(64) PRIMARY KEY,
+    orchestrator_id VARCHAR(64) NOT NULL,
     session_id     VARCHAR(255),
     user_id        VARCHAR(255),
     goal            TEXT,
@@ -185,8 +185,8 @@ CREATE TABLE IF NOT EXISTS public.orchestrator_run
 -- ========================
 CREATE TABLE IF NOT EXISTS public.orchestrator_message
 (
-    id           BIGSERIAL PRIMARY KEY,
-    run_id       BIGINT NOT NULL,
+    id           VARCHAR(64) PRIMARY KEY,
+    run_id       VARCHAR(64) NOT NULL,
     task_id      VARCHAR(255),
     agent_role   VARCHAR(100) NOT NULL,
     message_type VARCHAR(50) NOT NULL,
@@ -201,9 +201,9 @@ CREATE TABLE IF NOT EXISTS public.orchestrator_message
 -- ========================
 CREATE TABLE IF NOT EXISTS public.agent_memory
 (
-    id          BIGSERIAL PRIMARY KEY,
+    id          VARCHAR(64) PRIMARY KEY,
     session_id  VARCHAR(255),
-    agent_id    BIGINT,
+    agent_id    VARCHAR(64),
     memory_key  VARCHAR(255) NOT NULL,
     memory_value TEXT,
     memory_type VARCHAR(50) DEFAULT 'KV',
@@ -219,7 +219,7 @@ CREATE TABLE IF NOT EXISTS public.agent_memory
 -- ========================
 CREATE TABLE IF NOT EXISTS public.kg_entity
 (
-    id          BIGSERIAL PRIMARY KEY,
+    id          VARCHAR(64) PRIMARY KEY,
     name        TEXT NOT NULL,
     type        TEXT NOT NULL,
     description TEXT,
@@ -246,7 +246,7 @@ CREATE TABLE IF NOT EXISTS public.doc
 CREATE TABLE IF NOT EXISTS public.doc_kg_entity
 (
     doc_id      VARCHAR(32) NOT NULL,
-    kg_entity_id BIGINT NOT NULL,
+    kg_entity_id VARCHAR(64) NOT NULL,
     created_at  BIGINT DEFAULT (EXTRACT(EPOCH FROM CURRENT_TIMESTAMP))::BIGINT,
     CONSTRAINT pk_doc_kg_entity PRIMARY KEY (doc_id, kg_entity_id)
 );
@@ -256,7 +256,7 @@ CREATE TABLE IF NOT EXISTS public.doc_kg_entity
 -- ========================
 CREATE TABLE IF NOT EXISTS public.rag_doc
 (
-    rag_id     BIGINT NOT NULL,
+    rag_id     VARCHAR(64) NOT NULL,
     doc_id     VARCHAR(32) NOT NULL,
     created_at BIGINT DEFAULT (EXTRACT(EPOCH FROM CURRENT_TIMESTAMP))::BIGINT,
     CONSTRAINT pk_rag_doc PRIMARY KEY (rag_id, doc_id)
@@ -270,7 +270,7 @@ CREATE TABLE IF NOT EXISTS public.rag_doc
 INSERT INTO public.model (id, name, provider, model_type, api_endpoint, api_key, max_tokens, temperature, status, created_at, updated_at)
 VALUES 
     (
-        1,
+        '1',
         'GPT-4o',
         'OPENAI',
         'gpt-4o',
@@ -310,7 +310,7 @@ ON CONFLICT (id) DO UPDATE SET
 INSERT INTO public.orchestrator (id, name, description, status, created_at, updated_at)
 VALUES 
     (
-        1,
+        '1',
         'Default Orchestrator',
         '默认Orchestrator配置，包含Supervisor（主管）、Researcher（研究员）、Executor（执行）、Summarizer（汇总）四个角色的多agent系统',
         'ACTIVE',
@@ -318,7 +318,7 @@ VALUES
         EXTRACT(EPOCH FROM CURRENT_TIMESTAMP)::BIGINT
     ),
     (
-        2,
+        '2',
         'Research Orchestrator',
         '专注于研究任务的Orchestrator，包含Supervisor（主管）、Researcher（研究员）、Executor（执行）、Summarizer（汇总）四个角色的多agent系统',
         'ACTIVE',
@@ -336,7 +336,7 @@ ON CONFLICT (id) DO UPDATE SET
 -- Supervisor Agent (id=1, 主管)
 INSERT INTO public.agent (id, name, description, system_prompt, status, created_at, updated_at)
 VALUES (
-    1,
+    '1',
     'Supervisor Agent',
     '主管角色，负责任务拆解、指派、收敛，输出计划JSON',
     '你是多agent系统中的一个Supervisor（主管），负责任务规划。根据用户需求，将复杂任务拆解为多个子任务，并分配给合适的Agent执行。
@@ -399,7 +399,7 @@ ON CONFLICT (id) DO UPDATE SET
 -- Researcher Agent (id=2, 研究员)
 INSERT INTO public.agent (id, name, description, system_prompt, status, created_at, updated_at)
 VALUES (
-    2,
+    '2',
     'Researcher Agent',
     '研究员角色，负责检索和整合信息（RAG/搜索），cap:rag',
     '你是多agent系统中的一个Researcher（研究员/搜索），负责信息检索、搜索和整合。
@@ -440,7 +440,7 @@ ON CONFLICT (id) DO UPDATE SET
 -- Executor Agent (id=3, 执行)
 INSERT INTO public.agent (id, name, description, system_prompt, status, created_at, updated_at)
 VALUES (
-    3,
+    '3',
     'Executor Agent',
     '执行角色，负责执行具体任务，包括代码执行、文件操作、API调用等',
     '你是多agent系统中的一个Executor（执行者），负责执行具体任务。
@@ -487,7 +487,7 @@ ON CONFLICT (id) DO UPDATE SET
 -- Summarizer Agent (id=4, 汇总)
 INSERT INTO public.agent (id, name, description, system_prompt, status, created_at, updated_at)
 VALUES (
-    4,
+    '4',
     'Summarizer Agent',
     '汇总角色，负责整合和总结多个任务的结果，生成最终报告',
     '你是多agent系统中的一个Summarizer（汇总），负责整合和总结多个任务的结果，生成最终报告。
@@ -552,34 +552,34 @@ ON CONFLICT (id) DO UPDATE SET
 -- Orchestrator 1: Default Orchestrator
 INSERT INTO public.orchestrator_agent (orchestrator_id, agent_id, seq, role)
 VALUES 
-    (1, 1, 1, 1),  -- Supervisor (seq=1, role=1, 主管)
-    (1, 2, 2, 2),  -- Researcher (seq=2, role=2, 研究员)
-    (1, 3, 3, 2),  -- Executor (seq=3, role=2, 执行)
-    (1, 4, 4, 2)   -- Summarizer (seq=4, role=2, 汇总)
+    ('1', '1', 1, 1),  -- Supervisor (seq=1, role=1, 主管)
+    ('1', '2', 2, 2),  -- Researcher (seq=2, role=2, 研究员)
+    ('1', '3', 3, 2),  -- Executor (seq=3, role=2, 执行)
+    ('1', '4', 4, 2)   -- Summarizer (seq=4, role=2, 汇总)
 ON CONFLICT (orchestrator_id, agent_id) DO UPDATE SET seq = EXCLUDED.seq, role = EXCLUDED.role;
 
 -- Orchestrator 2: Research Orchestrator
 INSERT INTO public.orchestrator_agent (orchestrator_id, agent_id, seq, role)
 VALUES 
-    (2, 1, 1, 1),  -- Supervisor (seq=1, role=1, 主管)
-    (2, 2, 2, 2),  -- Researcher (seq=2, role=2, 研究员)
-    (2, 3, 3, 2),  -- Executor (seq=3, role=2, 执行)
-    (2, 4, 4, 2)   -- Summarizer (seq=4, role=2, 汇总)
+    ('2', '1', 1, 1),  -- Supervisor (seq=1, role=1, 主管)
+    ('2', '2', 2, 2),  -- Researcher (seq=2, role=2, 研究员)
+    ('2', '3', 3, 2),  -- Executor (seq=3, role=2, 执行)
+    ('2', '4', 4, 2)   -- Summarizer (seq=4, role=2, 汇总)
 ON CONFLICT (orchestrator_id, agent_id) DO UPDATE SET seq = EXCLUDED.seq, role = EXCLUDED.role;
 
 -- Agent-Model 关联
 INSERT INTO public.agent_model (agent_id, model_id)
 VALUES 
-    (1, 1),  -- Supervisor使用GPT-4o
-    (2, 1),  -- Researcher使用GPT-4o
-    (3, 1),  -- Executor使用GPT-4o
-    (4, 1)   -- Summarizer使用GPT-4o
+    ('1', '1'),  -- Supervisor使用GPT-4o
+    ('2', '1'),  -- Researcher使用GPT-4o
+    ('3', '1'),  -- Executor使用GPT-4o
+    ('4', '1')   -- Summarizer使用GPT-4o
 ON CONFLICT (agent_id, model_id) DO NOTHING;
 
 -- RAG 数据
 INSERT INTO public.rag (id, name, vector_store_type, embedding_model, chunk_size, chunk_overlap, database_type, database_host, database_port, database_name, database_user, database_password, table_name, dimension, use_index, index_list_size, config, status, created_at, updated_at)
 VALUES (
-    1,
+    '1',
     'Default RAG',
     'PGVECTOR',
     'text-embedding-3-small',
@@ -601,7 +601,7 @@ VALUES (
     EXTRACT(EPOCH FROM CURRENT_TIMESTAMP)::BIGINT
 ),
 (
-    2,
+    '2',
     'Research RAG',
     'PGVECTOR',
     'text-embedding-3-small',
@@ -645,14 +645,14 @@ ON CONFLICT (id) DO UPDATE SET
 -- Agent-RAG 关联
 INSERT INTO public.agent_rag (agent_id, rag_id)
 VALUES 
-    (2, 1),  -- Researcher Agent使用Default RAG
-    (2, 2)  -- Researcher Agent也可以使用Research RAG（如果配置了多个）
+    ('2', '1'),  -- Researcher Agent使用Default RAG
+    ('2', '2')  -- Researcher Agent也可以使用Research RAG（如果配置了多个）
 ON CONFLICT (agent_id, rag_id) DO NOTHING;
 
 -- MCP 数据
 INSERT INTO public.mcp (id, name, type, description, base_url, headers, status, created_at, updated_at)
 VALUES (
-    1,
+    '1',
     '阿里云百炼_ChatPPT',
     'sse',
     'ChatPPT MCP Server 目前已经开放了 10 个智能PPT文档的接口能力，包括但不限于 PPT 创作、PPT 美化、PPT 生成等场景下的文档处理能力，用户可搭建自己的文档创作工具。',

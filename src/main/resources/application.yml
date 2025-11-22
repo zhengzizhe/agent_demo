@@ -1,59 +1,54 @@
-micronaut:
-  server:
-    port: 8080
-    host: 0.0.0.0
-    cors:
-      enabled: true
-      configurations:
-        web:
-          allowed-origins:
-            - http://localhost:3000
-            - http://196.168.1.229:3000
-            - http://192.168.1.9:3000
-          allowed-methods:
-            - GET
-            - POST
-            - PUT
-            - PATCH
-            - DELETE
-            - OPTIONS
-          allowed-headers:
-            - Content-Type
-            - Authorization
-            - X-Requested-With
-            - Last-Event-ID
-            - Accept
-          exposed-headers:
-            - Content-Type
-            - Cache-Control
-            - Last-Event-ID
-          allow-credentials: true
-          max-age: 3600
+server:
+  port: 8080
+  address: 0.0.0.0
 
-datasources:
-  default:
+spring:
+  datasource:
     url: jdbc:postgresql://localhost:5432/agent
     username: postgres
     password: postgres
     driver-class-name: org.postgresql.Driver
-    dialect: POSTGRES
-    schema-generate: NONE
-jooq:
-  generator:
-    database:
-      name: org.jooq.meta.postgres.PostgresDatabase
-      includes: .*
-      excludes: ""
-      input-schema: public
-    target:
-      package-name: org.agent.jooq
-      directory: src/main/java
-    generate:
-      records: true
-      pojos: true
-      daos: false
-      interfaces: false
-      fluent-setters: true
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  # CORS配置
+  web:
+    cors:
+      allowed-origins:
+        - http://localhost:3000
+        - http://196.168.1.229:3000
+        - http://192.168.1.9:3000
+      allowed-methods:
+        - GET
+        - POST
+        - PUT
+        - PATCH
+        - DELETE
+        - OPTIONS
+      allowed-headers:
+        - Content-Type
+        - Authorization
+        - X-Requested-With
+        - Last-Event-ID
+        - Accept
+      exposed-headers:
+        - Content-Type
+        - Cache-Control
+        - Last-Event-ID
+      allow-credentials: true
+      max-age: 3600
+
+# MyBatis配置
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.example.ddd.infrastructure.dao.po
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
 
 # OpenAI API配置
 openai:
@@ -67,3 +62,13 @@ neo4j:
   uri: bolt://localhost:7687
   username: neo4j
   password: neo4j123
+
+# JWT配置
+jwt:
+  # JWT 密钥（至少256位，用于 HS256 算法）
+  # 生产环境请使用环境变量或配置中心管理，不要硬编码
+  secret: your-secret-key-should-be-at-least-256-bits-long-for-hs256-algorithm-please-change-this-in-production
+  # Token 过期时间（毫秒），默认 24 小时
+  expiration: 86400000
+  # 刷新 Token 过期时间（毫秒），默认 7 天
+  refresh-expiration: 604800000

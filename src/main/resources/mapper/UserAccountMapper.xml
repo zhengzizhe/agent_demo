@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.ddd.infrastructure.dao.mapper.UserAccountMapper">
+
+    <resultMap id="BaseResultMap" type="com.example.ddd.infrastructure.dao.po.UserAccountPO">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="uuid" property="uuid" jdbcType="VARCHAR"/>
+        <result column="email" property="email" jdbcType="VARCHAR"/>
+        <result column="display_name" property="displayName" jdbcType="VARCHAR"/>
+        <result column="password_hash" property="passwordHash" jdbcType="VARCHAR"/>
+        <result column="password_salt" property="passwordSalt" jdbcType="VARCHAR"/>
+        <result column="status" property="status" jdbcType="SMALLINT"/>
+        <result column="is_email_verified" property="isEmailVerified" jdbcType="SMALLINT"/>
+        <result column="created_at" property="createdAt" jdbcType="BIGINT"/>
+        <result column="updated_at" property="updatedAt" jdbcType="BIGINT"/>
+        <result column="last_login_at" property="lastLoginAt" jdbcType="BIGINT"/>
+        <result column="deleted" property="deleted" jdbcType="SMALLINT"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, uuid, email, display_name, password_hash, password_salt, status,
+        is_email_verified, created_at, updated_at, last_login_at, deleted
+    </sql>
+
+    <insert id="insert" parameterType="com.example.ddd.infrastructure.dao.po.UserAccountPO">
+        INSERT INTO user_account (
+            id, uuid, email, display_name, password_hash, password_salt, status,
+            is_email_verified, created_at, updated_at, last_login_at, deleted
+        )
+        VALUES (
+            #{id}, #{uuid}, #{email}, #{displayName}, #{passwordHash}, #{passwordSalt}, #{status},
+            #{isEmailVerified}, #{createdAt}, #{updatedAt}, #{lastLoginAt}, #{deleted}
+        )
+    </insert>
+
+    <select id="queryById" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM user_account
+        WHERE id = #{id} AND deleted = 0
+    </select>
+
+    <select id="queryByUuid" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM user_account
+        WHERE uuid = #{uuid} AND deleted = 0
+    </select>
+
+    <select id="queryByEmail" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM user_account
+        WHERE email = #{email} AND deleted = 0
+        LIMIT 1
+    </select>
+
+    <update id="update" parameterType="com.example.ddd.infrastructure.dao.po.UserAccountPO">
+        UPDATE user_account
+        <set>
+            <if test="email != null">email = #{email},</if>
+            <if test="displayName != null">display_name = #{displayName},</if>
+            <if test="passwordHash != null">password_hash = #{passwordHash},</if>
+            <if test="passwordSalt != null">password_salt = #{passwordSalt},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="isEmailVerified != null">is_email_verified = #{isEmailVerified},</if>
+            <if test="updatedAt != null">updated_at = #{updatedAt},</if>
+            <if test="lastLoginAt != null">last_login_at = #{lastLoginAt},</if>
+            <if test="deleted != null">deleted = #{deleted},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <update id="deleteById">
+        UPDATE user_account
+        SET deleted = 1
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateLastLoginAt">
+        UPDATE user_account
+        SET last_login_at = #{lastLoginAt}, updated_at = #{lastLoginAt}
+        WHERE id = #{id}
+    </update>
+
+    <select id="queryByEmailAndStatus" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM user_account
+        WHERE email = #{email} AND status = #{status} AND deleted = 0
+    </select>
+
+    <select id="queryByStatus" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM user_account
+        WHERE status = #{status} AND deleted = 0
+    </select>
+
+</mapper>
+

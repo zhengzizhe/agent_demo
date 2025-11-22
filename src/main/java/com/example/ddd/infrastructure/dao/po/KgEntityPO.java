@@ -1,17 +1,18 @@
 package com.example.ddd.infrastructure.dao.po;
 
-import com.example.jooq.tables.records.KgEntityRecord;
-import io.micronaut.serde.annotation.Serdeable;
 import lombok.Getter;
 import lombok.Setter;
 
 /**
-
+ * 知识图谱实体持久化对象
  */
 @Getter
 @Setter
-@Serdeable
-public class KgEntityPO extends KgEntityRecord {
-
+public class KgEntityPO {
+    private String id;
+    private String name;
+    private String type;
+    private String description;
+    private float[] embedding; // 向量数组
 }
 

@@ -1,7 +1,5 @@
 package com.example.ddd.infrastructure.dao.po;
 
-import com.example.jooq.tables.records.DocRecord;
-import io.micronaut.serde.annotation.Serdeable;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -10,6 +8,10 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-@Serdeable
-public class DocPO extends DocRecord {
+public class DocPO {
+    private String id;
+    private String name;
+    private String owner;
+    private String text;
+    private Integer type;
 }

@@ -1,7 +1,7 @@
 package com.example.ddd.common.utils;
 
-import jakarta.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 import java.util.function.Supplier;
 
@@ -10,7 +10,7 @@ import java.util.function.Supplier;
  * 根据评分结果决定是否重试
  */
 @Slf4j
-@Singleton
+@Component
 public class ScoredRetry {
 
     /**

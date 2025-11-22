@@ -1,11 +1,9 @@
 package com.example.ddd.domain.agent.model.valobj;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.micronaut.serde.annotation.Serdeable;
 import lombok.Getter;
 import lombok.Setter;
 
-@Serdeable
 @Getter
 @Setter
 public class RelationDTO {

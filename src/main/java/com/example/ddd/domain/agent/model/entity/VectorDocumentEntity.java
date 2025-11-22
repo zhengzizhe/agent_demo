@@ -1,6 +1,5 @@
 package com.example.ddd.domain.agent.model.entity;
 
-import io.micronaut.serde.annotation.Serdeable;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -11,10 +10,9 @@ import java.util.Map;
  */
 @Getter
 @Setter
-@Serdeable
 public class VectorDocumentEntity {
     private String embeddingId;
-    private Long ragId;
+    private String ragId;
     private String text;
     private float[] embedding; // 向量数组
     private Map<String, Object> metadata; // 元数据

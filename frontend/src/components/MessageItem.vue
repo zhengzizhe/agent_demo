@@ -2152,14 +2152,17 @@ document.addEventListener('click', (e) => {
 @keyframes messageSlideIn {
   from {
     opacity: 0;
-    transform: translateY(25px) scale(0.94) rotate(-1deg);
+    transform: translateY(20px) scale(0.96);
+    filter: blur(3px);
   }
-  50% {
-    transform: translateY(-2px) scale(1.01) rotate(0.5deg);
+  60% {
+    transform: translateY(-3px) scale(1.01);
+    filter: blur(1px);
   }
   to {
     opacity: 1;
-    transform: translateY(0) scale(1) rotate(0deg);
+    transform: translateY(0) scale(1);
+    filter: blur(0);
   }
 }
 
@@ -2273,11 +2276,17 @@ document.addEventListener('click', (e) => {
 @keyframes messageCardSlideIn {
   from {
     opacity: 0;
-    transform: translateY(20px) scale(0.95);
+    transform: translateY(16px) scale(0.97);
+    filter: blur(2px);
+  }
+  60% {
+    transform: translateY(-2px) scale(1.01);
+    filter: blur(0.5px);
   }
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
+    filter: blur(0);
   }
 }
 

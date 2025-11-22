@@ -17,6 +17,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ArmoryCommandEntity {
 
-    public Long OrchestratorId;
+    public String orchestratorId;
 
 }
