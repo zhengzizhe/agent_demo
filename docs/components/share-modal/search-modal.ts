@@ -98,7 +98,7 @@ import { DlButton } from '@/pages/docs/components';
                 border-radius: 50%;
                 overflow: hidden;
                 color: #fff;
-                background: #4857E2;
+                background: var(--cs-primary-color);
             }
 
             .avatar {
@@ -165,7 +165,7 @@ import { DlButton } from '@/pages/docs/components';
             cursor: pointer;
 
             &.checked {
-                color: #4857E2;
+                color: var(--cs-primary-color);
             }
         }
 
@@ -192,7 +192,7 @@ import { DlButton } from '@/pages/docs/components';
                     background: #f5f5f5;
 
                     > span {
-                        color: #4857E2;
+                        color: var(--cs-primary-color);
                     }
                 }
 

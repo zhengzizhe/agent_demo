@@ -19,10 +19,7 @@ public class AuthCommandHandler {
     @Resource
     public void verification(SendVerificationCodeRequest request) {
         String code = "123456";
-        // TODO: 实现发送验证码逻辑
-        EmailVerification newVerification = emailVerificationFactory.createNewVerification(new Email(request.getEmail()), request.getPurpose(), RequestContext.getCurrentContext().getClientIp(), RequestContext.getCurrentContext().getUserAgent());
+        EmailVerification newVerification = emailVerificationFactory.createNewVerification(new Email(request.getEmail()),code, request.getPurpose(), RequestContext.getCurrentContext().getClientIp(), RequestContext.getCurrentContext().getUserAgent());
         IAuthRepository.save(newVerification);
-        // 6. 记录发送日志
-
     }
 }

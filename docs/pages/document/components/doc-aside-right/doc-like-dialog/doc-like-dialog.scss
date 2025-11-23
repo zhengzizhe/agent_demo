@@ -50,7 +50,7 @@
                     width: 64px;
                     height: 64px;
                     border-radius: 50%;
-                    border: 1px solid #4857E2;
+                    border: 1px solid var(--cs-primary-color);
                     animation: bf_scale-down 0.8s ease-in-out infinite;
                 }
 
@@ -123,7 +123,7 @@
     }
 
     .text.active span {
-        background: linear-gradient(180deg, #4857E2 0%, #48ABE2 100%);
+        background: linear-gradient(180deg, var(--cs-primary-color) 0%, #48ABE2 100%);
         background-clip: text;
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;

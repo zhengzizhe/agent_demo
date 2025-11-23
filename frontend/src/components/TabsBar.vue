@@ -261,7 +261,7 @@ function scrollToActiveTab() {
 <style scoped>
 .tabs-bar {
   height: 40px;
-  background: rgba(249, 250, 251, 0.4);
+  background: rgba(245, 245, 247, 0.6);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   display: flex;
@@ -461,7 +461,9 @@ function scrollToActiveTab() {
 }
 
 .tab.active {
-  background: rgba(249, 250, 251, 0.95);
+  background: rgba(245, 245, 247, 0.85);
+  backdrop-filter: blur(15px) saturate(180%);
+  -webkit-backdrop-filter: blur(15px) saturate(180%);
   color: var(--theme-accent, #165dff);
   font-weight: 600;
   z-index: 1;
@@ -483,7 +485,9 @@ function scrollToActiveTab() {
     transform: translateY(-1px);
   }
   100% {
-    background: rgba(249, 250, 251, 0.95);
+    background: rgba(245, 245, 247, 0.85);
+  backdrop-filter: blur(15px) saturate(180%);
+  -webkit-backdrop-filter: blur(15px) saturate(180%);
     transform: translateY(0);
   }
 }

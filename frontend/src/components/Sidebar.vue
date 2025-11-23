@@ -1,21 +1,6 @@
 <template>
   <div class="sidebar" :class="{ collapsed: isCollapsed }">
-    <!-- 顶部操作 -->
-    <div v-if="!isCollapsed" class="sidebar-actions">
-      <button class="action-btn" @click="$emit('view-change', 'new-doc')">
-        <svg class="action-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          <path d="M4 4h8v8H4V4z" stroke="currentColor" stroke-width="1.5" fill="none"/>
-        </svg>
-        <span class="action-text">新文件</span>
-      </button>
-      <button class="action-btn" @click="$emit('view-change', 'shared')">
-        <svg class="action-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <path d="M8 2l6 6-6 6M2 8h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        <span class="action-text">与我分享</span>
-      </button>
-    </div>
+    <!-- 顶部操作已移至文档库内 -->
 
     <nav class="sidebar-nav">
       <!-- 对话 -->
@@ -36,79 +21,14 @@
         </button>
       </div>
 
-      <!-- 任务 -->
-      <div class="nav-section">
-        <div class="nav-section-title" v-if="!isCollapsed">任务</div>
-        <button
-          class="nav-item nav-item-group"
-          :class="{ expanded: expandedSections.tasks }"
-          @click="toggleSection('tasks')"
-          :title="isCollapsed ? '任务' : ''"
-        >
-          <svg class="nav-icon" width="14" height="14" viewBox="0 0 20 20" fill="none">
-            <path d="M4 4h12v12H4V4z" stroke="currentColor" stroke-width="1.5" fill="none"/>
-            <path d="M6 8h8M6 12h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
-          <span v-if="!isCollapsed" class="nav-text">任务</span>
-          <svg v-if="!isCollapsed" class="nav-chevron" width="12" height="12" viewBox="0 0 12 12" fill="none">
-            <path d="M4 2l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </button>
-        <div v-if="!isCollapsed && expandedSections.tasks" class="nav-submenu">
-          <button class="nav-subitem" @click="$emit('view-change', 'tasks-inbox')">
-            <span class="nav-subitem-text">收件箱</span>
-            <span class="nav-badge">3</span>
-          </button>
-          <button class="nav-subitem" @click="$emit('view-change', 'tasks-today')">
-            <span class="nav-subitem-text">今天</span>
-            <span class="nav-badge nav-badge-urgent">5</span>
-          </button>
-          <button class="nav-subitem" @click="$emit('view-change', 'tasks-week')">
-            <span class="nav-subitem-text">本周</span>
-            <span class="nav-badge">12</span>
-          </button>
-          <button class="nav-subitem" @click="$emit('view-change', 'tasks-todo')">
-            <span class="nav-subitem-text">待办</span>
-          </button>
-          <button class="nav-subitem" @click="$emit('view-change', 'tasks-progress')">
-            <span class="nav-subitem-text">进行中</span>
-            <span class="nav-badge">8</span>
-          </button>
-          <button class="nav-subitem" @click="$emit('view-change', 'tasks-done')">
-            <span class="nav-subitem-text">已完成</span>
-          </button>
-          <div class="nav-divider"></div>
-          <button class="nav-subitem nav-subitem-project" @click="$emit('view-change', 'project-1')">
-            <div class="nav-project-color" style="background: #3b82f6;"></div>
-            <span class="nav-subitem-text">产品设计</span>
-            <span class="nav-badge">7</span>
-          </button>
-          <button class="nav-subitem nav-subitem-project" @click="$emit('view-change', 'project-2')">
-            <div class="nav-project-color" style="background: #10b981;"></div>
-            <span class="nav-subitem-text">开发任务</span>
-            <span class="nav-badge">15</span>
-          </button>
-          <button class="nav-subitem nav-subitem-project" @click="$emit('view-change', 'project-3')">
-            <div class="nav-project-color" style="background: #f59e0b;"></div>
-            <span class="nav-subitem-text">市场营销</span>
-            <span class="nav-badge">4</span>
-          </button>
-          <button class="nav-subitem nav-subitem-add" @click="$emit('view-change', 'new-project')">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <path d="M7 3v8M3 7h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            </svg>
-            <span class="nav-subitem-text">新建项目</span>
-          </button>
-        </div>
-      </div>
+      <!-- 任务功能已移至文档库内 -->
 
       <!-- 文档库 -->
       <div class="nav-section">
-        <div class="nav-section-title" v-if="!isCollapsed">文档库</div>
         <button
-          class="nav-item nav-item-group"
-          :class="{ expanded: expandedSections.docs }"
-          @click="toggleSection('docs')"
+          class="nav-item"
+          :class="{ active: currentView === 'docs' }"
+          @click="$emit('view-change', 'docs')"
           :title="isCollapsed ? '文档库' : ''"
         >
           <svg class="nav-icon" width="14" height="14" viewBox="0 0 20 20" fill="none">
@@ -116,46 +36,7 @@
             <path d="M6 8h8M6 12h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
           </svg>
           <span v-if="!isCollapsed" class="nav-text">文档库</span>
-          <svg v-if="!isCollapsed" class="nav-chevron" width="12" height="12" viewBox="0 0 12 12" fill="none">
-            <path d="M4 2l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
         </button>
-        <div v-if="!isCollapsed && expandedSections.docs" class="nav-submenu">
-          <button class="nav-subitem" @click="$emit('view-change', 'docs-recent')">
-            <span class="nav-subitem-text">最近</span>
-          </button>
-          <button class="nav-subitem" @click="$emit('view-change', 'docs-favorites')">
-            <span class="nav-subitem-text">收藏</span>
-            <span class="nav-badge">8</span>
-          </button>
-          <button class="nav-subitem" @click="$emit('view-change', 'docs-my')">
-            <span class="nav-subitem-text">我的文档</span>
-          </button>
-          <button class="nav-subitem" @click="$emit('view-change', 'docs-shared')">
-            <span class="nav-subitem-text">共享给我</span>
-            <span class="nav-badge">5</span>
-          </button>
-          <div class="nav-divider"></div>
-          <button class="nav-subitem nav-subitem-space" @click="$emit('view-change', 'space-personal')">
-            <svg class="nav-space-icon" width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1.2" fill="none"/>
-            </svg>
-            <span class="nav-subitem-text">个人空间</span>
-          </button>
-          <button class="nav-subitem nav-subitem-space" @click="$emit('view-change', 'space-work')">
-            <svg class="nav-space-icon" width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <rect x="2" y="2" width="10" height="10" rx="1" stroke="currentColor" stroke-width="1.2" fill="none"/>
-            </svg>
-            <span class="nav-subitem-text">工作空间</span>
-          </button>
-          <div class="nav-divider"></div>
-          <button class="nav-subitem" @click="$emit('view-change', 'docs-templates')">
-            <span class="nav-subitem-text">模板</span>
-          </button>
-          <button class="nav-subitem" @click="$emit('view-change', 'docs-trash')">
-            <span class="nav-subitem-text">回收站</span>
-          </button>
-        </div>
       </div>
 
       <!-- RAG知识库 -->
@@ -209,17 +90,21 @@
     <div class="sidebar-footer">
       <!-- 语言切换 -->
       <div class="language-switcher" v-if="!isCollapsed">
-        <button
-          v-for="lang in languages"
-          :key="lang.code"
-          class="lang-btn"
-          :class="{ active: currentLang === lang.code }"
-          @click="switchLanguage(lang.code)"
-          :title="lang.name"
-        >
-          <span class="lang-flag">{{ lang.flag }}</span>
-          <span class="lang-name">{{ lang.name }}</span>
-        </button>
+        <div class="language-switcher-container">
+          <div class="language-switcher-slider" :style="langSliderStyle"></div>
+          <button
+            v-for="lang in languages"
+            :key="lang.code"
+            class="lang-btn"
+            :class="{ active: currentLang === lang.code }"
+            @click="switchLanguage(lang.code)"
+            :title="lang.name"
+            :data-lang="lang.code"
+          >
+            <span class="lang-flag">{{ lang.flag }}</span>
+            <span class="lang-name">{{ lang.name }}</span>
+          </button>
+        </div>
       </div>
       <div class="language-switcher-collapsed" v-else>
         <button
@@ -316,27 +201,58 @@ const currentLanguageName = computed(() => {
 const currentLanguageFlag = computed(() => {
   return languages.find(l => l.code === currentLang.value)?.flag || '🇨🇳'
 })
+
+// 语言切换器滑动指示器样式
+const langSliderStyle = computed(() => {
+  const index = languages.findIndex(lang => lang.code === currentLang.value)
+  if (index === -1) return { transform: 'translateX(0)', width: '0' }
+  
+  const width = 100 / languages.length
+  return {
+    transform: `translateX(${index * 100}%)`,
+    width: `${width}%`
+  }
+})
 </script>
 
 <style scoped>
 .sidebar {
-  width: 240px;
-  height: 100vh;
-  background: #ffffff;
+  width: 280px;
+  height: calc(100vh - 24px);
+  margin: 12px;
+  background: linear-gradient(
+    135deg,
+    rgba(235, 242, 255, 0.9) 0%,
+    rgba(255, 255, 255, 0.88) 20%,
+    rgba(255, 248, 240, 0.9) 40%,
+    rgba(255, 255, 255, 0.88) 60%,
+    rgba(250, 240, 255, 0.9) 80%,
+    rgba(255, 255, 255, 0.88) 100%
+  );
   display: flex;
   flex-direction: column;
   transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
   z-index: 10;
   will-change: width;
-  border-right: 1px solid rgba(0, 0, 0, 0.08);
+  border: none;
+  border-right: none;
+  border-radius: 16px;
   overflow: hidden;
   isolation: isolate;
-  box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: 
+    0 0 0 1px rgba(255, 255, 255, 0.2) inset,
+    0 2px 8px rgba(0, 0, 0, 0.06),
+    0 8px 24px rgba(0, 0, 0, 0.03);
 }
 
 .sidebar:hover {
-  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.04);
+  box-shadow: 
+    0 0 0 1px rgba(0, 0, 0, 0.03) inset,
+    0 4px 12px rgba(0, 0, 0, 0.08),
+    0 12px 32px rgba(0, 0, 0, 0.04);
 }
 
 .sidebar.collapsed {
@@ -1018,13 +934,41 @@ const currentLanguageFlag = computed(() => {
 
 /* 语言切换 */
 .language-switcher {
-  display: flex;
-  gap: 4px;
   margin-bottom: 8px;
   width: 100%;
 }
 
+.language-switcher-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: 10px;
+  padding: 3px;
+  gap: 0;
+  box-shadow: 
+    0 1px 3px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.language-switcher-slider {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  height: calc(100% - 6px);
+  background: linear-gradient(135deg, var(--theme-accent, #165dff) 0%, #4c7fff 50%, #7b9fff 100%);
+  border-radius: 7px;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 
+    0 2px 8px rgba(22, 93, 255, 0.3),
+    0 1px 3px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  z-index: 1;
+}
+
 .lang-btn {
+  position: relative;
+  z-index: 2;
   flex: 1;
   display: flex;
   align-items: center;
@@ -1033,44 +977,27 @@ const currentLanguageFlag = computed(() => {
   padding: 6px 8px;
   font-size: 11px;
   color: rgba(0, 0, 0, 0.6);
-  background: rgba(0, 0, 0, 0.02);
+  background: transparent;
   border: none;
-  border-radius: 6px;
+  border-radius: 7px;
   cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
-  overflow: hidden;
-}
-
-.lang-btn::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.04);
-  opacity: 0;
-  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: visible;
+  font-weight: 600;
 }
 
 .lang-btn:hover {
-  background: rgba(0, 0, 0, 0.04);
   color: rgba(0, 0, 0, 0.8);
   transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-.lang-btn:hover::before {
-  opacity: 1;
 }
 
 .lang-btn.active {
-  background: var(--theme-accent, #165dff);
-  color: #ffffff;
-  box-shadow: 0 2px 6px rgba(22, 93, 255, 0.3);
-  transform: translateY(-1px);
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .lang-btn.active:hover {
-  box-shadow: 0 4px 8px rgba(22, 93, 255, 0.4);
   transform: translateY(-2px);
 }
 

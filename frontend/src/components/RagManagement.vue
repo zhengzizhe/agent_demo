@@ -1067,14 +1067,16 @@ onUnmounted(() => {
   display: flex;
   height: 100%;
   width: 100%;
-  background: var(--theme-background, #ffffff);
+  background: var(--theme-background-gradient, none);
+  background-color: var(--theme-background, #ffffff);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
 }
 
 /* 左侧边栏 */
 .kb-sidebar {
   width: 240px;
-  background: var(--theme-background, #ffffff);
+  background: var(--theme-background-gradient, none);
+  background-color: var(--theme-background, #ffffff);
   border-right: 1px solid #e5e7eb;
   display: flex;
   flex-direction: column;
@@ -1205,7 +1207,8 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: var(--theme-background, #ffffff);
+  background: var(--theme-background-gradient, none);
+  background-color: var(--theme-background, #ffffff);
 }
 
 .kb-header {
@@ -1213,7 +1216,8 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: var(--theme-background, #ffffff);
+  background: var(--theme-background-gradient, none);
+  background-color: var(--theme-background, #ffffff);
   gap: 24px;
   border-bottom: 1px solid #e5e6eb;
 }
@@ -1265,7 +1269,8 @@ onUnmounted(() => {
   font-size: 14px;
   font-weight: 400;
   color: #4e5969;
-  background: var(--theme-background, #ffffff);
+  background: var(--theme-background-gradient, none);
+  background-color: var(--theme-background, #ffffff);
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -1331,7 +1336,8 @@ onUnmounted(() => {
   flex: 1;
   overflow-y: auto;
   padding: 24px 32px;
-  background: var(--theme-background, #ffffff);
+  background: var(--theme-background-gradient, none);
+  background-color: var(--theme-background, #ffffff);
 }
 
 .kg-content-full {
@@ -1385,7 +1391,8 @@ onUnmounted(() => {
 }
 
 .document-card {
-  background: var(--theme-background, #ffffff);
+  background: var(--theme-background-gradient, none);
+  background-color: var(--theme-background, #ffffff);
   border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 12px;
   padding: 16px;
@@ -1399,7 +1406,8 @@ onUnmounted(() => {
 }
 
 .document-card:hover {
-  background: var(--theme-background, #ffffff);
+  background: var(--theme-background-gradient, none);
+  background-color: var(--theme-background, #ffffff);
   border-color: color-mix(in srgb, var(--theme-accent, #165dff) 30%, transparent);
   box-shadow: 
     0 8px 16px rgba(0, 0, 0, 0.12),
@@ -1499,7 +1507,8 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--theme-background, #ffffff);
+  background: var(--theme-background-gradient, none);
+  background-color: var(--theme-background, #ffffff);
   border: none;
   border-radius: 4px;
   color: #495057;
@@ -1573,7 +1582,8 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: var(--theme-background, #ffffff);
+  background: var(--theme-background-gradient, none);
+  background-color: var(--theme-background, #ffffff);
   border-radius: 8px 8px 0 0;
   border-bottom: 1px solid #e5e6eb;
 }
@@ -1822,7 +1832,8 @@ onUnmounted(() => {
   right: 20px;
   width: 400px;
   max-width: calc(100vw - 40px);
-  background: var(--theme-background, #ffffff);
+  background: var(--theme-background-gradient, none);
+  background-color: var(--theme-background, #ffffff);
   border-radius: 8px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
   display: flex;
@@ -1846,7 +1857,8 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: var(--theme-background, #ffffff);
+  background: var(--theme-background-gradient, none);
+  background-color: var(--theme-background, #ffffff);
   border-bottom: 1px solid #e5e6eb;
 }
 
@@ -1961,7 +1973,8 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: var(--theme-background, #ffffff);
+  background: var(--theme-background-gradient, none);
+  background-color: var(--theme-background, #ffffff);
   border-radius: 0 0 8px 8px;
   border-top: 1px solid #e5e6eb;
 }
@@ -1973,7 +1986,8 @@ onUnmounted(() => {
   border: none;
   border-radius: 8px;
   outline: none;
-  background: var(--theme-background, #ffffff);
+  background: var(--theme-background-gradient, none);
+  background-color: var(--theme-background, #ffffff);
   color: #1d2129;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }

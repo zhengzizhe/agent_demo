@@ -1,16 +1,16 @@
 @import "mixin";
 
 :root {
-    // 主色
-    --cs-primary-color: #4857E2;
+    // 主色（与 frontend 统一）
+    --cs-primary-color: #165dff;
     // 主色悬停
-    --cs-primary-color-hover: #4958DE;
+    --cs-primary-color-hover: #0d4fd9;
     // 主色点击（激活）
-    --cs-primary-color-active: #4351CD;
+    --cs-primary-color-active: #0a45c7;
     // 主色禁用
-    --cs-primary-color-disabled: #CED3FF;
+    --cs-primary-color-disabled: #b3d1ff;
     // 主色透明
-    --cs-primary-color-transparent: rgba(72, 87, 226, 0.08);
+    --cs-primary-color-transparent: rgba(22, 93, 255, 0.08);
 
     // 标记色
     --cs-mark-color: #FED38C;
@@ -229,9 +229,6 @@ input, textarea {
             justify-content: center;
         }
 
-        mat-icon {
-
-        }
 
         &__title, &__desc {
             flex: 1;

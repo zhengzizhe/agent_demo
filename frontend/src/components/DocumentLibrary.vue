@@ -1,104 +1,162 @@
 <template>
   <div class="document-library-page">
-    <!-- 左侧边栏 -->
-    <div class="dl-sidebar">
-      <!-- 用户信息区域 -->
-      <div class="sidebar-user">
-        <div class="user-avatar">{{ userInitial }}</div>
-        <div class="user-info">
-          <div class="user-name">{{ currentSpace?.name || '个人空间' }}</div>
-        </div>
-      </div>
-
-      <!-- 导航菜单 -->
-      <div class="sidebar-nav">
-        <div class="nav-section">
-          <div 
-            class="nav-item" 
-            :class="{ active: currentView === 'home' }"
-            @click="switchView('home')"
-          >
-            <svg class="nav-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M2 4h12M2 8h12M2 12h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            </svg>
-            <span class="nav-text">文档库</span>
-          </div>
-        </div>
-
-        <div class="nav-section">
-          <div 
-            class="nav-item" 
-            :class="{ active: currentView === 'shared' }"
-            @click="switchView('shared')"
-          >
-            <svg class="nav-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M8 2L2 5v6l6 3 6-3V5l-6-3z" stroke="currentColor" stroke-width="1.5" fill="none"/>
-            </svg>
-            <span class="nav-text">共享给我</span>
-          </div>
-        </div>
-
-        <div class="nav-section">
-          <div class="nav-item" @click="toggleSpaces">
-            <svg class="nav-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M3 3h10v10H3V3z" stroke="currentColor" stroke-width="1.5" fill="none"/>
-              <path d="M6 3v10M10 3v10" stroke="currentColor" stroke-width="1.5"/>
-            </svg>
-            <span class="nav-text">空间</span>
-            <svg class="nav-arrow" :class="{ expanded: showSpaces }" width="12" height="12" viewBox="0 0 12 12" fill="none">
-              <path d="M3 4.5l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </div>
-          <div v-if="showSpaces" class="nav-submenu">
-            <div 
-              v-for="space in spaces" 
-              :key="space.id"
-              class="nav-subitem"
-              :class="{ active: currentSpace?.id === space.id }"
-              @click="selectSpace(space)"
-            >
-              <svg class="nav-icon" width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1.5" fill="none"/>
-              </svg>
-              <span class="nav-text">{{ space.name }}</span>
+    <!-- 主内容区（作为主侧边栏的子视图） -->
+    <div class="dl-main-wrapper">
+      <div class="dl-main">
+      <!-- 空间选择栏 -->
+      <div class="dl-space-nav">
+        <div class="space-nav-header">
+          <!-- 左侧：空间切换器 -->
+          <div class="space-section">
+            <div class="space-section-label">空间</div>
+            <div class="space-switcher" @click.stop="toggleSpaceDropdown">
+              <!-- 当前空间显示 -->
+              <div class="space-current">
+                <div v-if="currentSpace && currentSpace.id !== 'all'" class="space-current-icon" :style="{ background: currentSpace.color }">
+                  {{ currentSpace.icon }}
+                </div>
+                <span class="space-current-name">{{ currentSpace?.name || '全部' }}</span>
+                <span class="space-current-count" v-if="currentSpace && currentSpace.id !== 'all'">
+                  {{ currentSpace.documentCount }} 个文档
+                </span>
+                <svg class="space-switcher-arrow" :class="{ expanded: showSpaceDropdown }" width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <path d="M3.5 5.25l3.5 3.5 3.5-3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <!-- 空间切换下拉菜单 -->
+              <transition name="space-dropdown">
+                <div v-if="showSpaceDropdown" class="space-switcher-menu">
+                  <div 
+                    class="space-switcher-item"
+                    :class="{ active: !currentSpace || currentSpace.id === 'all' }"
+                    @click="selectSpace({ id: 'all', name: '全部' }, $event)"
+                  >
+                    <span class="space-switcher-item-text">全部</span>
+                    <span class="space-switcher-item-count">{{ allDocuments.value.filter(doc => !doc.deleted).length }}</span>
+                  </div>
+                  <div 
+                    v-for="space in spaces" 
+                    :key="space.id"
+                    class="space-switcher-item"
+                    :class="{ active: currentSpace?.id === space.id }"
+                    @click="selectSpace(space, $event)"
+                  >
+                    <div class="space-switcher-item-icon" :style="{ background: space.color }">{{ space.icon }}</div>
+                    <span class="space-switcher-item-text">{{ space.name }}</span>
+                    <span class="space-switcher-item-count">{{ space.documentCount }}</span>
+                  </div>
+                </div>
+              </transition>
             </div>
           </div>
+          <!-- 右侧：搜索框、回收站和新建按钮 -->
+          <div class="space-nav-actions">
+            <!-- 搜索框 -->
+            <div class="space-nav-search">
+              <SearchBox v-model="searchQuery" placeholder="搜索文档..." />
+            </div>
+            <button 
+              class="space-nav-action-btn"
+              :class="{ active: currentView === 'trash' }"
+              @click="switchView('trash')"
+              title="回收站"
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M3 4h10M5 4V3a1 1 0 011-1h4a1 1 0 011 1v1M6 7v5M10 7v5M4 4l1 9a1 1 0 001 1h4a1 1 0 001-1l1-9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <span>回收站</span>
+              <span class="action-badge" v-if="trashCount > 0">{{ trashCount }}</span>
+            </button>
+            <button class="space-nav-action-btn primary" @click="showCreateDialog = true" title="新建文档">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+              <span>新建</span>
+            </button>
+          </div>
         </div>
-
-        <div class="nav-section nav-section-bottom">
-          <div 
-            class="nav-item" 
-            :class="{ active: currentView === 'favorites' }"
-            @click="switchView('favorites')"
-          >
-            <svg class="nav-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M8 2l2 4 4.5.5-3.5 3.5 1 4.5L8 12.5 4 14.5l1-4.5L1.5 6.5 6 6l2-4z" stroke="currentColor" stroke-width="1.5" fill="none"/>
-            </svg>
-            <span class="nav-text">收藏</span>
+        <!-- 空间子视图切换（仅在文档库视图显示） -->
+        <div v-if="currentView === 'home'" class="space-sub-views">
+          <div class="space-sub-views-container">
+            <div class="space-sub-views-slider" :style="sliderStyle"></div>
+            <button 
+              class="space-sub-view-btn"
+              :class="{ active: spaceSubView === 'all' }"
+              @click="switchSpaceSubView('all')"
+              data-view="all"
+            >
+              <span class="btn-content">全部</span>
+            </button>
+            <button 
+              class="space-sub-view-btn"
+              :class="{ active: spaceSubView === 'recent' }"
+              @click="switchSpaceSubView('recent')"
+              data-view="recent"
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                <path d="M8 4v4l3 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+              <span class="btn-content">最近</span>
+            </button>
+            <button 
+              class="space-sub-view-btn"
+              :class="{ active: spaceSubView === 'favorites' }"
+              @click="switchSpaceSubView('favorites')"
+              data-view="favorites"
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M8 2l2 4 4.5.5-3.5 3.5 1 4.5L8 12.5 4 14.5l1-4.5L1.5 6.5 6 6l2-4z" 
+                      :fill="spaceSubView === 'favorites' ? 'currentColor' : 'none'"
+                      stroke="currentColor" 
+                      stroke-width="1.5"/>
+              </svg>
+              <span class="btn-content">收藏</span>
+            </button>
+            <button 
+              class="space-sub-view-btn"
+              :class="{ active: spaceSubView === 'liked' }"
+              @click="switchSpaceSubView('liked')"
+              data-view="liked"
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M8 2l2 2 4 .5-3 3 .5 4L8 12 4 12l.5-4-3-3 4-.5L8 2z" 
+                      :fill="spaceSubView === 'liked' ? 'currentColor' : 'none'"
+                      stroke="currentColor" 
+                      stroke-width="1.5"/>
+              </svg>
+              <span class="btn-content">点赞</span>
+            </button>
+            <button 
+              class="space-sub-view-btn"
+              :class="{ active: spaceSubView === 'shared' }"
+              @click="switchSpaceSubView('shared')"
+              data-view="shared"
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M8 2L2 5v6l6 3 6-3V5l-6-3z" stroke="currentColor" stroke-width="1.5" fill="none"/>
+              </svg>
+              <span class="btn-content">共享</span>
+            </button>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- 主内容区 -->
-    <div class="dl-main">
       <!-- 顶部标题栏 -->
       <div class="dl-header">
         <div class="dl-header-left">
           <h1 class="dl-title">{{ currentViewTitle }}</h1>
-          <div class="dl-stats" v-if="!loading && documents.length > 0">
+          <div class="dl-stats" v-if="!loading && sortedAndFilteredDocuments.length > 0">
             <span class="stat-item">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                 <rect x="2" y="3" width="10" height="8" rx="1" stroke="currentColor" stroke-width="1.5" fill="none"/>
                 <path d="M5 3v6M9 3v6" stroke="currentColor" stroke-width="1.5"/>
               </svg>
-              {{ documents.length }} 个文档
+              {{ sortedAndFilteredDocuments.length }} 个文档
             </span>
           </div>
         </div>
         <div class="dl-actions">
-          <!-- 搜索框 -->
-          <SearchBox v-model="searchQuery" placeholder="搜索文档..." />
           <!-- 排序 -->
           <div class="sort-wrapper">
             <select v-model="sortBy" class="sort-select" @change="handleSort">
@@ -109,18 +167,30 @@
           </div>
           <!-- 视图切换 -->
           <ViewToggle v-model="viewMode" />
-          <!-- 新建文档按钮 -->
-          <button class="create-btn btn btn-primary" @click="showCreateDialog = true" title="新建文档">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            </svg>
-            <span>新建</span>
-          </button>
         </div>
       </div>
 
-      <!-- 文档列表 -->
-      <div class="dl-content">
+      <!-- 内容区域（包含目录树和文档列表） -->
+      <div class="dl-content-wrapper">
+        <!-- 目录树 -->
+        <DocumentTree
+          :documents="treeDocuments"
+          :selected-id="selectedTreeId"
+          @select="handleTreeSelect"
+          @folder-select="handleFolderSelect"
+        />
+
+        <!-- 文档列表 -->
+        <div class="dl-content">
+        <!-- 调试信息（开发时可见） -->
+        <!-- <div style="padding: 10px; background: #f0f0f0; margin-bottom: 10px; font-size: 12px;">
+          加载中: {{ loading }} | 
+          总文档数: {{ allDocuments.length }} | 
+          过滤后: {{ sortedAndFilteredDocuments.length }} | 
+          当前视图: {{ currentView }} | 
+          视图模式: {{ viewMode }}
+        </div> -->
+        
         <!-- 加载状态 -->
         <LoadingState v-if="loading" />
 
@@ -180,9 +250,43 @@
             <div class="doc-card-body">
               <h3 class="doc-title">{{ doc.name || '未命名文档' }}</h3>
               <p class="doc-desc" v-if="doc.description">{{ doc.description }}</p>
+              
+              <!-- 协作者和分享信息 -->
+              <div class="doc-collaborators" v-if="doc.collaborators?.length > 0 || doc.shareLink">
+                <div class="doc-collaborators-list" v-if="doc.collaborators?.length > 0">
+                  <div 
+                    v-for="(collab, idx) in doc.collaborators.slice(0, 3)" 
+                    :key="collab.user.id"
+                    class="doc-collaborator-avatar"
+                    :title="collab.user.name"
+                    :style="{ zIndex: 10 - idx, marginLeft: idx > 0 ? '-8px' : '0' }"
+                  >
+                    {{ collab.user.avatar }}
+                  </div>
+                  <span v-if="doc.collaborators.length > 3" class="doc-collaborator-more">
+                    +{{ doc.collaborators.length - 3 }}
+                  </span>
+                </div>
+                <div class="doc-share-badge" v-if="doc.shareLink">
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                    <path d="M6 1L1 3v4l5 2 5-2V3L6 1z" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                  </svg>
+                  已分享
+                </div>
+              </div>
+              
               <div class="doc-meta">
                 <span class="doc-time">{{ formatDate(doc.updatedAt || doc.createdAt) }}</span>
                 <span class="doc-size" v-if="doc.size">{{ formatSize(doc.size) }}</span>
+                <span class="doc-likes" v-if="doc.likeCount > 0">
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                    <path d="M6 1l1 1 3 .5-2 2 .5 3L6 8 3 7.5l.5-3-2-2 3-.5L6 1z" 
+                          :fill="doc.liked ? 'currentColor' : 'none'"
+                          stroke="currentColor" 
+                          stroke-width="1.5"/>
+                  </svg>
+                  {{ doc.likeCount }}
+                </span>
               </div>
             </div>
           </div>
@@ -269,6 +373,8 @@
             </tbody>
           </table>
         </div>
+        </div>
+      </div>
       </div>
     </div>
 
@@ -435,6 +541,24 @@
       :message="errorDialogMessage"
       @close="showErrorDialog = false"
     />
+
+    <!-- 分享对话框 -->
+    <ShareDialog
+      :visible="showShareDialog"
+      :document="shareDocument"
+      @update:visible="showShareDialog = $event"
+      @save="handleShareSave"
+    />
+
+    <!-- 文档编辑器（使用 Teleport 全屏显示） -->
+    <DocumentEditorPage
+      v-if="editingDocument"
+      :document-id="editingDocument.id"
+      :document="editingDocument"
+      @close="closeEditor"
+      @update="handleDocumentUpdate"
+      @save="handleDocumentSave"
+    />
   </div>
 </template>
 
@@ -446,27 +570,53 @@ import LoadingState from './LoadingState.vue'
 import EmptyState from './EmptyState.vue'
 import MessageToast from './MessageToast.vue'
 import ErrorDialog from './ErrorDialog.vue'
+import ShareDialog from './ShareDialog.vue'
+import DocumentTree from './DocumentTree.vue'
+import DocumentEditorPage from './DocumentEditorPage.vue'
 import { formatDate, formatSizeBytes } from '../utils/format.js'
 import { useSession } from '../composables/useSession.js'
+import { generateDocuments, generateSpaces, generateTasks, generateCalendarEvents } from '../utils/mockData.js'
+
+// Props: 接收外部传入的空间ID或视图类型
+const props = defineProps({
+  spaceId: {
+    type: String,
+    default: null
+  },
+  viewType: {
+    type: String,
+    default: null
+  }
+})
 
 // 会话管理
 const session = useSession()
 
 // 响应式数据
-const currentView = ref('home') // home, shared, favorites
+const currentView = ref('home') // home, recent, favorites, liked, shared, knowledge, tasks, calendar, trash
 const currentSpace = ref(null)
+const spaceSubView = ref('all') // all, recent, favorites, liked, shared (空间子视图)
 const spaces = ref([])
 const showSpaces = ref(false)
+const showSpaceDropdown = ref(false)
 const documents = ref([])
+const allDocuments = ref([]) // 所有文档（包括假数据）
+const tasks = ref([])
+const calendarEvents = ref([])
 const loading = ref(false)
 const searchQuery = ref('')
 const sortBy = ref('time') // time, name, size
 const viewMode = ref('grid') // grid, list
 const selectedDocs = ref([])
+const selectedTreeId = ref(null)
+const selectedFolderId = ref(null)
 const showCreateDialog = ref(false)
 const showRenameDialog = ref(false)
+const showShareDialog = ref(false)
+const shareDocument = ref(null)
 const renameValue = ref('')
 const renameInputRef = ref(null)
+const editingDocument = ref(null)
 const createDocName = ref('')
 const createDocContent = ref('')
 const createDocType = ref('text') // 'text' or 'markdown'
@@ -502,31 +652,130 @@ const userInitial = computed(() => {
 })
 
 const currentViewTitle = computed(() => {
-  const titles = {
-    home: '文档库',
-    shared: '共享给我',
-    favorites: '收藏'
+  if (currentView.value === 'trash') {
+    return '回收站'
   }
-  return titles[currentView.value] || '文档库'
+  
+  // 文档库视图：显示空间和子视图
+  if (currentView.value === 'home') {
+    const subViewTitles = {
+      all: '全部',
+      recent: '最近',
+      favorites: '收藏',
+      liked: '点赞',
+      shared: '共享'
+    }
+    
+    if (currentSpace.value && currentSpace.value.id !== 'all') {
+      return `${currentSpace.value.name} · ${subViewTitles[spaceSubView.value] || '全部'}`
+    } else {
+      return `全部 · ${subViewTitles[spaceSubView.value] || '全部'}`
+    }
+  }
+  
+  return '文档库'
+})
+
+// 统计数据
+const recentCount = computed(() => {
+  return allDocuments.value.filter(doc => {
+    const daysSinceUpdate = (Date.now() - doc.updatedAt) / (24 * 60 * 60 * 1000)
+    return daysSinceUpdate <= 7
+  }).length
+})
+
+const favoriteCount = computed(() => {
+  return allDocuments.value.filter(doc => doc.favorite).length
+})
+
+const likedCount = computed(() => {
+  return allDocuments.value.filter(doc => doc.liked).length
+})
+
+const sharedCount = computed(() => {
+  return allDocuments.value.filter(doc => doc.shareLink || doc.collaborators?.length > 0).length
+})
+
+const taskCount = computed(() => {
+  return tasks.value.filter(task => task.status !== 'done').length
+})
+
+const trashCount = computed(() => {
+  return allDocuments.value.filter(doc => doc.deleted).length
+})
+
+// 滑动指示器样式
+const sliderStyle = computed(() => {
+  const views = ['all', 'recent', 'favorites', 'liked', 'shared']
+  const index = views.indexOf(spaceSubView.value)
+  if (index === -1) return { transform: 'translateX(0)', width: '0' }
+  
+  const width = 100 / views.length
+  return {
+    transform: `translateX(${index * 100}%)`,
+    width: `${width}%`
+  }
+})
+
+// 目录树使用的文档列表（仅按空间过滤，不应用其他过滤）
+const treeDocuments = computed(() => {
+  let result = [...allDocuments.value]
+  
+  // 只显示未删除的文档
+  result = result.filter(doc => !doc.deleted)
+  
+  // 如果选择了特定空间，按空间过滤
+  if (currentSpace.value && currentSpace.value.id !== 'all') {
+    result = result.filter(doc => doc.spaceId === currentSpace.value.id)
+  }
+  
+  return result
 })
 
 const sortedAndFilteredDocuments = computed(() => {
-  let result = [...documents.value]
+  let result = [...allDocuments.value]
+  
+  // 视图过滤
+  if (currentView.value === 'trash') {
+    result = result.filter(doc => doc.deleted)
+  } else if (currentView.value === 'home') {
+    // 文档库视图
+    result = result.filter(doc => !doc.deleted)
+    
+    // 如果选择了特定空间，按空间过滤
+    if (currentSpace.value && currentSpace.value.id !== 'all') {
+      result = result.filter(doc => doc.spaceId === currentSpace.value.id)
+    }
+    
+    // 应用空间子视图过滤（无论是否选择空间）
+    if (spaceSubView.value === 'recent') {
+      result = result.filter(doc => {
+        const daysSinceUpdate = (Date.now() - doc.updatedAt) / (24 * 60 * 60 * 1000)
+        return daysSinceUpdate <= 7
+      })
+    } else if (spaceSubView.value === 'favorites') {
+      result = result.filter(doc => doc.favorite)
+    } else if (spaceSubView.value === 'liked') {
+      result = result.filter(doc => doc.liked)
+    } else if (spaceSubView.value === 'shared') {
+      result = result.filter(doc => doc.shareLink || doc.collaborators?.length > 0)
+    }
+    // spaceSubView.value === 'all' 时不过滤
+    
+    // 如果选择了文件夹，只显示该文件夹下的文档
+    if (selectedFolderId.value) {
+      result = result.filter(doc => doc.parentId === selectedFolderId.value)
+    }
+  }
   
   // 搜索过滤
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase()
     result = result.filter(doc => 
       doc.name?.toLowerCase().includes(query) ||
-      doc.description?.toLowerCase().includes(query)
+      doc.description?.toLowerCase().includes(query) ||
+      doc.owner?.name?.toLowerCase().includes(query)
     )
-  }
-  
-  // 视图过滤
-  if (currentView.value === 'shared') {
-    result = result.filter(doc => doc.shared)
-  } else if (currentView.value === 'favorites') {
-    result = result.filter(doc => doc.favorite)
   }
   
   // 排序
@@ -549,6 +798,16 @@ const sortedAndFilteredDocuments = computed(() => {
 // 方法
 const switchView = (view) => {
   currentView.value = view
+  // 切换到回收站时，重置空间选择和子视图
+  if (view === 'trash') {
+    currentSpace.value = null
+    spaceSubView.value = 'all'
+  } else if (view === 'home') {
+    // 切换到文档库时，确保有默认空间
+    if (!currentSpace.value) {
+      currentSpace.value = null // 默认显示全部
+    }
+  }
   loadDocuments()
 }
 
@@ -559,27 +818,72 @@ const toggleSpaces = () => {
   }
 }
 
-const selectSpace = (space) => {
-  currentSpace.value = space
-  loadDocuments()
+const toggleSpaceDropdown = () => {
+  showSpaceDropdown.value = !showSpaceDropdown.value
+  if (showSpaceDropdown.value && spaces.value.length === 0) {
+    loadSpaces()
+  }
+}
+
+const selectSpace = (space, event) => {
+  // 阻止事件冒泡，避免触发外部的view-change
+  if (event) {
+    event.stopPropagation()
+  }
+  
+  // 如果选择"全部"，设置为null，并重置空间子视图
+  if (space.id === 'all') {
+    currentSpace.value = null
+    spaceSubView.value = 'all'
+  } else {
+    // 添加切换动画效果
+    const oldSpace = currentSpace.value
+    currentSpace.value = space
+    // 选择空间后，默认显示"全部"子视图
+    spaceSubView.value = 'all'
+  }
+  
+  // 切换空间时，清除文件夹筛选
+  selectedFolderId.value = null
+  selectedTreeId.value = null
+  
+  // 关闭下拉菜单
+  showSpaceDropdown.value = false
+  
+  // 切换空间时，确保在文档库视图
+  if (currentView.value !== 'home') {
+    currentView.value = 'home'
+  }
+  
+  // 计算该空间的文档数量
+  const spaceDocCount = space.id === 'all' 
+    ? allDocuments.value.filter(doc => !doc.deleted).length
+    : allDocuments.value.filter(doc => doc.spaceId === space.id && !doc.deleted).length
+  
+  console.log(`切换到空间: ${space.name}, 文档数: ${spaceDocCount}`)
+  
+  // 切换空间时，重新过滤文档（不需要重新加载，只需要触发计算属性更新）
+  // sortedAndFilteredDocuments 会自动更新
+}
+
+const switchSpaceSubView = (subView) => {
+  spaceSubView.value = subView
+  // 切换子视图时，清除文件夹筛选，避免冲突
+  if (subView !== 'all') {
+    selectedFolderId.value = null
+    selectedTreeId.value = null
+  }
+  // sortedAndFilteredDocuments 会自动更新
 }
 
 const loadSpaces = async () => {
   try {
-    // TODO: 调用API获取空间列表
-    // const response = await fetch('/api/spaces')
-    // spaces.value = await response.json()
+    // 使用假数据
+    spaces.value = generateSpaces()
     
-    // 初始化空间列表，默认包含个人空间
-    if (spaces.value.length === 0) {
-      spaces.value = [
-        { id: 'personal', name: '个人空间', type: 'personal' }
-      ]
-      
-      // 如果没有当前空间，默认设置为个人空间
-      if (!currentSpace.value) {
-        currentSpace.value = spaces.value[0]
-      }
+    // 如果没有当前空间，默认设置为个人空间
+    if (!currentSpace.value) {
+      currentSpace.value = spaces.value[0]
     }
   } catch (error) {
     console.error('加载空间列表失败:', error)
@@ -594,39 +898,73 @@ const loadDocuments = async () => {
       currentSpace.value = { id: 'personal', name: '个人空间', type: 'personal' }
     }
     
-    const userId = getUserId()
-    const response = await fetch(`/doc/list/${userId}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json'
+    // 先尝试从API加载
+    try {
+      const userId = getUserId()
+      const response = await fetch(`/doc/list/${userId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      
+      if (response.ok) {
+        const docList = await response.json()
+        // 转换后端返回的数据格式
+        const apiDocs = docList.map(doc => ({
+          id: doc.id,
+          name: doc.name || '未命名文档',
+          description: doc.text || '',
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+          size: (doc.text || '').length,
+          favorite: false,
+          liked: false,
+          likeCount: 0,
+          collaborators: [],
+          shareLink: null,
+          owner: { id: doc.owner || userId, name: '当前用户' },
+          spaceId: currentSpace.value.id,
+          deleted: false
+        }))
+        
+        // 合并API数据和假数据
+        allDocuments.value = [...apiDocs, ...generateDocuments(30)]
+      } else {
+        // API失败，使用假数据
+        allDocuments.value = generateDocuments(50)
       }
-    })
-    
-    if (!response.ok) {
-      throw new Error('加载文档列表失败')
+    } catch (apiError) {
+      // API调用失败，使用假数据
+      console.log('使用假数据:', apiError)
+      allDocuments.value = generateDocuments(50)
     }
     
-    const docList = await response.json()
+    // 确保有数据，生成50个文档
+    if (allDocuments.value.length === 0) {
+      console.log('生成50个假数据文档')
+      allDocuments.value = generateDocuments(50)
+    }
     
-    // 转换后端返回的数据格式为前端需要的格式
-    documents.value = docList.map(doc => ({
-      id: doc.id,
-      name: doc.name || '未命名文档',
-      description: doc.text || '',
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-      size: (doc.text || '').length,
-      favorite: false,
-      shared: false,
-      owner: { id: doc.owner || userId, name: '当前用户' },
-      spaceId: currentSpace.value.id
-    }))
+    console.log('加载的文档数量:', allDocuments.value.length)
+    console.log('当前视图:', currentView.value)
+    console.log('当前空间:', currentSpace.value?.name)
+    
+    // 加载任务和日历事件
+    tasks.value = generateTasks()
+    calendarEvents.value = generateCalendarEvents()
+    
   } catch (error) {
     console.error('加载文档列表失败:', error)
-    // 如果API调用失败，使用空数组
-    documents.value = []
+    // 即使出错也生成假数据
+    if (allDocuments.value.length === 0) {
+      console.log('错误后生成50个假数据文档')
+      allDocuments.value = generateDocuments(50)
+    }
   } finally {
     loading.value = false
+    console.log('文档加载完成，总数:', allDocuments.value.length)
+    console.log('当前空间:', currentSpace.value?.name, '过滤后数量:', sortedAndFilteredDocuments.value.length)
   }
 }
 
@@ -652,10 +990,71 @@ const toggleSelect = (doc) => {
 }
 
 const openDocument = (doc) => {
-  // TODO: 打开文档编辑器
-  console.log('打开文档:', doc)
-  // 可以emit事件或路由跳转
-  // emit('open-document', doc)
+  // 打开文档编辑器
+  editingDocument.value = {
+    ...doc,
+    content: doc.content || '<p></p>'
+  }
+}
+
+// 关闭编辑器
+const closeEditor = () => {
+  editingDocument.value = null
+}
+
+// 处理文档更新
+const handleDocumentUpdate = (updates) => {
+  if (editingDocument.value) {
+    Object.assign(editingDocument.value, updates)
+    // 更新文档列表中的对应文档
+    const index = allDocuments.value.findIndex(d => d.id === editingDocument.value.id)
+    if (index > -1) {
+      Object.assign(allDocuments.value[index], updates)
+    }
+  }
+}
+
+// 处理文档保存
+const handleDocumentSave = async (data) => {
+  try {
+    // TODO: 调用 API 保存文档
+    console.log('保存文档:', data)
+    showMessage('文档已保存', 'success')
+    
+    // 更新文档列表
+    const index = allDocuments.value.findIndex(d => d.id === editingDocument.value.id)
+    if (index > -1) {
+      Object.assign(allDocuments.value[index], {
+        name: data.name,
+        content: data.content,
+        updatedAt: new Date()
+      })
+    }
+  } catch (error) {
+    console.error('保存文档失败:', error)
+    showMessage(error.message || '保存文档失败', 'error')
+  }
+}
+
+// 处理目录树选择
+const handleTreeSelect = (node) => {
+  selectedTreeId.value = node.id
+  if (node.isFolder) {
+    // 选择文件夹时，切换到"全部"子视图，避免与子视图筛选冲突
+    spaceSubView.value = 'all'
+    selectedFolderId.value = node.id
+  } else {
+    // 选择文档时，清除文件夹筛选并打开文档
+    selectedFolderId.value = null
+    openDocument(node)
+  }
+}
+
+// 处理文件夹选择
+const handleFolderSelect = (folderId) => {
+  // 选择文件夹时，切换到"全部"子视图
+  spaceSubView.value = 'all'
+  selectedFolderId.value = folderId
 }
 
 // 关闭创建对话框并重置表单
@@ -722,7 +1121,7 @@ const createDocument = async (type) => {
       spaceId: currentSpace.value.id
     }
     
-    documents.value.unshift(newDoc)
+    allDocuments.value.unshift(newDoc)
     closeCreateDialog()
     showMessage('文档创建成功', 'success')
     openDocument(newDoc)
@@ -794,7 +1193,7 @@ const handleContextAction = async (action) => {
       await duplicateDocument(doc)
       break
     case 'share':
-      await shareDocument(doc)
+      await openShareDialog(doc)
       break
     case 'favorite':
       await toggleFavorite(doc)
@@ -840,15 +1239,32 @@ const duplicateDocument = async (doc) => {
       updatedAt: Date.now()
     }
     
-    documents.value.unshift(newDoc)
+    allDocuments.value.unshift(newDoc)
+    showMessage('文档已复制', 'success')
   } catch (error) {
     console.error('复制文档失败:', error)
   }
 }
 
-const shareDocument = async (doc) => {
-  // TODO: 打开分享对话框
-  console.log('分享文档:', doc)
+const openShareDialog = async (doc) => {
+  shareDocument.value = doc
+  showShareDialog.value = true
+}
+
+const handleShareSave = (shareData) => {
+  const doc = shareDocument.value
+  if (!doc) return
+  
+  // 更新文档的分享信息
+  const docIndex = allDocuments.value.findIndex(d => d.id === doc.id)
+  if (docIndex > -1) {
+    allDocuments.value[docIndex] = {
+      ...allDocuments.value[docIndex],
+      shareLink: shareData.shareLink,
+      collaborators: shareData.collaborators
+    }
+    showMessage('分享设置已保存', 'success')
+  }
 }
 
 const deleteDocument = async (doc) => {
@@ -862,15 +1278,19 @@ const deleteDocument = async (doc) => {
     //   method: 'DELETE'
     // })
     
-    const index = documents.value.findIndex(d => d.id === doc.id)
+    const index = allDocuments.value.findIndex(d => d.id === doc.id)
     if (index > -1) {
-      documents.value.splice(index, 1)
+      // 标记为已删除，而不是真正删除
+      allDocuments.value[index].deleted = true
+      allDocuments.value[index].deletedAt = Date.now()
     }
     
     const selectedIndex = selectedDocs.value.indexOf(doc.id)
     if (selectedIndex > -1) {
       selectedDocs.value.splice(selectedIndex, 1)
     }
+    
+    showMessage('文档已移至回收站', 'success')
   } catch (error) {
     console.error('删除文档失败:', error)
   }
@@ -891,6 +1311,9 @@ const handleClickOutside = (event) => {
   }
   if (showRenameDialog && !event.target.closest('.dialog')) {
     showRenameDialog.value = false
+  }
+  if (showSpaceDropdown && !event.target.closest('.space-selector-dropdown')) {
+    showSpaceDropdown.value = false
   }
 }
 
@@ -913,17 +1336,46 @@ watch(showCreateDialog, (newVal) => {
   }
 })
 
-onMounted(() => {
+onMounted(async () => {
   // 先加载空间，确保个人空间存在
-  loadSpaces()
+  await loadSpaces()
   
-  // 确保默认选中个人空间
-  if (!currentSpace.value) {
+  // 如果外部传入了spaceId，自动选择该空间
+  if (props.spaceId) {
+    const space = spaces.value.find(s => s.id === props.spaceId)
+    if (space) {
+      currentSpace.value = space
+      currentView.value = 'home'
+      console.log('外部传入空间ID:', props.spaceId, '空间名称:', space.name)
+    }
+  } else if (!currentSpace.value) {
+    // 确保默认选中个人空间
     currentSpace.value = { id: 'personal', name: '个人空间', type: 'personal' }
   }
   
+  // 如果外部传入了viewType，切换到对应视图
+  if (props.viewType) {
+    if (props.viewType.startsWith('docs-')) {
+      const view = props.viewType.replace('docs-', '')
+      if (['recent', 'favorites', 'shared', 'my', 'templates', 'trash'].includes(view)) {
+        currentView.value = view === 'my' ? 'home' : view
+      }
+    }
+  }
+  
   // 加载文档列表
-  loadDocuments()
+  await loadDocuments()
+  
+  // 确保有数据，生成50个文档
+  if (allDocuments.value.length === 0) {
+    console.warn('文档列表为空，生成50个假数据文档')
+    allDocuments.value = generateDocuments(50)
+  }
+  
+  console.log('组件挂载完成，文档总数:', allDocuments.value.length)
+  console.log('当前空间:', currentSpace.value?.name)
+  console.log('当前视图:', currentView.value)
+  console.log('个人空间文档数:', allDocuments.value.filter(doc => doc.spaceId === 'personal').length)
   
   document.addEventListener('click', handleClickOutside)
   // 监听刷新事件
@@ -941,167 +1393,507 @@ onUnmounted(() => {
 .document-library-page {
   display: flex;
   height: 100vh;
-  background: var(--theme-background, #ffffff);
+  background: #f5f5f7;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  padding: 0;
 }
 
-/* 左侧边栏 */
-.dl-sidebar {
-  width: 240px;
-  background: var(--theme-background, #ffffff);
-  border-right: 1px solid #e5e7eb;
+.dl-main-wrapper {
   display: flex;
-  flex-direction: column;
-  overflow-y: auto;
+  flex: 1;
+  overflow: hidden;
+  min-width: 0;
+  align-items: stretch;
+  position: relative;
+  gap: 0;
+  height: 100vh;
 }
 
-.sidebar-user {
-  padding: 20px 16px;
-  border-bottom: 1px solid #e5e7eb;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.user-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
-  background: var(--theme-accent, #165dff);
+/* 顶部导航栏 */
+.dl-top-nav {
+  background: rgba(255, 255, 255, 0.5);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  padding: 12px 24px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  color: white;
-  font-weight: 600;
-  font-size: 16px;
+  justify-content: space-between;
+  flex-shrink: 0;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.dl-nav-left {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex: 1;
+}
+
+.dl-view-tabs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.view-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  color: #6b7280;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.view-tab:hover {
+  background: rgba(0, 0, 0, 0.04);
+  color: #111827;
+}
+
+.view-tab.active {
+  background: rgba(22, 93, 255, 0.1);
+  color: var(--theme-accent, #165dff);
+}
+
+.view-tab svg {
   flex-shrink: 0;
 }
 
-.user-info {
-  flex: 1;
-  min-width: 0;
+.tab-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+  background: #f3f4f6;
+  padding: 2px 6px;
+  border-radius: 10px;
+  min-width: 18px;
+  text-align: center;
 }
 
-.user-name {
+.view-tab.active .tab-badge {
+  background: rgba(22, 93, 255, 0.15);
+  color: var(--theme-accent, #165dff);
+}
+
+/* 空间导航栏 */
+.dl-space-nav {
+  background: transparent;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  padding: 12px 24px;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  position: relative;
+  z-index: 10;
+}
+
+.space-nav-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* 空间区域 */
+.space-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.space-section-label {
   font-size: 14px;
   font-weight: 600;
   color: #111827;
-  overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.sidebar-nav {
-  flex: 1;
-  padding: 8px 0;
-  display: flex;
-  flex-direction: column;
+/* 空间切换器 */
+.space-switcher {
+  position: relative;
+  z-index: 1000;
 }
 
-.nav-section {
-  padding: 4px 0;
-}
-
-.nav-section-bottom {
-  margin-top: auto;
-  border-top: 1px solid #e5e7eb;
-  padding-top: 8px;
-}
-
-.nav-item {
+.space-current {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   padding: 10px 16px;
-  color: #6b7280;
+  border: 2px solid rgba(22, 93, 255, 0.2);
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 10px;
   cursor: pointer;
-  transition: all 0.15s;
-  position: relative;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 180px;
 }
 
-.nav-item:hover {
-  background: #f9fafb;
-  color: #111827;
+.space-current:hover {
+  border-color: var(--theme-accent, #165dff);
+  background: rgba(255, 255, 255, 1);
+  box-shadow: 0 4px 12px rgba(22, 93, 255, 0.15);
+  transform: translateY(-1px);
 }
 
-.nav-item.active {
-  color: var(--theme-accent, #165dff);
-  background: color-mix(in srgb, var(--theme-accent, #165dff) 10%, transparent);
-}
-
-.nav-item.active::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 3px;
-  background: var(--theme-accent, #165dff);
-}
-
-.nav-icon {
+.space-current-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
   flex-shrink: 0;
-  color: currentColor;
+  color: white;
+  font-weight: 600;
 }
 
-.nav-text {
+.space-current-name {
   flex: 1;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
+  color: #111827;
+  text-align: left;
 }
 
-.nav-arrow {
+.space-current-count {
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 400;
+}
+
+.space-switcher-arrow {
   flex-shrink: 0;
-  transition: transform 0.2s;
-  color: currentColor;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  color: #6b7280;
 }
 
-.nav-arrow.expanded {
+.space-switcher-arrow.expanded {
   transform: rotate(180deg);
 }
 
-.nav-submenu {
-  padding-left: 44px;
-  padding-top: 4px;
+/* 空间切换菜单 */
+.space-switcher-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  min-width: 240px;
+  max-width: 320px;
+  max-height: 400px;
+  overflow-y: auto;
+  background: rgba(255, 255, 255, 0.98);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  z-index: 1000;
+  padding: 8px;
 }
 
-.nav-subitem {
+.space-switcher-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 8px 16px;
-  color: #6b7280;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   font-size: 13px;
-}
-
-.nav-subitem:hover {
-  background: #f9fafb;
   color: #111827;
 }
 
-.nav-subitem.active {
+.space-switcher-item:hover {
+  background: rgba(22, 93, 255, 0.08);
+  transform: translateX(4px);
+}
+
+.space-switcher-item.active {
+  background: rgba(22, 93, 255, 0.12);
   color: var(--theme-accent, #165dff);
-  background: color-mix(in srgb, var(--theme-accent, #165dff) 10%, transparent);
+  font-weight: 600;
+}
+
+.space-switcher-item-icon {
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  flex-shrink: 0;
+  color: white;
+  font-weight: 600;
+}
+
+.space-switcher-item-text {
+  flex: 1;
+  text-align: left;
+}
+
+.space-switcher-item-count {
+  font-size: 12px;
+  color: #9ca3af;
+  font-weight: 400;
+}
+
+.space-switcher-item.active .space-switcher-item-count {
+  color: var(--theme-accent, #165dff);
+}
+
+/* 下拉菜单动画 */
+.space-dropdown-enter-active,
+.space-dropdown-leave-active {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.space-dropdown-enter-from {
+  opacity: 0;
+  transform: translateY(-10px) scale(0.95);
+}
+
+.space-dropdown-leave-to {
+  opacity: 0;
+  transform: translateY(-10px) scale(0.95);
+}
+
+.space-nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.space-nav-search {
+  min-width: 200px;
+  max-width: 320px;
+  flex: 1;
+}
+
+.space-nav-search :deep(.search-wrapper) {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.space-nav-search :deep(.search-wrapper:focus-within) {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: var(--theme-accent, #165dff);
+  box-shadow: 0 0 0 3px rgba(22, 93, 255, 0.1);
+}
+
+.space-nav-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.6);
+  color: #6b7280;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+}
+
+.space-nav-action-btn:hover {
+  background: rgba(255, 255, 255, 0.8);
+  border-color: rgba(0, 0, 0, 0.15);
+  color: #111827;
+}
+
+.space-nav-action-btn.active {
+  background: rgba(22, 93, 255, 0.1);
+  border-color: var(--theme-accent, #165dff);
+  color: var(--theme-accent, #165dff);
+}
+
+.space-nav-action-btn.primary {
+  background: var(--theme-accent, #165dff);
+  border-color: var(--theme-accent, #165dff);
+  color: white;
+}
+
+.space-nav-action-btn.primary:hover {
+  background: color-mix(in srgb, var(--theme-accent, #165dff) 90%, black);
+  border-color: color-mix(in srgb, var(--theme-accent, #165dff) 90%, black);
+}
+
+.space-nav-action-btn svg {
+  flex-shrink: 0;
+}
+
+.action-badge {
+  font-size: 11px;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.8);
+  color: #6b7280;
+  padding: 2px 6px;
+  border-radius: 10px;
+  min-width: 18px;
+  text-align: center;
+}
+
+.space-nav-action-btn.active .action-badge {
+  background: rgba(22, 93, 255, 0.15);
+  color: var(--theme-accent, #165dff);
+}
+
+/* 空间子视图切换 - 现代分段控制器风格 */
+.space-sub-views {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.space-sub-views-container {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: 12px;
+  padding: 4px;
+  gap: 0;
+  box-shadow: 
+    0 1px 3px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.space-sub-views-slider {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  height: calc(100% - 8px);
+  background: linear-gradient(135deg, var(--theme-accent, #165dff) 0%, #4c7fff 50%, #7b9fff 100%);
+  border-radius: 8px;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 
+    0 2px 8px rgba(22, 93, 255, 0.3),
+    0 1px 3px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  z-index: 1;
+}
+
+.space-sub-view-btn {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: none;
+  background: transparent;
+  color: #6b7280;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 80px;
+  white-space: nowrap;
+}
+
+.space-sub-view-btn .btn-content {
+  position: relative;
+  z-index: 1;
+}
+
+.space-sub-view-btn svg {
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.space-sub-view-btn:hover {
+  color: #111827;
+  transform: translateY(-1px);
+}
+
+.space-sub-view-btn:hover svg {
+  transform: scale(1.1);
+}
+
+.space-sub-view-btn.active {
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.space-sub-view-btn.active svg {
+  transform: scale(1.15);
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+}
+
+.dl-nav-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.nav-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: none;
+  background: var(--theme-accent, #165dff);
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nav-action-btn:hover {
+  background: color-mix(in srgb, var(--theme-accent, #165dff) 90%, black);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(22, 93, 255, 0.2);
 }
 
 /* 主内容区 */
 .dl-main {
   flex: 1;
+  min-width: 0;
+  height: calc(100vh - 24px);
+  margin: 12px 12px 12px 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  position: relative;
+  z-index: 1;
+  background: var(--theme-background-gradient, none);
+  background-color: var(--theme-background, #f5f5f7);
+  border: none;
+  border-radius: 16px;
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: 
+    0 0 0 1px rgba(0, 0, 0, 0.03) inset,
+    0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .dl-header {
-  background: var(--theme-background, #ffffff);
-  border-bottom: 1px solid #e5e7eb;
+  background: transparent;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
   padding: 16px 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-shrink: 0;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 .dl-header-left {
@@ -1143,11 +1935,31 @@ onUnmounted(() => {
 
 /* 搜索框、排序、视图切换样式已移至 common.css */
 
+/* 内容区域包装器 */
+.dl-content-wrapper {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  gap: 0;
+  min-width: 0;
+  background: transparent;
+}
+
 /* 内容区 */
 .dl-content {
   flex: 1;
   overflow-y: auto;
   padding: 24px;
+  background: transparent;
+  min-width: 0;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+/* 隐藏滚动条但保持滚动功能 */
+.dl-content::-webkit-scrollbar {
+  width: 0;
+  display: none;
 }
 
 /* 加载状态和空状态样式已移至 common.css */
@@ -1155,30 +1967,51 @@ onUnmounted(() => {
 /* 网格视图 */
 .dl-grid-view {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 24px;
 }
 
 .doc-card {
-  background: var(--theme-background, #ffffff);
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 12px;
-  padding: 16px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 16px;
+  padding: 20px;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   box-shadow: 
-    0 2px 4px rgba(0, 0, 0, 0.06),
-    0 1px 2px rgba(0, 0, 0, 0.04);
+    0 1px 3px rgba(0, 0, 0, 0.05),
+    0 1px 2px rgba(0, 0, 0, 0.03);
+  position: relative;
+  overflow: hidden;
+}
+
+.doc-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--theme-accent, #165dff) 0%, #4c7fff 100%);
+  opacity: 0;
+  transition: opacity 0.3s;
 }
 
 .doc-card:hover {
-  border-color: color-mix(in srgb, var(--theme-accent, #165dff) 30%, transparent);
+  background: rgba(255, 255, 255, 1);
+  border-color: rgba(22, 93, 255, 0.2);
   box-shadow: 
-    0 8px 16px rgba(0, 0, 0, 0.12),
-    0 4px 8px color-mix(in srgb, var(--theme-accent, #165dff) 15%, transparent);
-  transform: translateY(-2px);
+    0 8px 24px rgba(0, 0, 0, 0.12),
+    0 4px 12px rgba(22, 93, 255, 0.15);
+  transform: translateY(-4px) scale(1.01);
+}
+
+.doc-card:hover::before {
+  opacity: 1;
 }
 
 .doc-card-header {
@@ -1189,15 +2022,28 @@ onUnmounted(() => {
 }
 
 .doc-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 6px;
-  background: var(--theme-accent, #165dff);
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--theme-accent, #165dff) 0%, #4c7fff 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
   flex-shrink: 0;
+  box-shadow: 
+    0 4px 12px rgba(22, 93, 255, 0.25),
+    0 2px 4px rgba(22, 93, 255, 0.15);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+.doc-card:hover .doc-icon {
+  transform: scale(1.05) rotate(2deg);
+  box-shadow: 
+    0 6px 16px rgba(22, 93, 255, 0.35),
+    0 3px 6px rgba(22, 93, 255, 0.2);
 }
 
 .doc-actions {
@@ -1222,7 +2068,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.15s;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .doc-action-btn:hover {
@@ -1241,15 +2087,17 @@ onUnmounted(() => {
 }
 
 .doc-title {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
   color: #111827;
-  margin: 0 0 8px 0;
+  margin: 0 0 10px 0;
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
 }
 
 .doc-desc {
@@ -1264,6 +2112,51 @@ onUnmounted(() => {
   flex: 1;
 }
 
+.doc-collaborators {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0;
+  min-height: 24px;
+}
+
+.doc-collaborators-list {
+  display: flex;
+  align-items: center;
+}
+
+.doc-collaborator-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+  border: 2px solid white;
+  flex-shrink: 0;
+}
+
+.doc-collaborator-more {
+  font-size: 11px;
+  color: #6b7280;
+  margin-left: 4px;
+}
+
+.doc-share-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: #165dff;
+  background: #eff6ff;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
 .doc-meta {
   display: flex;
   align-items: center;
@@ -1273,32 +2166,48 @@ onUnmounted(() => {
   margin-top: auto;
 }
 
+.doc-likes {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #f59e0b;
+}
+
 /* 列表视图 */
 .dl-list-view {
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  overflow: hidden;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  overflow: visible;
 }
 
 .doc-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
 }
 
 .doc-table thead {
-  background: #f9fafb;
-  border-bottom: 1px solid #e5e7eb;
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .doc-table th {
-  padding: 12px 16px;
+  padding: 14px 20px;
   text-align: left;
   font-size: 12px;
   font-weight: 600;
   color: #6b7280;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 2px solid rgba(0, 0, 0, 0.06);
 }
 
 .col-check {
@@ -1326,27 +2235,50 @@ onUnmounted(() => {
 }
 
 .doc-row {
-  border-bottom: 1px solid #f3f4f6;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
   cursor: pointer;
-  transition: background 0.15s;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  background: rgba(255, 255, 255, 0.5);
+  position: relative;
+  transform: translateZ(0);
+  will-change: transform, background;
+}
+
+.doc-row::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(180deg, var(--theme-accent, #165dff) 0%, #4c7fff 100%);
+  opacity: 0;
+  transition: opacity 0.2s;
 }
 
 .doc-row:hover {
-  background: #f9fafb;
+  background: rgba(255, 255, 255, 0.9);
+  transform: translateX(2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.doc-row:hover::before {
+  opacity: 1;
 }
 
 .doc-row.selected {
-  background: #eff6ff;
+  background: rgba(22, 93, 255, 0.08);
 }
 
-.doc-row:last-child {
-  border-bottom: none;
+.doc-row.selected::before {
+  opacity: 1;
 }
 
 .doc-row td {
-  padding: 12px 16px;
+  padding: 16px 20px;
   font-size: 14px;
   color: #111827;
+  vertical-align: middle;
 }
 
 .doc-name-cell {
@@ -1356,15 +2288,26 @@ onUnmounted(() => {
 }
 
 .doc-icon-small {
-  width: 32px;
-  height: 32px;
-  border-radius: 4px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--theme-accent, #165dff) 0%, #4c7fff 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
   flex-shrink: 0;
+  box-shadow: 
+    0 2px 8px rgba(22, 93, 255, 0.2),
+    0 1px 3px rgba(22, 93, 255, 0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.doc-row:hover .doc-icon-small {
+  transform: scale(1.1);
+  box-shadow: 
+    0 4px 12px rgba(22, 93, 255, 0.3),
+    0 2px 4px rgba(22, 93, 255, 0.15);
 }
 
 .doc-name {
@@ -1394,17 +2337,18 @@ onUnmounted(() => {
 }
 
 .owner-avatar {
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--theme-accent, #165dff) 0%, #4c7fff 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(22, 93, 255, 0.2);
 }
 
 .action-btn {
@@ -1418,7 +2362,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.15s;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .action-btn:hover {
@@ -1439,7 +2383,7 @@ onUnmounted(() => {
   border: 2px solid #e5e7eb;
   border-radius: 8px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   text-align: center;
 }
 
@@ -1499,8 +2443,9 @@ onUnmounted(() => {
   border-radius: 6px;
   font-size: 14px;
   font-family: inherit;
-  transition: all 0.15s;
-  background: var(--theme-background, #ffffff);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  background: var(--theme-background-gradient, none);
+  background-color: var(--theme-background, #f5f5f7);
   color: var(--theme-text, #111827);
   box-sizing: border-box;
 }
@@ -1528,12 +2473,13 @@ onUnmounted(() => {
   padding: 12px 16px;
   border: 2px solid #e5e7eb;
   border-radius: 6px;
-  background: var(--theme-background, #ffffff);
+  background: var(--theme-background-gradient, none);
+  background-color: var(--theme-background, #f5f5f7);
   color: #6b7280;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1561,7 +2507,7 @@ onUnmounted(() => {
   border: 1px solid #d1d5db;
   border-radius: 6px;
   font-size: 14px;
-  transition: all 0.15s;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .rename-input:focus {
@@ -1575,7 +2521,8 @@ onUnmounted(() => {
 /* 右键菜单 */
 .context-menu {
   position: fixed;
-  background: var(--theme-background, #ffffff);
+  background: var(--theme-background-gradient, none);
+  background-color: var(--theme-background, #f5f5f7);
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);

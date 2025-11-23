@@ -37,7 +37,8 @@ public class AuthController {
     public Result<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         log.info("用户登录请求: loginType={}, email={}", request.getLoginType(), request.getEmail());
         // TODO: 实现登录逻辑
-        // 1. 根据 loginType 判断登录方式
+        String loginType = request.getLoginType();
+
         // 2. 验证用户凭证（密码/验证码/OAuth）
         // 3. 查询用户信息
         // 4. 生成 JWT Token
@@ -53,7 +54,6 @@ public class AuthController {
                 .displayName("示例用户")
                 .isFirstLogin(false)
                 .build();
-
         return Result.success("登录成功", response);
     }
 
@@ -174,4 +174,6 @@ public class AuthController {
         return Result.success(response);
     }
 }
+
+
 

@@ -192,6 +192,16 @@
               <DocumentLibrary />
             </div>
 
+            <!-- 空间视图（显示文档库，并传递空间信息） -->
+            <div v-else-if="currentView && currentView.startsWith('space-')" :key="`${activeTabId}-${currentView}`" class="view-container docs-view">
+              <DocumentLibrary :space-id="currentView.replace('space-', '')" />
+            </div>
+
+            <!-- 其他文档相关视图 -->
+            <div v-else-if="currentView && (currentView.startsWith('docs-') || currentView.startsWith('tasks-') || currentView.startsWith('project-'))" :key="`${activeTabId}-${currentView}`" class="view-container docs-view">
+              <DocumentLibrary :view-type="currentView" />
+            </div>
+
             <!-- 其他动态视图（单开标签页） -->
             <div v-else :key="`${activeTabId}-${currentView}`" class="view-container dynamic-view">
               <div class="dynamic-view-content">
@@ -225,7 +235,6 @@ import MessageItem from './components/MessageItem.vue'
 import InputArea from './components/InputArea.vue'
 import RagManagement from './components/RagManagement.vue'
 import DocumentLibrary from './components/DocumentLibrary.vue'
-import TitleBar from './components/TitleBar.vue'
 import Sidebar from './components/Sidebar.vue'
 import TabsBar from './components/TabsBar.vue'
 import ColorPalette from './components/ColorPalette.vue'
@@ -503,8 +512,11 @@ const canSend = computed(() => {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  background: rgba(249, 250, 251, 0.6);
-  border-radius: 16px;
+  background: rgba(245, 245, 247, 0.6);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-radius: 0 0 16px 16px;
+  margin-top: 0;
 }
 
 /* 视图容器 */

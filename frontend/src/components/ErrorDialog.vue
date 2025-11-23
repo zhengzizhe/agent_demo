@@ -23,7 +23,7 @@
 </template>
 
 <script setup>
-import { defineProps, defineEmits, watch, onMounted } from 'vue'
+import { watch, onMounted } from 'vue'
 
 const props = defineProps({
   visible: {

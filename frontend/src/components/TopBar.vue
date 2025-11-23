@@ -1,9 +1,10 @@
 <template>
   <div class="top-bar">
     <div class="top-bar-left">
-      <!-- 网站风格标签页 -->
+      <!-- 现代分段控制器风格标签页 -->
       <nav class="tabs-nav" aria-label="标签页导航">
         <div class="tabs-container">
+          <div class="tabs-slider" :style="tabsSliderStyle"></div>
           <button
             v-for="tab in tabs"
             :key="tab.id"
@@ -11,6 +12,7 @@
             :class="{ active: currentView === tab.id }"
             @click="handleTabClick(tab.id)"
             :title="tab.title"
+            :data-tab="tab.id"
           >
             <span class="tab-icon" v-if="tab.icon">{{ tab.icon }}</span>
             <span class="tab-label">{{ tab.label }}</span>
@@ -76,6 +78,18 @@ const tabs = computed(() => [
 const handleTabClick = (viewId) => {
   emit('view-change', viewId)
 }
+
+// 滑动指示器样式
+const tabsSliderStyle = computed(() => {
+  const index = tabs.value.findIndex(tab => tab.id === props.currentView)
+  if (index === -1) return { transform: 'translateX(0)', width: '0' }
+  
+  const width = 100 / tabs.value.length
+  return {
+    transform: `translateX(${index * 100}%)`,
+    width: `${width}%`
+  }
+})
 </script>
 
 <style scoped>
@@ -112,53 +126,69 @@ const handleTabClick = (viewId) => {
 }
 
 .tabs-container {
-  display: flex;
+  position: relative;
+  display: inline-flex;
   align-items: center;
-  gap: 4px;
-  height: 100%;
-  padding: 0 4px;
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: 12px;
+  padding: 4px;
+  gap: 0;
+  height: 40px;
+  box-shadow: 
+    0 1px 3px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.tabs-slider {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  height: calc(100% - 8px);
+  background: linear-gradient(135deg, var(--theme-accent, #165dff) 0%, #4c7fff 50%, #7b9fff 100%);
+  border-radius: 8px;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 
+    0 2px 8px rgba(22, 93, 255, 0.3),
+    0 1px 3px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  z-index: 1;
 }
 
 .tab-item {
+  position: relative;
+  z-index: 2;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   padding: 8px 16px;
   border: none;
   background: transparent;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   color: #86909c;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   white-space: nowrap;
   border-radius: 8px;
-  position: relative;
-  height: 36px;
+  height: 100%;
   line-height: 1.5;
+  min-width: 80px;
 }
 
 .tab-item:hover {
   color: #1d2129;
-  background: rgba(0, 0, 0, 0.04);
+  transform: translateY(-1px);
 }
 
 .tab-item.active {
-  color: #165dff;
-  background: rgba(22, 93, 255, 0.08);
-  font-weight: 600;
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
-.tab-item.active::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 24px;
-  height: 3px;
-  background: #165dff;
-  border-radius: 3px 3px 0 0;
+.tab-item.active .tab-icon {
+  transform: scale(1.15);
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
 }
 
 .tab-icon {
@@ -167,6 +197,7 @@ const handleTabClick = (viewId) => {
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: all 0.3s;
 }
 
 .tab-label {

@@ -2139,6 +2139,8 @@ document.addEventListener('click', (e) => {
   box-shadow: 0 2px 6px rgba(33, 150, 243, 0.4);
   position: relative;
   z-index: 1;
+  transform: translateZ(0);
+  will-change: transform, opacity;
 }
 
 .typing-dot:nth-child(2) {
@@ -2233,11 +2235,11 @@ document.addEventListener('click', (e) => {
 
 @keyframes typing {
   0%, 60%, 100% {
-    transform: translateY(0) scale(1);
+    transform: translateY(0) scale(1) translateZ(0);
     opacity: 0.6;
   }
   30% {
-    transform: translateY(-12px) scale(1.2);
+    transform: translateY(-12px) scale(1.2) translateZ(0);
     opacity: 1;
   }
 }

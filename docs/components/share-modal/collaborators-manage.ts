@@ -81,7 +81,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
                         align-items: center;
                         justify-content: center;
                         color: #fff;
-                        background: #4857E2;
+                        background: var(--cs-primary-color);
                     }
 
                     .info {

@@ -53,3 +53,5 @@ public interface AuthIdentityMapper {
     int deleteByUserId(@Param("userId") Long userId);
 }
 
+
+

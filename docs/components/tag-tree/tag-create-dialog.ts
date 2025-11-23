@@ -94,7 +94,7 @@ import { DlButton, DlSpinMaskComponent } from '@/pages/docs/components';
                         transition: all ease-in-out 0.1s;
 
                         &.active {
-                            outline: 2px solid #4857E2;
+                            outline: 2px solid var(--cs-primary-color);
                         }
 
                         &:hover {
