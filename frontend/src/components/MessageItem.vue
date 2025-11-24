@@ -517,19 +517,36 @@ document.addEventListener('click', (e) => {
 
 .message-card {
   position: relative;
-  background: linear-gradient(135deg, #ffffff 0%, #fafafa 50%, #ffffff 100%);
-  border-radius: 14px;
-  padding: 2px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-medium);
+  padding: 0;
   box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.1),
-    0 4px 8px rgba(0, 0, 0, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+    0 0 0 1px rgba(255, 255, 255, 0.6) inset,
+    var(--shadow-soft),
+    0 0 50px rgba(0, 102, 255, 0.03);
   animation: messageCardSlideIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
   will-change: transform, opacity;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
-  width: fit-content; /* 根据内容自适应宽度 */
-  max-width: 100%; /* 不超过父容器 */
+  width: fit-content;
+  max-width: 100%;
+  backdrop-filter: blur(40px) saturate(200%);
+  -webkit-backdrop-filter: blur(40px) saturate(200%);
+}
+
+.message-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-medium);
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.5) 0%, 
+    rgba(255, 255, 255, 0.2) 50%,
+    rgba(255, 255, 255, 0.3) 100%);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.6;
 }
 
 /* 移除旧的hover样式，已在.message-copy-wrapper中处理 */
@@ -542,18 +559,19 @@ document.addEventListener('click', (e) => {
   left: -50%;
   width: 200%;
   height: 200%;
-  background: radial-gradient(circle, rgba(33, 150, 243, 0.1) 0%, transparent 70%);
+  background: radial-gradient(circle, var(--theme-accent-glow) 0%, transparent 70%);
   opacity: 0;
-  transition: opacity 0.5s;
+  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1);
   pointer-events: none;
 }
 
 .message-card:hover {
-  transform: translateY(-2px);
+  transform: translateY(-6px) scale(1.01);
   box-shadow: 
-    0 12px 40px rgba(33, 150, 243, 0.15),
-    0 6px 12px rgba(33, 150, 243, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+    0 0 0 1px rgba(255, 255, 255, 0.7) inset,
+    var(--shadow-medium),
+    var(--shadow-glow);
+  border-color: var(--glass-border-hover);
 }
 
 .message-card:hover .message-card-glow {
@@ -561,28 +579,28 @@ document.addEventListener('click', (e) => {
 }
 
 .message-text {
-  background: #ffffff;
-  padding: 20px 24px;
-  border-radius: 14px;
-  line-height: 1.75;
+  background: transparent;
+  padding: 28px 32px;
+  border-radius: var(--radius-medium);
+  line-height: 1.85;
   word-wrap: break-word;
   word-break: break-word;
   font-size: 15px;
-  color: #2d2d2d;
-  letter-spacing: 0.01em;
+  color: var(--color-text-primary);
+  letter-spacing: 0.015em;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
   position: relative;
   z-index: 1;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', 'Hiragino Sans GB', sans-serif;
-  width: fit-content; /* 根据内容自适应宽度 */
-  max-width: 100%; /* 不超过父容器 */
+  width: fit-content;
+  max-width: 100%;
 }
 
 /* AI消息内容增加内边距，不要紧贴消息泡泡 */
 .message.assistant .message-text {
-  padding: 28px 32px; /* 增加内边距 */
+  padding: 36px 40px;
 }
 
 /* 当有任务列表时，消息文本的顶部内边距可以正常 */
@@ -600,14 +618,15 @@ document.addEventListener('click', (e) => {
   top: 0;
   left: 0;
   right: 0;
-  height: 2px;
+  height: 3px;
   background: linear-gradient(90deg, 
     transparent 0%, 
-    rgba(33, 150, 243, 0.2) 20%, 
-    rgba(66, 165, 245, 0.3) 50%, 
-    rgba(33, 150, 243, 0.2) 80%, 
+    var(--theme-accent-glow) 20%, 
+    var(--theme-accent-light) 50%, 
+    var(--theme-accent-glow) 80%, 
     transparent 100%);
-  border-radius: 18px 18px 0 0;
+  border-radius: var(--radius-medium) var(--radius-medium) 0 0;
+  opacity: 0.6;
 }
 
 .message-text p {

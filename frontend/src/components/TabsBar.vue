@@ -260,22 +260,22 @@ function scrollToActiveTab() {
 
 <style scoped>
 .tabs-bar {
-  height: 40px;
-  background: rgba(245, 245, 247, 0.6);
+  height: 48px;
+  background: transparent;
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   display: flex;
   align-items: flex-end;
   gap: 0;
-  padding: 0 12px 0 8px;
+  padding: 0 16px 0 12px;
   overflow: hidden;
   position: relative;
   flex-shrink: 0;
   z-index: 10;
   -webkit-app-region: drag;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
-  border-radius: 16px 16px 0 0;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+  border-radius: var(--radius-large) var(--radius-large) 0 0;
 }
 
 .tabs-bar > * {
@@ -392,24 +392,24 @@ function scrollToActiveTab() {
 .tab {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 14px;
+  gap: 10px;
+  padding: 8px 16px;
   border: none;
   background: transparent;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
-  color: #6b7280;
+  color: var(--color-text-secondary);
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   white-space: nowrap;
   position: relative;
-  height: 32px;
-  border-radius: 8px 8px 0 0;
-  min-width: 100px;
-  max-width: 280px;
+  height: 40px;
+  border-radius: var(--radius-small) var(--radius-small) 0 0;
+  min-width: 120px;
+  max-width: 300px;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  animation: tabSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: tabSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
   transform-origin: left center;
 }
 
@@ -444,51 +444,73 @@ function scrollToActiveTab() {
   left: 50%;
   transform: translateX(-50%) scaleX(0);
   width: 0;
-  height: 2px;
-  background: var(--theme-accent, #165dff);
-  border-radius: 2px 2px 0 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--theme-accent) 0%, var(--theme-accent-light) 100%);
+  border-radius: 4px 4px 0 0;
   opacity: 0;
-  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 0 12px var(--theme-accent-glow);
 }
 
 .tab:hover {
-  background: rgba(0, 0, 0, 0.02);
-  color: #1d2129;
+  background: rgba(0, 102, 255, 0.05);
+  color: var(--color-text-primary);
+  transform: translateY(-2px);
 }
 
 .tab:hover::before {
   opacity: 1;
+  background: rgba(0, 102, 255, 0.08);
 }
 
 .tab.active {
-  background: rgba(245, 245, 247, 0.85);
-  backdrop-filter: blur(15px) saturate(180%);
-  -webkit-backdrop-filter: blur(15px) saturate(180%);
-  color: var(--theme-accent, #165dff);
+  background: var(--glass-bg-hover);
+  backdrop-filter: blur(30px) saturate(200%);
+  -webkit-backdrop-filter: blur(30px) saturate(200%);
+  color: var(--theme-accent);
   font-weight: 600;
   z-index: 1;
-  height: 36px;
+  height: 48px;
   margin-bottom: -1px;
-  border-bottom: 1px solid rgba(249, 250, 251, 0.95);
+  border-bottom: 2px solid transparent;
   box-shadow: 
-    0 -2px 8px rgba(0, 0, 0, 0.02),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6);
-  animation: tabActivate 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+    0 -4px 20px rgba(0, 102, 255, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    var(--shadow-soft);
+  animation: tabActivate 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  position: relative;
+}
+
+.tab.active::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-small) var(--radius-small) 0 0;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.6) 0%, 
+    rgba(255, 255, 255, 0.3) 50%,
+    rgba(255, 255, 255, 0.5) 100%);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.7;
 }
 
 @keyframes tabActivate {
   0% {
     background: transparent;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
+    opacity: 0.8;
   }
   50% {
-    transform: translateY(-1px);
+    transform: translateY(-2px) scale(1.02);
+    opacity: 0.95;
   }
   100% {
-    background: rgba(245, 245, 247, 0.85);
-  backdrop-filter: blur(15px) saturate(180%);
-  -webkit-backdrop-filter: blur(15px) saturate(180%);
-    transform: translateY(0);
+    background: var(--glass-bg-hover);
+    backdrop-filter: blur(30px) saturate(200%);
+    -webkit-backdrop-filter: blur(30px) saturate(200%);
+    transform: translateY(0) scale(1);
+    opacity: 1;
   }
 }
 
@@ -499,8 +521,10 @@ function scrollToActiveTab() {
 .tab.active::after {
   opacity: 1;
   transform: translateX(-50%) scaleX(1);
-  width: 40px;
-  height: 2.5px;
+  width: 48px;
+  height: 3px;
+  background: linear-gradient(90deg, var(--theme-accent) 0%, var(--theme-accent-light) 100%);
+  box-shadow: 0 0 12px var(--theme-accent-glow);
   animation: tabIndicatorSlide 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 

@@ -504,9 +504,10 @@ onBeforeUnmount(() => {
 .block-menu {
   position: fixed;
   z-index: 10000;
-  background: rgba(245, 245, 247, 0.85);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  background: rgba(245, 245, 247, 0.95);
+  /* 性能优化：降低blur值或移除backdrop-filter */
+  backdrop-filter: blur(8px) saturate(120%);
+  -webkit-backdrop-filter: blur(8px) saturate(120%);
   border-radius: 12px;
   box-shadow: 
     0 8px 32px rgba(0, 0, 0, 0.12),
@@ -515,19 +516,19 @@ onBeforeUnmount(() => {
   overflow: hidden;
   width: 360px;
   max-height: 500px;
-  animation: menuSlideIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: menuSlideIn 0.15s cubic-bezier(0.16, 1, 0.3, 1);
   transform: translateZ(0);
-  will-change: opacity, transform;
+  /* 移除will-change，减少内存占用 */
 }
 
 @keyframes menuSlideIn {
   from {
     opacity: 0;
-    transform: translateY(-12px) scale(0.96) translateZ(0);
+    transform: translateY(-8px) translateZ(0);
   }
   to {
     opacity: 1;
-    transform: translateY(0) scale(1) translateZ(0);
+    transform: translateY(0) translateZ(0);
   }
 }
 
@@ -640,11 +641,12 @@ onBeforeUnmount(() => {
   gap: 12px;
   padding: 10px 16px;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  /* 性能优化：只使用transform和opacity */
+  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.15s ease;
   position: relative;
   user-select: none;
   min-height: 48px;
-  animation: itemSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: itemSlideIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
   border-radius: 8px;
   margin: 2px 8px;
 }
@@ -688,6 +690,7 @@ onBeforeUnmount(() => {
 .block-menu-item.active {
   background: rgba(255, 255, 255, 0.4);
   transform: translateX(4px);
+  /* 性能优化：移除box-shadow动画 */
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 

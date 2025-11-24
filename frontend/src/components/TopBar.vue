@@ -62,12 +62,6 @@ const tabs = computed(() => [
     title: '对话'
   },
   {
-    id: 'rag',
-    label: 'RAG知识库',
-    icon: '📚',
-    title: 'RAG知识库'
-  },
-  {
     id: 'docs',
     label: '文档库',
     icon: '📄',

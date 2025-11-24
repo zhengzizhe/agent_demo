@@ -18,26 +18,12 @@
 
       <!-- 主内容区域 -->
       <div class="main-content">
-        <!-- 标签页栏 -->
-        <TabsBar
-          :tabs="tabs"
-          :active-tab-id="activeTabId"
-          :can-go-back="canGoBack"
-          :can-go-forward="canGoForward"
-          @tab-click="handleTabClick"
-          @tab-close="handleTabClose"
-          @new-tab="handleNewTab"
-          @go-back="handleGoBack"
-          @go-forward="handleGoForward"
-          @refresh="handleRefresh"
-        />
-        
         <!-- 内容区域 -->
         <div class="content-area">
-          <!-- 根据当前激活标签页的视图显示对应内容 -->
+          <!-- 根据当前视图显示对应内容 -->
           <transition name="view-transition" mode="out-in">
             <!-- 对话视图 -->
-            <div v-if="currentView === 'chat'" :key="`${activeTabId}-chat`" class="view-container chat-view">
+            <div v-if="currentView === 'chat'" :key="'chat'" class="view-container chat-view">
               <!-- 调试面板 -->
               <transition name="debug-panel">
                 <div v-if="showDebugPanel" class="debug-panel">
@@ -182,39 +168,19 @@
               </div>
             </div>
 
-            <!-- RAG知识库管理视图 -->
-            <div v-else-if="currentView === 'rag'" :key="`${activeTabId}-rag`" class="view-container rag-view">
-              <RagManagement />
-            </div>
-
-            <!-- 文档库视图 -->
-            <div v-else-if="currentView === 'docs'" :key="`${activeTabId}-docs`" class="view-container docs-view">
+            <!-- 文档库视图（禁用外部动画，使用内部动画） -->
+            <div v-else-if="currentView === 'docs'" :key="'docs'" class="view-container docs-view" style="animation: none;">
               <DocumentLibrary />
             </div>
 
-            <!-- 空间视图（显示文档库，并传递空间信息） -->
-            <div v-else-if="currentView && currentView.startsWith('space-')" :key="`${activeTabId}-${currentView}`" class="view-container docs-view">
+            <!-- 空间视图（显示文档库，并传递空间信息，禁用外部动画） -->
+            <div v-else-if="currentView && currentView.startsWith('space-')" :key="currentView" class="view-container docs-view" style="animation: none;">
               <DocumentLibrary :space-id="currentView.replace('space-', '')" />
             </div>
 
-            <!-- 其他文档相关视图 -->
-            <div v-else-if="currentView && (currentView.startsWith('docs-') || currentView.startsWith('tasks-') || currentView.startsWith('project-'))" :key="`${activeTabId}-${currentView}`" class="view-container docs-view">
+            <!-- 其他文档相关视图（禁用外部动画） -->
+            <div v-else-if="currentView && (currentView.startsWith('docs-') || currentView.startsWith('tasks-') || currentView.startsWith('project-'))" :key="currentView" class="view-container docs-view" style="animation: none;">
               <DocumentLibrary :view-type="currentView" />
-            </div>
-
-            <!-- 其他动态视图（单开标签页） -->
-            <div v-else :key="`${activeTabId}-${currentView}`" class="view-container dynamic-view">
-              <div class="dynamic-view-content">
-                <div class="dynamic-view-header">
-                  <h2>{{ activeTab.label }}</h2>
-                  <p>这是动态视图：{{ currentView }}</p>
-                </div>
-                <div class="dynamic-view-body">
-                  <p>您可以在这里实现自定义视图内容</p>
-                  <p>标签页ID: {{ activeTabId }}</p>
-                  <p>视图类型: {{ currentView }}</p>
-                </div>
-              </div>
             </div>
           </transition>
         </div>
@@ -233,10 +199,8 @@
 import { reactive, ref, computed, watch, nextTick } from 'vue'
 import MessageItem from './components/MessageItem.vue'
 import InputArea from './components/InputArea.vue'
-import RagManagement from './components/RagManagement.vue'
 import DocumentLibrary from './components/DocumentLibrary.vue'
 import Sidebar from './components/Sidebar.vue'
-import TabsBar from './components/TabsBar.vue'
 import ColorPalette from './components/ColorPalette.vue'
 import AnimatedLogo from './components/AnimatedLogo.vue'
 import LoginPage from './components/LoginPage.vue'
@@ -244,7 +208,6 @@ import { useMessages } from './composables/useMessages.js'
 import { useEventHandlers } from './composables/useEventHandlers.js'
 import { useTaskExecution } from './composables/useTaskExecution.js'
 import { useSession } from './composables/useSession.js'
-import { useTabs } from './composables/useTabs.js'
 import { useAuth } from './composables/useAuth.js'
 import { getToken } from './utils/api.js'
 
@@ -277,70 +240,12 @@ const handleLoginSuccess = (data) => {
   isLoggedIn.value = true
 }
 
-// 标签页管理
-const tabsManager = useTabs()
-const { tabs, activeTabId, activeTab, currentView, canGoBack, canGoForward, openTab, closeTab, switchTab, switchToFixedTab, goBack, goForward, refreshTab, fixedViews } = tabsManager
-
-// 页面标题（从当前激活的标签页获取）
-const pageTitle = computed(() => {
-  return activeTab.value?.label || 'Agent 系统'
-})
+// 当前视图
+const currentView = ref('chat')
 
 // 处理视图切换（来自左侧边栏）
 const handleViewChange = (view) => {
-  // 如果是固定视图，切换到固定标签页
-  if (fixedViews.includes(view)) {
-    switchToFixedTab(view)
-  } else {
-    // 如果不是固定视图，打开新标签页
-    openTab(view)
-  }
-}
-
-// 处理标签页点击
-const handleTabClick = (tabId) => {
-  switchTab(tabId)
-}
-
-// 处理标签页关闭
-const handleTabClose = (tabId) => {
-  closeTab(tabId)
-}
-
-// 处理新建标签页
-const handleNewTab = () => {
-  // 打开一个默认的新标签页（可以自定义）
-  openTab('chat', '新标签页', '📄', true)
-}
-
-// 处理后退
-const handleGoBack = () => {
-  goBack()
-}
-
-// 处理前进
-const handleGoForward = () => {
-  goForward()
-}
-
-// 处理刷新
-const handleRefresh = (tabId) => {
-  // 获取当前标签页信息
-  const tab = tabs.value.find(t => t.id === tabId)
-  if (!tab) return
-  
-  const view = tab.view
-  
-  // 先设置加载状态
-  refreshTab(tabId)
-  
-  // 使用 nextTick 确保状态更新后再触发刷新事件
-  nextTick(() => {
-    // 触发全局刷新事件，让子组件可以监听并执行刷新
-    window.dispatchEvent(new CustomEvent('tab-refresh', { 
-      detail: { tabId, view } 
-    }))
-  })
+  currentView.value = view
 }
 
 // 调试面板
@@ -446,8 +351,8 @@ const canSend = computed(() => {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background: #f5f5f7;
-  color: #111827;
+  background: var(--theme-background-gradient, var(--theme-background));
+  color: var(--color-text-primary);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   position: relative;
   overflow: hidden;
@@ -467,44 +372,76 @@ const canSend = computed(() => {
   overflow: hidden;
 }
 
-/* 主内容区域 */
+/* 主内容区域 - Craft 风格玻璃拟态 */
 .main-content {
   flex: 1;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: rgba(249, 250, 251, 0.95);
-  margin: 12px;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 16px;
+  background: var(--glass-bg);
+  margin: 20px 20px 20px 0;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-large);
   box-shadow: 
-    0 0 0 1px rgba(0, 0, 0, 0.03) inset,
-    0 2px 8px rgba(0, 0, 0, 0.06),
-    0 8px 24px rgba(0, 0, 0, 0.03);
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+    0 0 0 1px rgba(255, 255, 255, 0.6) inset,
+    var(--shadow-soft),
+    0 0 80px rgba(0, 102, 255, 0.04);
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  backdrop-filter: blur(60px) saturate(200%);
+  -webkit-backdrop-filter: blur(60px) saturate(200%);
   position: relative;
   isolation: isolate;
   overflow: hidden;
+  height: calc(100vh - 40px);
 }
 
-/* 标签栏和内容区域的融合 */
 .main-content::before {
   content: '';
   position: absolute;
-  top: 40px;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(to right, 
-    transparent 0%, 
-    rgba(0, 0, 0, 0.04) 20%, 
-    rgba(0, 0, 0, 0.04) 80%, 
-    transparent 100%);
-  z-index: 5;
+  inset: 0;
+  border-radius: var(--radius-large);
+  background: 
+    linear-gradient(135deg, 
+      rgba(255, 255, 255, 0.5) 0%, 
+      rgba(255, 255, 255, 0.2) 30%,
+      rgba(255, 255, 255, 0.1) 50%,
+      rgba(255, 255, 255, 0.2) 70%,
+      rgba(255, 255, 255, 0.4) 100%);
   pointer-events: none;
+  z-index: 0;
+  opacity: 0.7;
 }
+
+.main-content::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, var(--theme-accent-subtle) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0;
+  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: subtleGlow 8s ease-in-out infinite;
+}
+
+@keyframes subtleGlow {
+  0%, 100% {
+    opacity: 0;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.3;
+    transform: scale(1.1);
+  }
+}
+
+.main-content:hover::after {
+  opacity: 0.2;
+}
+
 
 /* 内容区域 */
 .content-area {
@@ -512,11 +449,13 @@ const canSend = computed(() => {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  background: rgba(245, 245, 247, 0.6);
+  background: transparent;
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border-radius: 0 0 16px 16px;
+  border-radius: 0 0 var(--radius-large) var(--radius-large);
   margin-top: 0;
+  position: relative;
+  z-index: 1;
 }
 
 /* 视图容器 */
@@ -528,25 +467,27 @@ const canSend = computed(() => {
   height: 100%;
 }
 
-/* 页面切换动画 - Craft 风格 */
+/* 页面切换动画 - 性能优化版本（移除blur效果） */
 .view-transition-enter-active {
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
 }
 
 .view-transition-leave-active {
-  transition: all 0.3s cubic-bezier(0.4, 0, 1, 1);
+  transition: opacity 0.15s cubic-bezier(0.4, 0, 1, 1), transform 0.15s cubic-bezier(0.4, 0, 1, 1);
+  will-change: opacity, transform;
 }
 
 .view-transition-enter-from {
   opacity: 0;
-  transform: translateY(8px) scale(0.98);
-  filter: blur(4px);
+  transform: translateY(4px);
+  /* 移除filter: blur()，避免性能问题和闪烁 */
 }
 
 .view-transition-leave-to {
   opacity: 0;
-  transform: translateY(-4px) scale(0.99);
-  filter: blur(2px);
+  transform: translateY(-2px);
+  /* 移除filter: blur()，避免性能问题和闪烁 */
 }
 
 .tab-icon {
@@ -570,7 +511,6 @@ const canSend = computed(() => {
 
 /* 视图特定样式 */
 .chat-view,
-.rag-view,
 .docs-view,
 .dynamic-view {
   width: 100%;
@@ -642,11 +582,30 @@ const canSend = computed(() => {
   right: 0;
   bottom: 0;
   background: 
-    radial-gradient(circle at 10% 20%, rgba(22, 93, 255, 0.015) 0%, transparent 50%),
-    radial-gradient(circle at 90% 60%, rgba(99, 102, 241, 0.015) 0%, transparent 50%);
+    radial-gradient(circle at 10% 20%, rgba(0, 102, 255, 0.12) 0%, transparent 50%),
+    radial-gradient(circle at 90% 70%, rgba(147, 51, 234, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(236, 72, 153, 0.06) 0%, transparent 60%),
+    radial-gradient(circle at 30% 80%, rgba(34, 197, 94, 0.05) 0%, transparent 50%);
   pointer-events: none;
   z-index: 0;
-  opacity: 0.6;
+  opacity: 1;
+  animation: gradientShift 25s ease infinite;
+  filter: blur(60px);
+}
+
+@keyframes gradientShift {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  33% {
+    opacity: 0.9;
+    transform: scale(1.05);
+  }
+  66% {
+    opacity: 0.85;
+    transform: scale(0.98);
+  }
 }
 
 /* 对话框容器 */
@@ -655,19 +614,19 @@ const canSend = computed(() => {
   flex-direction: column;
   flex: 1;
   overflow: hidden;
-  background: rgba(249, 250, 251, 0.4);
+  background: transparent;
   position: relative;
   z-index: 1;
-  border-radius: 16px;
+  border-radius: var(--radius-large);
 }
 
 .dialog-messages {
   flex: 1;
   overflow-y: auto;
-  padding: 48px 120px;
+  padding: 80px 160px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 40px;
   max-width: 1800px;
   margin: 0 auto;
   width: 100%;
@@ -675,8 +634,8 @@ const canSend = computed(() => {
   position: relative;
   min-height: 0;
   align-items: flex-start;
-  border-radius: 16px;
-  transition: padding 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: var(--radius-large);
+  transition: padding 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* 当有消息时，恢复正常的消息布局 */
@@ -699,14 +658,26 @@ const canSend = computed(() => {
   left: 50%;
   transform: translate(-50%, -50%);
   width: 100%;
-  max-width: 900px;
-  padding: 0 24px;
+  max-width: 1000px;
+  padding: 0 32px;
   z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 48px;
+  gap: 64px;
+  animation: welcomeFadeIn 1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes welcomeFadeIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -45%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
 }
 
 .welcome-message {
@@ -728,10 +699,28 @@ const canSend = computed(() => {
 
 .welcome-message h2 {
   margin: 0;
-  color: #111827;
-  font-size: 32px;
+  color: var(--color-text-primary);
+  font-size: 42px;
   font-weight: 600;
-  letter-spacing: -0.025em;
+  letter-spacing: -0.04em;
+  background: linear-gradient(135deg, 
+    var(--color-text-primary) 0%, 
+    var(--theme-accent) 50%,
+    var(--color-text-secondary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: textGradient 3s ease infinite;
+  background-size: 200% 200%;
+}
+
+@keyframes textGradient {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
 }
 
 /* 错误消息样式 */

@@ -1,23 +1,28 @@
 <template>
   <div class="document-tree" :class="{ collapsed: collapsed }">
     <div v-if="!collapsed" class="tree-content">
-      <div v-if="filteredTreeNodes.length === 0" class="tree-empty">
+      <div v-if="treeData.length === 0" class="tree-empty">
         <svg width="48" height="48" viewBox="0 0 48 48" fill="none" class="empty-icon">
           <path d="M8 12C8 10.8954 8.89543 10 10 10H19L22 14H38C39.1046 14 40 14.8954 40 16V36C40 37.1046 39.1046 38 38 38H10C8.89543 38 8 37.1046 8 36V12Z" stroke="currentColor" stroke-width="2" fill="none" opacity="0.3"/>
           <path d="M8 12H22L19 16H8V12Z" fill="currentColor" opacity="0.1"/>
         </svg>
         <p class="empty-text">暂无文件夹</p>
       </div>
+      
       <div v-else class="tree-list">
-        <DocumentTreeNode
-          v-for="node in filteredTreeNodes"
-          :key="node.id"
-          :node="node"
-          :selected-id="selectedId"
-          :expanded-ids="expandedIds"
-          @select="handleSelect"
-          @toggle="handleToggle"
-        />
+        <transition-group name="tree-node" tag="div">
+          <TreeNode
+            v-for="node in treeData"
+            :key="node.id"
+            :node="node"
+            :selected-id="selectedId"
+            :expanded-ids="expandedIds"
+            :depth="0"
+            @select="handleNodeSelect"
+            @toggle="handleNodeToggle"
+            @open="handleNodeOpen"
+          />
+        </transition-group>
       </div>
     </div>
   </div>
@@ -25,7 +30,7 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
-import DocumentTreeNode from './DocumentTreeNode.vue'
+import TreeNode from './TreeNode.vue'
 
 const props = defineProps({
   documents: {
@@ -35,105 +40,83 @@ const props = defineProps({
   selectedId: {
     type: String,
     default: null
+  },
+  spaceId: {
+    type: String,
+    default: null
   }
 })
 
-const emit = defineEmits(['select', 'folder-select'])
+const emit = defineEmits(['select', 'folder-select', 'open'])
 
 const collapsed = ref(false)
 const expandedIds = ref([])
 
 // 构建树形结构
-const treeNodes = computed(() => {
+const treeData = computed(() => {
   if (!props.documents || !Array.isArray(props.documents)) {
     return []
   }
-  const docs = props.documents.filter(doc => doc && !doc.deleted)
-  const folders = docs.filter(doc => doc.isFolder === true)
-  const files = docs.filter(doc => !doc.isFolder)
   
-  // 构建文件夹映射
-  const folderMap = new Map()
-  folders.forEach(folder => {
-    folderMap.set(folder.id, {
-      ...folder,
-      children: [],
-      level: 0
-    })
+  const docs = props.documents.filter(doc => doc && !doc.deleted)
+  const nodeMap = new Map()
+  const rootNodes = []
+  
+  // 第一遍：创建所有节点
+  docs.forEach(doc => {
+    const node = {
+      id: doc.id || String(Math.random()),
+      name: doc.name || '未命名',
+      parentId: doc.parentId || null,
+      isFolder: doc.isFolder === true,
+      data: doc,
+      children: []
+    }
+    nodeMap.set(node.id, node)
   })
   
-  // 递归设置层级
-  const setLevel = (node, level) => {
-    node.level = level
-    if (node.children && Array.isArray(node.children)) {
-      node.children.forEach(child => {
-        setLevel(child, level + 1)
-      })
+  // 第二遍：构建父子关系
+  nodeMap.forEach(node => {
+    if (node.parentId && nodeMap.has(node.parentId)) {
+      const parent = nodeMap.get(node.parentId)
+      parent.children.push(node)
+    } else {
+      rootNodes.push(node)
     }
+  })
+  
+  // 排序：文件夹在前，文档在后
+  const sortNodes = (nodes) => {
+    return nodes.sort((a, b) => {
+      if (a.isFolder && !b.isFolder) return -1
+      if (!a.isFolder && b.isFolder) return 1
+      return (a.name || '').localeCompare(b.name || '')
+    }).map(node => {
+      if (node.children.length > 0) {
+        node.children = sortNodes(node.children)
+      }
+      return node
+    })
   }
   
-  // 处理文件夹的层级关系
-  const rootFolders = []
-  folderMap.forEach((folder, id) => {
-    if (!folder || !folder.parentId) {
-      rootFolders.push(folder)
-    } else if (folderMap.has(folder.parentId)) {
-      const parentFolder = folderMap.get(folder.parentId)
-      if (parentFolder && Array.isArray(parentFolder.children)) {
-        parentFolder.children.push(folder)
-      }
-    }
-  })
-  
-  // 将文件添加到对应的文件夹
-  files.forEach(file => {
-    if (file && file.parentId && folderMap.has(file.parentId)) {
-      const folder = folderMap.get(file.parentId)
-      if (folder && Array.isArray(folder.children)) {
-        folder.children.push({
-          ...file,
-          children: []
-        })
-      }
-    }
-  })
-  
-  // 设置所有节点的层级
-  rootFolders.forEach(root => {
-    setLevel(root, 0)
-  })
-  
-  // 添加没有父级的文件
-  const rootFiles = files.filter(file => file && !file.parentId)
-  rootFiles.forEach(file => {
-    if (file) {
-      rootFolders.push({
-        ...file,
-        children: [],
-        level: 0
-      })
-    }
-  })
-  
-  // 排序：文件夹在前，文档在后，同类型按名称排序
-  return rootFolders.sort((a, b) => {
-    if (a.isFolder && !b.isFolder) return -1
-    if (!a.isFolder && b.isFolder) return 1
-    return (a.name || '').localeCompare(b.name || '')
-  })
+  return sortNodes(rootNodes)
 })
 
-// 直接使用树节点，不再需要过滤
-const filteredTreeNodes = computed(() => treeNodes.value)
-
-const handleSelect = (node) => {
-  emit('select', node)
+// 处理节点选择
+const handleNodeSelect = (node) => {
+  emit('select', node.data)
   if (node.isFolder) {
     emit('folder-select', node.id)
   }
 }
 
-const handleToggle = (nodeId) => {
+// 处理节点打开（双击文档时）
+const handleNodeOpen = (node) => {
+  emit('open', node.data)
+}
+
+// 处理节点展开/收起
+const handleNodeToggle = (nodeId) => {
   const index = expandedIds.value.indexOf(nodeId)
   if (index > -1) {
     expandedIds.value.splice(index, 1)
@@ -142,31 +125,40 @@ const handleToggle = (nodeId) => {
   }
 }
 
+// 监听空间切换，重置展开状态
+watch(() => props.spaceId, (newSpaceId, oldSpaceId) => {
+  if (newSpaceId !== oldSpaceId && oldSpaceId !== undefined) {
+    expandedIds.value = []
+  }
+}, { immediate: false })
+
 // 监听选中项变化，自动展开父级
 watch(() => props.selectedId, (newId) => {
   if (newId) {
-    const findParent = (nodes, targetId, parentIds = []) => {
+    const findParent = (nodeId, nodes, parentIds = []) => {
       for (const node of nodes) {
-        if (node.id === targetId) {
-          // 使用 Set 优化查找性能
-          const idsSet = new Set(expandedIds.value)
-          parentIds.forEach(id => {
-            if (!idsSet.has(id)) {
-              idsSet.add(id)
-            }
-          })
-          expandedIds.value = Array.from(idsSet)
+        if (node.id === nodeId) {
           return true
         }
         if (node.children && node.children.length > 0) {
-          if (findParent(node.children, targetId, [...parentIds, node.id])) {
+          if (findParent(nodeId, node.children, parentIds)) {
+            parentIds.push(node.id)
             return true
           }
         }
       }
       return false
     }
-    findParent(treeNodes.value, newId)
+    
+    const parentIds = []
+    findParent(newId, treeData.value, parentIds)
+    
+    // 展开所有父级
+    parentIds.forEach(id => {
+      if (!expandedIds.value.includes(id)) {
+        expandedIds.value.push(id)
+      }
+    })
   }
 }, { immediate: false })
 </script>
@@ -175,13 +167,61 @@ watch(() => props.selectedId, (newId) => {
 .document-tree {
   width: 280px;
   height: 100%;
-  background: transparent;
+  background: rgba(255, 255, 255, 0.01);
+  /* 性能优化：移除backdrop-filter */
+  /* backdrop-filter: blur(6px) saturate(120%); */
+  /* -webkit-backdrop-filter: blur(6px) saturate(120%); */
   display: flex;
   flex-direction: column;
-  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  /* GPU加速 */
+  transform: translateZ(0);
+  contain: layout style paint;
+  /* 移除will-change，减少内存占用 */
+}
+
+/* 树节点列表动画 - 性能优化 */
+.tree-node-enter-active {
+  transition: opacity 0.15s cubic-bezier(0.16, 1, 0.3, 1), transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  /* 移除will-change */
+}
+
+.tree-node-leave-active {
+  transition: opacity 0.12s cubic-bezier(0.4, 0, 1, 1), transform 0.12s cubic-bezier(0.4, 0, 1, 1);
+  /* 移除will-change */
+}
+
+.tree-node-enter-from {
+  opacity: 0;
+  transform: translate3d(-12px, 0, 0);
+}
+
+.tree-node-leave-to {
+  opacity: 0;
+  transform: translate3d(-8px, 0, 0);
+}
+
+.tree-node-move {
+  transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  /* 移除will-change */
   flex-shrink: 0;
   position: relative;
   overflow: hidden;
+}
+
+.document-tree::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: linear-gradient(180deg, 
+    transparent 0%, 
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0.2) 100%);
+  pointer-events: none;
+  z-index: 0;
 }
 
 .document-tree.collapsed {
@@ -198,28 +238,34 @@ watch(() => props.selectedId, (newId) => {
   display: flex;
   flex-direction: column;
   background: transparent;
+  position: relative;
+  z-index: 1;
 }
 
 .tree-list {
-  flex: 1;
+  padding: 12px 8px;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 6px 8px;
-  scroll-behavior: smooth;
+  height: 100%;
 }
 
-/* 隐藏滚动条但保持滚动功能 */
 .tree-list::-webkit-scrollbar {
-  width: 0;
-  display: none;
+  width: 4px;
 }
 
-.tree-list {
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE and Edge */
+.tree-list::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-/* 空状态 */
+.tree-list::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 2px;
+}
+
+.tree-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.15);
+}
+
 .tree-empty {
   display: flex;
   flex-direction: column;
@@ -241,4 +287,3 @@ watch(() => props.selectedId, (newId) => {
   margin: 0;
 }
 </style>
-

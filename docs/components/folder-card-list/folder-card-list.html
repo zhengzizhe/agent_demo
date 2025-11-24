@@ -23,6 +23,22 @@
                 } @else {
                     <p class="desc">{{ folder.subCount }}个项目</p>
                 }
+                <!-- 文档状态指示器 -->
+                <div class="doc-status-indicator">
+                    @if (folder.isNew) {
+                        <span class="status-dot new"></span>
+                        <span class="status-text">新文档</span>
+                    } @else if (folder.hasUpdate) {
+                        <span class="status-dot updated"></span>
+                        <span class="status-text">有更新</span>
+                    } @else if (folder.isDraft) {
+                        <span class="status-dot draft"></span>
+                        <span class="status-text">草稿</span>
+                    }
+                    @if (folder.shared) {
+                        <span class="status-text" style="margin-left: 8px; color: var(--cs-primary-color);">已分享</span>
+                    }
+                </div>
             </div>
 
             <button class="btn-more dl-btn-hover"

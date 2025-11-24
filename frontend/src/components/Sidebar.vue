@@ -39,22 +39,6 @@
         </button>
       </div>
 
-      <!-- RAG知识库 -->
-      <div class="nav-section">
-        <button
-          class="nav-item"
-          :class="{ active: currentView === 'rag' }"
-          @click="$emit('view-change', 'rag')"
-          :title="isCollapsed ? 'RAG知识库' : ''"
-        >
-          <svg class="nav-icon" width="14" height="14" viewBox="0 0 20 20" fill="none">
-            <path d="M4 4h12v12H4V4z" stroke="currentColor" stroke-width="1.5" fill="none"/>
-            <path d="M6 8h8M6 12h8M6 16h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
-          <span v-if="!isCollapsed" class="nav-text">RAG知识库</span>
-        </button>
-      </div>
-
       <!-- 工具 -->
       <div class="nav-section">
         <div class="nav-section-title" v-if="!isCollapsed">工具</div>
@@ -218,41 +202,68 @@ const langSliderStyle = computed(() => {
 <style scoped>
 .sidebar {
   width: 280px;
-  height: calc(100vh - 24px);
-  margin: 12px;
-  background: linear-gradient(
-    135deg,
-    rgba(235, 242, 255, 0.9) 0%,
-    rgba(255, 255, 255, 0.88) 20%,
-    rgba(255, 248, 240, 0.9) 40%,
-    rgba(255, 255, 255, 0.88) 60%,
-    rgba(250, 240, 255, 0.9) 80%,
-    rgba(255, 255, 255, 0.88) 100%
-  );
+  height: calc(100vh - 40px);
+  margin: 20px;
+  background: var(--glass-bg);
   display: flex;
   flex-direction: column;
-  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
   z-index: 10;
-  will-change: width;
-  border: none;
-  border-right: none;
-  border-radius: 16px;
+  will-change: width, transform;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-large);
   overflow: hidden;
   isolation: isolate;
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(60px) saturate(200%);
+  -webkit-backdrop-filter: blur(60px) saturate(200%);
   box-shadow: 
-    0 0 0 1px rgba(255, 255, 255, 0.2) inset,
-    0 2px 8px rgba(0, 0, 0, 0.06),
-    0 8px 24px rgba(0, 0, 0, 0.03);
+    0 0 0 1px rgba(255, 255, 255, 0.6) inset,
+    var(--shadow-soft),
+    0 0 60px rgba(0, 102, 255, 0.03);
+}
+
+.sidebar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-large);
+  background: 
+    linear-gradient(135deg, 
+      rgba(255, 255, 255, 0.6) 0%, 
+      rgba(255, 255, 255, 0.3) 30%,
+      rgba(255, 255, 255, 0.2) 50%,
+      rgba(255, 255, 255, 0.3) 70%,
+      rgba(255, 255, 255, 0.5) 100%);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.7;
+}
+
+.sidebar::after {
+  content: '';
+  position: absolute;
+  top: -30%;
+  right: -30%;
+  width: 60%;
+  height: 60%;
+  background: radial-gradient(circle, var(--theme-accent-subtle) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0;
+  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .sidebar:hover {
+  transform: translateY(-3px);
   box-shadow: 
-    0 0 0 1px rgba(0, 0, 0, 0.03) inset,
-    0 4px 12px rgba(0, 0, 0, 0.08),
-    0 12px 32px rgba(0, 0, 0, 0.04);
+    0 0 0 1px rgba(255, 255, 255, 0.7) inset,
+    var(--shadow-medium),
+    0 0 80px rgba(0, 102, 255, 0.05);
+}
+
+.sidebar:hover::after {
+  opacity: 0.4;
 }
 
 .sidebar.collapsed {
@@ -375,15 +386,17 @@ const langSliderStyle = computed(() => {
 .sidebar-nav {
   flex: 1;
   overflow-y: auto;
-  padding: 12px 8px;
+  padding: 20px 16px;
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  transition: padding 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  gap: 6px;
+  transition: padding 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  z-index: 1;
 }
 
 .nav-section {
-  margin-bottom: 8px;
+  margin-bottom: 16px;
 }
 
 .nav-section-title {
@@ -408,19 +421,19 @@ const langSliderStyle = computed(() => {
   width: 100%;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 12px;
+  gap: 14px;
+  padding: 12px 16px;
   border: none;
   background: transparent;
-  border-radius: 8px;
+  border-radius: var(--radius-small);
   cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  color: rgba(0, 0, 0, 0.7);
-  font-size: 13px;
-  font-weight: 400;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  font-weight: 500;
   text-align: left;
   position: relative;
-  min-height: 36px;
+  min-height: 44px;
   overflow: hidden;
   transform-origin: left center;
 }
@@ -431,12 +444,13 @@ const langSliderStyle = computed(() => {
   left: 0;
   top: 50%;
   transform: translateY(-50%) scaleY(0);
-  width: 3px;
+  width: 4px;
   height: 0;
-  background: var(--theme-accent, #165dff);
-  border-radius: 0 2px 2px 0;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  background: linear-gradient(135deg, var(--theme-accent) 0%, var(--theme-accent-light) 100%);
+  border-radius: 0 4px 4px 0;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   opacity: 0;
+  box-shadow: 0 0 12px var(--theme-accent-glow);
 }
 
 .nav-item::after {
@@ -451,54 +465,59 @@ const langSliderStyle = computed(() => {
 }
 
 .nav-item:hover {
-  background: rgba(0, 0, 0, 0.04);
-  color: rgba(0, 0, 0, 0.9);
-  transform: translateX(2px);
+  background: var(--theme-accent-subtle);
+  color: var(--color-text-primary);
+  transform: translateX(6px) scale(1.02);
+  box-shadow: var(--shadow-soft);
 }
 
 .nav-item:hover::after {
   opacity: 1;
+  background: rgba(0, 102, 255, 0.08);
 }
 
 .nav-item:hover .nav-icon {
-  transform: scale(1.05);
-  color: rgba(0, 0, 0, 0.7);
+  transform: scale(1.1) translateX(2px);
+  color: var(--theme-accent);
 }
 
 .nav-item.active {
-  background: rgba(0, 0, 0, 0.06);
-  color: rgba(0, 0, 0, 0.9);
-  font-weight: 500;
+  background: linear-gradient(135deg, var(--theme-accent-subtle) 0%, rgba(0, 102, 255, 0.06) 100%);
+  color: var(--theme-accent);
+  font-weight: 600;
+  box-shadow: var(--shadow-soft), 0 0 20px var(--theme-accent-glow);
+  transform: translateX(2px);
 }
 
 .nav-item.active::before {
   transform: translateY(-50%) scaleY(1);
-  height: 20px;
+  height: 24px;
   opacity: 1;
 }
 
 .nav-item.active::after {
-  background: rgba(0, 0, 0, 0.06);
+  background: rgba(0, 102, 255, 0.1);
   opacity: 1;
 }
 
 .nav-item.active .nav-icon {
-  transform: scale(1);
-  color: rgba(0, 0, 0, 0.8);
+  transform: scale(1.1);
+  color: var(--theme-accent);
+  filter: drop-shadow(0 0 4px var(--theme-accent-glow));
 }
 
 
 .nav-icon {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   flex-shrink: 0;
-  color: rgba(0, 0, 0, 0.5);
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  color: var(--color-text-tertiary);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   transform-origin: center;
 }
 
 .nav-item.active .nav-icon {
-  color: rgba(0, 0, 0, 0.7);
+  color: var(--theme-accent);
 }
 
 .nav-item-group {
@@ -797,58 +816,61 @@ const langSliderStyle = computed(() => {
 }
 
 .sidebar-footer {
-  padding: 12px 8px;
+  padding: 16px 12px;
   margin-top: auto;
   display: flex;
   flex-direction: column;
   background: transparent;
   align-items: stretch;
-  gap: 8px;
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  gap: 12px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
   position: relative;
   z-index: 1;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .user-info {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   flex: 1;
   min-width: 0;
-  padding: 8px 12px;
-  background: rgba(0, 0, 0, 0.02);
-  border-radius: 8px;
-  border: none;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: var(--radius-small);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   cursor: pointer;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .user-info:hover {
-  background: rgba(0, 0, 0, 0.04);
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  background: rgba(255, 255, 255, 0.7);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-soft);
+  border-color: rgba(0, 102, 255, 0.1);
 }
 
 .user-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-small);
+  background: linear-gradient(135deg, var(--theme-accent) 0%, var(--theme-accent-light) 100%);
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 600;
-  font-size: 13px;
+  font-size: 14px;
   flex-shrink: 0;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 2px 4px rgba(99, 102, 241, 0.2);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 12px var(--theme-accent-glow);
 }
 
 .user-info:hover .user-avatar {
-  transform: scale(1.08) rotate(2deg);
-  box-shadow: 0 4px 8px rgba(99, 102, 241, 0.3);
+  transform: scale(1.05) rotate(3deg);
+  box-shadow: 0 6px 16px var(--theme-accent-glow);
 }
 
 .user-details {
@@ -873,19 +895,22 @@ const langSliderStyle = computed(() => {
 
 .collapse-btn {
   width: 100%;
-  height: 36px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
   border: none;
-  background: rgba(0, 0, 0, 0.02);
-  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  border-radius: var(--radius-small);
   cursor: pointer;
-  color: rgba(0, 0, 0, 0.5);
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  color: var(--color-text-secondary);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   flex-shrink: 0;
   position: relative;
   overflow: hidden;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .collapse-btn::before {
@@ -898,10 +923,11 @@ const langSliderStyle = computed(() => {
 }
 
 .collapse-btn:hover {
-  background: rgba(0, 0, 0, 0.04);
-  color: rgba(0, 0, 0, 0.7);
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--color-text-primary);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-soft);
+  border-color: rgba(0, 102, 255, 0.1);
 }
 
 .collapse-btn:hover::before {

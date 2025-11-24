@@ -14,10 +14,6 @@ export default defineConfig({
         target: 'http://localhost:8080',
         changeOrigin: true
       },
-      '/rag': {
-        target: 'http://localhost:8080',
-        changeOrigin: true
-      },
       '/doc': {
         target: 'http://localhost:8080',
         changeOrigin: true

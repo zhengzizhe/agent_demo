@@ -3,161 +3,105 @@
     <!-- 主内容区（作为主侧边栏的子视图） -->
     <div class="dl-main-wrapper">
       <div class="dl-main">
-      <!-- 空间选择栏 -->
-      <div class="dl-space-nav">
-        <div class="space-nav-header">
-          <!-- 左侧：空间切换器 -->
-          <div class="space-section">
-            <div class="space-section-label">空间</div>
-            <div class="space-switcher" @click.stop="toggleSpaceDropdown">
-              <!-- 当前空间显示 -->
-              <div class="space-current">
-                <div v-if="currentSpace && currentSpace.id !== 'all'" class="space-current-icon" :style="{ background: currentSpace.color }">
-                  {{ currentSpace.icon }}
+      <!-- 顶部栏 -->
+      <div class="dl-top-bar">
+        <div class="dl-top-bar-left">
+          <!-- 个人空间选择器 -->
+          <div class="space-selector" @click.stop="toggleSpaceDropdown">
+            <div class="space-selector-icon">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <circle cx="10" cy="8" r="3" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                <path d="M5 18c0-2.5 2.5-5 5-5s5 2.5 5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="space-selector-content">
+              <div class="space-selector-name">个人空间</div>
+              <div class="space-selector-count">{{ currentSpaceDocumentCount }}个文档</div>
+            </div>
+            <svg class="space-selector-arrow" :class="{ expanded: showSpaceDropdown }" width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M3.5 5.25l3.5 3.5 3.5-3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <!-- 空间切换下拉菜单 -->
+            <transition name="space-dropdown">
+              <div v-if="showSpaceDropdown" class="space-switcher-menu">
+                <div 
+                  class="space-switcher-item"
+                  :class="{ active: !currentSpace || currentSpace.id === 'all' }"
+                  @click="selectSpace({ id: 'all', name: '全部' }, $event)"
+                >
+                  <span class="space-switcher-item-text">全部</span>
+                  <span class="space-switcher-item-count">{{ allDocuments.filter(doc => !doc.deleted).length }}</span>
                 </div>
-                <span class="space-current-name">{{ currentSpace?.name || '全部' }}</span>
-                <span class="space-current-count" v-if="currentSpace && currentSpace.id !== 'all'">
-                  {{ currentSpace.documentCount }} 个文档
-                </span>
-                <svg class="space-switcher-arrow" :class="{ expanded: showSpaceDropdown }" width="14" height="14" viewBox="0 0 14 14" fill="none">
-                  <path d="M3.5 5.25l3.5 3.5 3.5-3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
+                <div 
+                  v-for="space in spaces" 
+                  :key="space.id"
+                  class="space-switcher-item"
+                  :class="{ active: currentSpace?.id === space.id }"
+                  @click="selectSpace(space, $event)"
+                >
+                  <div class="space-switcher-item-icon" :style="{ background: space.color }">{{ space.icon }}</div>
+                  <span class="space-switcher-item-text">{{ space.name }}</span>
+                  <span class="space-switcher-item-count">{{ space.documentCount }}</span>
+                </div>
               </div>
-              <!-- 空间切换下拉菜单 -->
-              <transition name="space-dropdown">
-                <div v-if="showSpaceDropdown" class="space-switcher-menu">
-                  <div 
-                    class="space-switcher-item"
-                    :class="{ active: !currentSpace || currentSpace.id === 'all' }"
-                    @click="selectSpace({ id: 'all', name: '全部' }, $event)"
-                  >
-                    <span class="space-switcher-item-text">全部</span>
-                    <span class="space-switcher-item-count">{{ allDocuments.value.filter(doc => !doc.deleted).length }}</span>
-                  </div>
-                  <div 
-                    v-for="space in spaces" 
-                    :key="space.id"
-                    class="space-switcher-item"
-                    :class="{ active: currentSpace?.id === space.id }"
-                    @click="selectSpace(space, $event)"
-                  >
-                    <div class="space-switcher-item-icon" :style="{ background: space.color }">{{ space.icon }}</div>
-                    <span class="space-switcher-item-text">{{ space.name }}</span>
-                    <span class="space-switcher-item-count">{{ space.documentCount }}</span>
-                  </div>
-                </div>
-              </transition>
-            </div>
+            </transition>
           </div>
-          <!-- 右侧：搜索框、回收站和新建按钮 -->
-          <div class="space-nav-actions">
-            <!-- 搜索框 -->
-            <div class="space-nav-search">
-              <SearchBox v-model="searchQuery" placeholder="搜索文档..." />
-            </div>
-            <button 
-              class="space-nav-action-btn"
-              :class="{ active: currentView === 'trash' }"
-              @click="switchView('trash')"
-              title="回收站"
-            >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M3 4h10M5 4V3a1 1 0 011-1h4a1 1 0 011 1v1M6 7v5M10 7v5M4 4l1 9a1 1 0 001 1h4a1 1 0 001-1l1-9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              <span>回收站</span>
-              <span class="action-badge" v-if="trashCount > 0">{{ trashCount }}</span>
-            </button>
-            <button class="space-nav-action-btn primary" @click="showCreateDialog = true" title="新建文档">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-              </svg>
-              <span>新建</span>
-            </button>
+          
+          <!-- 搜索框 -->
+          <div class="dl-top-bar-search">
+            <SearchBox v-model="searchQuery" placeholder="Q 搜索..." />
           </div>
         </div>
-        <!-- 空间子视图切换（仅在文档库视图显示） -->
-        <div v-if="currentView === 'home'" class="space-sub-views">
-          <div class="space-sub-views-container">
-            <div class="space-sub-views-slider" :style="sliderStyle"></div>
+        
+        <div class="dl-top-bar-right">
+          <!-- 筛选按钮 -->
+          <div class="filter-buttons">
             <button 
-              class="space-sub-view-btn"
+              class="filter-btn"
               :class="{ active: spaceSubView === 'all' }"
               @click="switchSpaceSubView('all')"
-              data-view="all"
             >
-              <span class="btn-content">全部</span>
+              全部
             </button>
             <button 
-              class="space-sub-view-btn"
+              class="filter-btn"
               :class="{ active: spaceSubView === 'recent' }"
               @click="switchSpaceSubView('recent')"
-              data-view="recent"
             >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5" fill="none"/>
-                <path d="M8 4v4l3 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-              </svg>
-              <span class="btn-content">最近</span>
+              最近
             </button>
             <button 
-              class="space-sub-view-btn"
+              class="filter-btn"
               :class="{ active: spaceSubView === 'favorites' }"
               @click="switchSpaceSubView('favorites')"
-              data-view="favorites"
             >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M8 2l2 4 4.5.5-3.5 3.5 1 4.5L8 12.5 4 14.5l1-4.5L1.5 6.5 6 6l2-4z" 
-                      :fill="spaceSubView === 'favorites' ? 'currentColor' : 'none'"
-                      stroke="currentColor" 
-                      stroke-width="1.5"/>
-              </svg>
-              <span class="btn-content">收藏</span>
+              收藏
             </button>
             <button 
-              class="space-sub-view-btn"
+              class="filter-btn"
               :class="{ active: spaceSubView === 'liked' }"
               @click="switchSpaceSubView('liked')"
-              data-view="liked"
             >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M8 2l2 2 4 .5-3 3 .5 4L8 12 4 12l.5-4-3-3 4-.5L8 2z" 
-                      :fill="spaceSubView === 'liked' ? 'currentColor' : 'none'"
-                      stroke="currentColor" 
-                      stroke-width="1.5"/>
-              </svg>
-              <span class="btn-content">点赞</span>
+              点赞
             </button>
             <button 
-              class="space-sub-view-btn"
+              class="filter-btn"
               :class="{ active: spaceSubView === 'shared' }"
               @click="switchSpaceSubView('shared')"
-              data-view="shared"
             >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M8 2L2 5v6l6 3 6-3V5l-6-3z" stroke="currentColor" stroke-width="1.5" fill="none"/>
-              </svg>
-              <span class="btn-content">共享</span>
+              共享
             </button>
           </div>
-        </div>
-      </div>
-
-      <!-- 顶部标题栏 -->
-      <div class="dl-header">
-        <div class="dl-header-left">
-          <h1 class="dl-title">{{ currentViewTitle }}</h1>
-          <div class="dl-stats" v-if="!loading && sortedAndFilteredDocuments.length > 0">
-            <span class="stat-item">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <rect x="2" y="3" width="10" height="8" rx="1" stroke="currentColor" stroke-width="1.5" fill="none"/>
-                <path d="M5 3v6M9 3v6" stroke="currentColor" stroke-width="1.5"/>
-              </svg>
-              {{ sortedAndFilteredDocuments.length }} 个文档
-            </span>
-          </div>
-        </div>
-        <div class="dl-actions">
-          <!-- 排序 -->
+          
+          <!-- 新建按钮 -->
+          <button class="dl-top-bar-new-btn" @click="showCreateDialog = true">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            新建
+          </button>
+          
+          <!-- 排序下拉 -->
           <div class="sort-wrapper">
             <select v-model="sortBy" class="sort-select" @change="handleSort">
               <option value="time">按时间</option>
@@ -165,8 +109,21 @@
               <option value="size">按大小</option>
             </select>
           </div>
+          
           <!-- 视图切换 -->
           <ViewToggle v-model="viewMode" />
+        </div>
+      </div>
+
+      <!-- 标题栏 -->
+      <div class="dl-header">
+        <div class="dl-header-left">
+          <h1 class="dl-title">{{ currentViewTitle }}</h1>
+          <div class="dl-stats" v-if="!loading && sortedAndFilteredDocuments.length > 0">
+            <span class="stat-item">
+              {{ sortedAndFilteredDocuments.length }}个文档
+            </span>
+          </div>
         </div>
       </div>
 
@@ -667,13 +624,24 @@ const currentViewTitle = computed(() => {
     }
     
     if (currentSpace.value && currentSpace.value.id !== 'all') {
-      return `${currentSpace.value.name} · ${subViewTitles[spaceSubView.value] || '全部'}`
+      return `${currentSpace.value.name}·${subViewTitles[spaceSubView.value] || '全部'}`
     } else {
-      return `全部 · ${subViewTitles[spaceSubView.value] || '全部'}`
+      // 默认显示个人空间
+      return `个人空间·${subViewTitles[spaceSubView.value] || '全部'}`
     }
   }
   
   return '文档库'
+})
+
+// 当前空间的文档数量（实时计算）
+const currentSpaceDocumentCount = computed(() => {
+  if (!currentSpace.value || currentSpace.value.id === 'all') {
+    return allDocuments.value.filter(doc => !doc.deleted).length
+  }
+  return allDocuments.value.filter(doc => 
+    doc.spaceId === currentSpace.value.id && !doc.deleted
+  ).length
 })
 
 // 统计数据
@@ -704,18 +672,6 @@ const trashCount = computed(() => {
   return allDocuments.value.filter(doc => doc.deleted).length
 })
 
-// 滑动指示器样式
-const sliderStyle = computed(() => {
-  const views = ['all', 'recent', 'favorites', 'liked', 'shared']
-  const index = views.indexOf(spaceSubView.value)
-  if (index === -1) return { transform: 'translateX(0)', width: '0' }
-  
-  const width = 100 / views.length
-  return {
-    transform: `translateX(${index * 100}%)`,
-    width: `${width}%`
-  }
-})
 
 // 目录树使用的文档列表（仅按空间过滤，不应用其他过滤）
 const treeDocuments = computed(() => {
@@ -883,7 +839,14 @@ const loadSpaces = async () => {
     
     // 如果没有当前空间，默认设置为个人空间
     if (!currentSpace.value) {
-      currentSpace.value = spaces.value[0]
+      const personalSpace = spaces.value.find(s => s.id === 'personal' || s.name === '个人空间')
+      if (personalSpace) {
+        currentSpace.value = personalSpace
+      } else if (spaces.value.length > 0) {
+        currentSpace.value = spaces.value[0]
+      } else {
+        currentSpace.value = { id: 'personal', name: '个人空间', type: 'personal', color: '#8b5cf6', icon: '个' }
+      }
     }
   } catch (error) {
     console.error('加载空间列表失败:', error)
@@ -895,7 +858,12 @@ const loadDocuments = async () => {
   try {
     // 确保有当前空间，默认使用个人空间
     if (!currentSpace.value) {
-      currentSpace.value = { id: 'personal', name: '个人空间', type: 'personal' }
+      const personalSpace = spaces.value.find(s => s.id === 'personal' || s.name === '个人空间')
+      if (personalSpace) {
+        currentSpace.value = personalSpace
+      } else {
+        currentSpace.value = { id: 'personal', name: '个人空间', type: 'personal', color: '#8b5cf6', icon: '个' }
+      }
     }
     
     // 先尝试从API加载
@@ -1074,7 +1042,12 @@ const createDocument = async (type) => {
   try {
     // 确保在个人空间创建文档
     if (!currentSpace.value) {
-      currentSpace.value = { id: 'personal', name: '个人空间', type: 'personal' }
+      const personalSpace = spaces.value.find(s => s.id === 'personal' || s.name === '个人空间')
+      if (personalSpace) {
+        currentSpace.value = personalSpace
+      } else {
+        currentSpace.value = { id: 'personal', name: '个人空间', type: 'personal', color: '#8b5cf6', icon: '个' }
+      }
     }
     
     const userId = getUserId()
@@ -1350,7 +1323,12 @@ onMounted(async () => {
     }
   } else if (!currentSpace.value) {
     // 确保默认选中个人空间
-    currentSpace.value = { id: 'personal', name: '个人空间', type: 'personal' }
+    const personalSpace = spaces.value.find(s => s.id === 'personal' || s.name === '个人空间')
+    if (personalSpace) {
+      currentSpace.value = personalSpace
+    } else {
+      currentSpace.value = { id: 'personal', name: '个人空间', type: 'personal', color: '#8b5cf6', icon: '个' }
+    }
   }
   
   // 如果外部传入了viewType，切换到对应视图
@@ -1480,22 +1458,168 @@ onUnmounted(() => {
   color: var(--theme-accent, #165dff);
 }
 
-/* 空间导航栏 */
-.dl-space-nav {
+/* 顶部栏 */
+.dl-top-bar {
   background: transparent;
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
   padding: 12px 24px;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
   position: relative;
   z-index: 10;
 }
 
-.space-nav-header {
+.dl-top-bar-left {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 16px;
+  flex: 1;
+}
+
+.dl-top-bar-right {
+  display: flex;
+  align-items: center;
   gap: 12px;
+}
+
+/* 个人空间选择器 */
+.space-selector {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  background: transparent;
+}
+
+.space-selector:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.space-selector-icon {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(0, 0, 0, 0.7);
+  flex-shrink: 0;
+}
+
+.space-selector-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.space-selector-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.9);
+  line-height: 1.2;
+}
+
+.space-selector-count {
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.5);
+  line-height: 1.2;
+}
+
+.space-selector-arrow {
+  width: 14px;
+  height: 14px;
+  color: rgba(0, 0, 0, 0.5);
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.space-selector-arrow.expanded {
+  transform: rotate(180deg);
+}
+
+/* 搜索框容器 */
+.dl-top-bar-search {
+  flex: 1;
+  max-width: 400px;
+  min-width: 200px;
+}
+
+.dl-top-bar-search :deep(.search-wrapper) {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+}
+
+.dl-top-bar-search :deep(.search-wrapper:focus-within) {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(22, 93, 255, 0.3);
+}
+
+/* 筛选按钮 */
+.filter-buttons {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: 8px;
+  padding: 4px;
+}
+
+.filter-btn {
+  padding: 6px 12px;
+  border: none;
+  background: transparent;
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.filter-btn:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: rgba(0, 0, 0, 0.8);
+}
+
+.filter-btn.active {
+  background: rgba(22, 93, 255, 0.1);
+  color: rgba(22, 93, 255, 1);
+  font-weight: 600;
+}
+
+/* 新建按钮 */
+.dl-top-bar-new-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: none;
+  background: rgba(22, 93, 255, 1);
+  color: white;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.dl-top-bar-new-btn:hover {
+  background: rgba(22, 93, 255, 0.9);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(22, 93, 255, 0.3);
+}
+
+.dl-top-bar-new-btn svg {
+  flex-shrink: 0;
 }
 
 /* 空间区域 */
@@ -1593,6 +1717,10 @@ onUnmounted(() => {
   -webkit-backdrop-filter: blur(20px);
   z-index: 1000;
   padding: 8px;
+}
+
+.space-selector {
+  position: relative;
 }
 
 .space-switcher-item {
@@ -1748,91 +1876,6 @@ onUnmounted(() => {
   color: var(--theme-accent, #165dff);
 }
 
-/* 空间子视图切换 - 现代分段控制器风格 */
-.space-sub-views {
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
-}
-
-.space-sub-views-container {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  background: rgba(0, 0, 0, 0.04);
-  border-radius: 12px;
-  padding: 4px;
-  gap: 0;
-  box-shadow: 
-    0 1px 3px rgba(0, 0, 0, 0.05),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6);
-}
-
-.space-sub-views-slider {
-  position: absolute;
-  top: 4px;
-  left: 4px;
-  height: calc(100% - 8px);
-  background: linear-gradient(135deg, var(--theme-accent, #165dff) 0%, #4c7fff 50%, #7b9fff 100%);
-  border-radius: 8px;
-  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-  box-shadow: 
-    0 2px 8px rgba(22, 93, 255, 0.3),
-    0 1px 3px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3);
-  z-index: 1;
-}
-
-.space-sub-view-btn {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 8px 16px;
-  border: none;
-  background: transparent;
-  color: #6b7280;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  border-radius: 8px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  min-width: 80px;
-  white-space: nowrap;
-}
-
-.space-sub-view-btn .btn-content {
-  position: relative;
-  z-index: 1;
-}
-
-.space-sub-view-btn svg {
-  flex-shrink: 0;
-  position: relative;
-  z-index: 1;
-  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.space-sub-view-btn:hover {
-  color: #111827;
-  transform: translateY(-1px);
-}
-
-.space-sub-view-btn:hover svg {
-  transform: scale(1.1);
-}
-
-.space-sub-view-btn.active {
-  color: white;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-}
-
-.space-sub-view-btn.active svg {
-  transform: scale(1.15);
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
-}
 
 .dl-nav-right {
   display: flex;
@@ -1894,6 +1937,7 @@ onUnmounted(() => {
   flex-shrink: 0;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
+  margin-top: 0;
 }
 
 .dl-header-left {
@@ -1923,15 +1967,6 @@ onUnmounted(() => {
   color: #6b7280;
 }
 
-.stat-item svg {
-  color: #9ca3af;
-}
-
-.dl-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
 
 /* 搜索框、排序、视图切换样式已移至 common.css */
 

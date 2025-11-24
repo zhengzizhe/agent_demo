@@ -110,14 +110,14 @@ watch(() => props.form.message, () => {
 <style scoped>
 /* 输入区域 */
 .input-container {
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
-  background: rgba(255, 255, 255, 0.6);
+  border-top: 1px solid rgba(0, 0, 0, 0.02);
+  background: transparent;
   backdrop-filter: blur(30px) saturate(180%);
   -webkit-backdrop-filter: blur(30px) saturate(180%);
-  padding: 24px 40px;
+  padding: 40px 56px;
   position: relative;
   z-index: 10;
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* 居中显示（初始状态） */
@@ -184,20 +184,39 @@ watch(() => props.form.message, () => {
 
 .input-wrapper {
   display: flex;
-  gap: 12px;
+  gap: 16px;
   align-items: flex-start;
-  max-width: 800px;
+  max-width: 1000px;
   margin: 0 auto;
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border: 1.5px solid rgba(22, 93, 255, 0.2);
-  border-radius: 18px;
-  padding: 18px 20px;
-  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  background: var(--glass-bg);
+  backdrop-filter: blur(60px) saturate(200%);
+  -webkit-backdrop-filter: blur(60px) saturate(200%);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-large);
+  padding: 24px 28px;
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
   box-shadow: 
-    0 2px 12px rgba(22, 93, 255, 0.08),
-    0 0 0 1px rgba(0, 0, 0, 0.02) inset;
+    0 0 0 1px rgba(255, 255, 255, 0.6) inset,
+    var(--shadow-soft),
+    0 0 50px rgba(0, 102, 255, 0.03);
+  position: relative;
+}
+
+.input-wrapper::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-large);
+  background: 
+    linear-gradient(135deg, 
+      rgba(255, 255, 255, 0.5) 0%, 
+      rgba(255, 255, 255, 0.2) 30%,
+      rgba(255, 255, 255, 0.1) 50%,
+      rgba(255, 255, 255, 0.2) 70%,
+      rgba(255, 255, 255, 0.4) 100%);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.7;
 }
 
 /* 居中状态时更宽 */
@@ -207,13 +226,13 @@ watch(() => props.form.message, () => {
 }
 
 .input-wrapper:focus-within {
-  background: rgba(255, 255, 255, 0.95);
-  border-color: var(--theme-accent, #165dff);
+  background: var(--glass-bg-hover);
+  border-color: var(--glass-border-hover);
   box-shadow: 
-    0 4px 20px rgba(22, 93, 255, 0.12),
-    0 0 0 4px rgba(22, 93, 255, 0.08),
-    0 0 0 1px rgba(0, 0, 0, 0.02) inset;
-  transform: translateY(-1px);
+    0 0 0 1px rgba(255, 255, 255, 0.7) inset,
+    var(--shadow-medium),
+    var(--shadow-glow);
+  transform: translateY(-3px) scale(1.005);
 }
 
 .input-content {
@@ -268,18 +287,21 @@ watch(() => props.form.message, () => {
 
 .message-input {
   flex: 1;
-  padding: 8px 0;
+  padding: 12px 0;
   background: transparent;
   border: none;
   border-radius: 0;
-  color: #111827;
+  color: var(--color-text-primary);
   font-size: 15px;
   font-family: inherit;
   resize: none;
   max-height: 200px;
   overflow-y: auto;
-  line-height: 1.6;
-  min-height: 24px;
+  line-height: 1.8;
+  min-height: 28px;
+  position: relative;
+  z-index: 1;
+  letter-spacing: 0.01em;
 }
 
 .message-input:focus {
@@ -287,7 +309,8 @@ watch(() => props.form.message, () => {
 }
 
 .message-input::placeholder {
-  color: #9ca3af;
+  color: var(--color-text-tertiary);
+  opacity: 0.6;
 }
 
 .message-input:disabled {
@@ -296,23 +319,38 @@ watch(() => props.form.message, () => {
 }
 
 .send-button {
-  width: 42px;
-  height: 42px;
+  width: 48px;
+  height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, var(--theme-accent, #165dff) 0%, #0e42d2 100%);
+  background: linear-gradient(135deg, var(--theme-accent) 0%, var(--theme-accent-light) 100%);
   color: white;
   border: none;
-  border-radius: 12px;
+  border-radius: var(--radius-small);
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   flex-shrink: 0;
   box-shadow: 
-    0 2px 8px rgba(22, 93, 255, 0.25),
-    0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+    0 6px 20px var(--theme-accent-glow),
+    0 0 0 1px rgba(255, 255, 255, 0.3) inset;
   position: relative;
   overflow: hidden;
+  z-index: 1;
+}
+
+.send-button::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-small);
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.3) 0%, 
+    transparent 50%,
+    rgba(255, 255, 255, 0.1) 100%);
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.8;
 }
 
 .send-button::before {
@@ -325,11 +363,16 @@ watch(() => props.form.message, () => {
 }
 
 .send-button:hover:not(:disabled) {
-  background: linear-gradient(135deg, #0e42d2 0%, #0a35b8 100%);
-  transform: translateY(-2px) scale(1.02);
+  background: linear-gradient(135deg, var(--theme-accent-light) 0%, var(--theme-accent) 100%);
+  transform: translateY(-4px) scale(1.08);
   box-shadow: 
-    0 4px 16px rgba(22, 93, 255, 0.35),
-    0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+    0 8px 32px var(--theme-accent-glow),
+    0 0 0 1px rgba(255, 255, 255, 0.4) inset,
+    0 0 40px rgba(0, 102, 255, 0.2);
+}
+
+.send-button:hover:not(:disabled)::after {
+  opacity: 1;
 }
 
 .send-button:hover:not(:disabled)::before {

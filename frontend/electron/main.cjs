@@ -30,7 +30,24 @@ function createWindow() {
       nodeIntegration: false,
       contextIsolation: true,
       enableRemoteModule: false,
-      webSecurity: true
+      webSecurity: true,
+      // 性能优化：启用硬件加速
+      enableBlinkFeatures: '',
+      disableBlinkFeatures: 'Auxclick',
+      // 性能优化：启用 WebGL 和 WebGPU
+      enableWebGPU: true,
+      // 性能优化：启用 offscreen rendering
+      offscreen: false,
+      // 性能优化：启用背景节流
+      backgroundThrottling: true,
+      // 性能优化：启用 v8 缓存
+      v8CacheOptions: 'code',
+      // 性能优化：启用图片动画
+      imageAnimationPolicy: 'animate',
+      // 性能优化：启用平滑滚动
+      enablePreferredSizeMode: false,
+      // 性能优化：禁用 spellcheck（如果不需要）
+      spellcheck: false
     },
     ...(hasIcon && { icon: iconPath }),
     show: false,
@@ -38,10 +55,11 @@ function createWindow() {
     hasShadow: true,
     roundedCorners: true,
     // macOS 特定设置
-    ...(isMac && {
-      vibrancy: 'under-window',
-      visualEffectState: 'active'
-    })
+    // 性能优化：移除 vibrancy 效果（会显著影响性能）
+    // ...(isMac && {
+    //   vibrancy: 'under-window',
+    //   visualEffectState: 'active'
+    // })
   })
 
   // 加载应用
@@ -59,6 +77,15 @@ function createWindow() {
       mainWindow.loadURL('http://localhost:3000')
     })
   }
+
+  // 性能优化：设置帧率限制为90fps（高刷新率）
+  mainWindow.webContents.setFrameRate(90)
+  
+  // 性能优化：监听页面加载完成
+  mainWindow.webContents.on('dom-ready', () => {
+    // 可以在这里添加其他性能优化逻辑
+    console.log('页面加载完成，性能优化已启用')
+  })
 
   // 窗口准备好后显示
   mainWindow.once('ready-to-show', () => {
@@ -87,6 +114,19 @@ function createWindow() {
   mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
     console.error('Failed to load:', errorCode, errorDescription)
   })
+}
+
+// 性能优化：启用硬件加速（适用于所有平台）
+app.commandLine.appendSwitch('enable-gpu-rasterization')
+// 性能优化：启用 GPU 合成
+app.commandLine.appendSwitch('enable-gpu-compositing')
+// 性能优化：禁用后台节流（提升前台性能）
+app.commandLine.appendSwitch('disable-background-timer-throttling')
+app.commandLine.appendSwitch('disable-backgrounding-occluded-windows')
+app.commandLine.appendSwitch('disable-renderer-backgrounding')
+// 性能优化：启用零拷贝（如果支持）
+if (process.platform === 'darwin' || process.platform === 'linux') {
+  app.commandLine.appendSwitch('enable-zero-copy')
 }
 
 // 应用准备就绪

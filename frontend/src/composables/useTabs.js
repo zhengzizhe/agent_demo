@@ -6,13 +6,12 @@ import { ref, computed } from 'vue'
 
 export function useTabs() {
   // 定义左侧一级功能（固定标签页的视图）
-  const fixedViews = ['chat', 'rag', 'docs']
+  const fixedViews = ['chat', 'docs']
   
   // 获取视图标签
   const getViewLabel = (view) => {
     const labels = {
       chat: '对话',
-      rag: 'RAG知识库',
       docs: '文档库'
     }
     return labels[view] || view
@@ -22,7 +21,6 @@ export function useTabs() {
   const getViewIcon = (view) => {
     const icons = {
       chat: '💬',
-      rag: '📚',
       docs: '📄'
     }
     return icons[view] || '📄'

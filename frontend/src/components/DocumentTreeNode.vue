@@ -86,7 +86,7 @@
       
       <!-- 子项数量 -->
       <span v-if="node.isFolder && hasChildren" class="tree-node-count">
-        {{ node.children.length }}
+        {{ getNodeChildren.length }}
       </span>
     </div>
     
@@ -94,13 +94,15 @@
     <transition name="tree-expand">
       <div v-if="node.isFolder && isExpanded && hasChildren" class="tree-node-children">
         <DocumentTreeNode
-          v-for="(child, index) in node.children"
+          v-for="(child, index) in loadedChildren"
           :key="child.id"
           :node="child"
           :selected-id="selectedId"
           :expanded-ids="expandedIds"
           :parent-lines="computedParentLines"
-          :is-last="index === node.children.length - 1"
+          :is-last="index === loadedChildren.length - 1"
+          :get-children="getChildren"
+          :space-id="spaceId"
           @select="$emit('select', $event)"
           @toggle="$emit('toggle', $event)"
         />
@@ -110,7 +112,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 const props = defineProps({
   node: {
@@ -132,14 +134,77 @@ const props = defineProps({
   isLast: {
     type: Boolean,
     default: false
+  },
+  getChildren: {
+    type: Function,
+    default: null
+  },
+  spaceId: {
+    type: String,
+    default: null
   }
 })
 
 const emit = defineEmits(['select', 'toggle'])
 
 const selected = computed(() => props.selectedId === props.node.id)
-const hasChildren = computed(() => props.node.children && props.node.children.length > 0)
 const isExpanded = computed(() => props.expandedIds.includes(props.node.id))
+
+// 动态加载的子节点
+const loadedChildren = ref([])
+const lastSpaceId = ref(null)
+
+// 检查是否有子节点（通过 getChildren 函数或节点的 children 属性）
+const hasChildren = computed(() => {
+  if (!props.node.isFolder) {
+    return false
+  }
+  
+  // 优先使用节点的 children 属性（如果已构建）
+  if (props.node.children && props.node.children.length > 0) {
+    return true
+  }
+  
+  // 否则通过 getChildren 函数检查
+  if (props.getChildren) {
+    const children = props.getChildren(props.node.id)
+    return children && children.length > 0
+  }
+  
+  return false
+})
+
+// 获取子节点（计算属性）
+const getNodeChildren = computed(() => {
+  // 优先使用节点的 children 属性
+  if (props.node.children && props.node.children.length > 0) {
+    return props.node.children
+  }
+  
+  // 否则通过 getChildren 函数获取
+  if (props.getChildren) {
+    return props.getChildren(props.node.id)
+  }
+  
+  return []
+})
+
+// 当展开时，动态加载子节点
+watch([isExpanded, () => props.spaceId], ([expanded, spaceId]) => {
+  // 空间切换时，清空已加载的子节点
+  if (spaceId !== lastSpaceId.value) {
+    loadedChildren.value = []
+    lastSpaceId.value = spaceId
+  }
+  
+  if (expanded && props.node.isFolder) {
+    // 使用计算属性获取子节点
+    loadedChildren.value = getNodeChildren.value
+  } else if (!expanded) {
+    // 收起时不清空，保持已加载的子节点（可选：也可以清空以节省内存）
+    // loadedChildren.value = []
+  }
+}, { immediate: true })
 
 // 计算缩进样式
 const indentStyle = computed(() => {
