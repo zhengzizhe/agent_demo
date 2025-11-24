@@ -16,7 +16,7 @@ public class AuthCommandHandler {
     @Resource
     EmailVerificationFactory emailVerificationFactory;
 
-    @Resource
+
     public void verification(SendVerificationCodeRequest request) {
         String code = "123456";
         EmailVerification newVerification = emailVerificationFactory.createNewVerification(new Email(request.getEmail()),code, request.getPurpose(), RequestContext.getCurrentContext().getClientIp(), RequestContext.getCurrentContext().getUserAgent());

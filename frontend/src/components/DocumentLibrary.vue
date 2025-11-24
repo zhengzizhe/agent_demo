@@ -3,126 +3,147 @@
     <!-- 主内容区（作为主侧边栏的子视图） -->
     <div class="dl-main-wrapper">
       <div class="dl-main">
-      <!-- 顶部栏 -->
-      <div class="dl-top-bar">
-        <div class="dl-top-bar-left">
-          <!-- 个人空间选择器 -->
-          <div class="space-selector" @click.stop="toggleSpaceDropdown">
-            <div class="space-selector-icon">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <circle cx="10" cy="8" r="3" stroke="currentColor" stroke-width="1.5" fill="none"/>
-                <path d="M5 18c0-2.5 2.5-5 5-5s5 2.5 5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-              </svg>
-            </div>
-            <div class="space-selector-content">
-              <div class="space-selector-name">个人空间</div>
-              <div class="space-selector-count">{{ currentSpaceDocumentCount }}个文档</div>
-            </div>
-            <svg class="space-selector-arrow" :class="{ expanded: showSpaceDropdown }" width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <path d="M3.5 5.25l3.5 3.5 3.5-3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            <!-- 空间切换下拉菜单 -->
-            <transition name="space-dropdown">
-              <div v-if="showSpaceDropdown" class="space-switcher-menu">
-                <div 
-                  class="space-switcher-item"
-                  :class="{ active: !currentSpace || currentSpace.id === 'all' }"
-                  @click="selectSpace({ id: 'all', name: '全部' }, $event)"
-                >
-                  <span class="space-switcher-item-text">全部</span>
-                  <span class="space-switcher-item-count">{{ allDocuments.filter(doc => !doc.deleted).length }}</span>
-                </div>
-                <div 
-                  v-for="space in spaces" 
-                  :key="space.id"
-                  class="space-switcher-item"
-                  :class="{ active: currentSpace?.id === space.id }"
-                  @click="selectSpace(space, $event)"
-                >
-                  <div class="space-switcher-item-icon" :style="{ background: space.color }">{{ space.icon }}</div>
-                  <span class="space-switcher-item-text">{{ space.name }}</span>
-                  <span class="space-switcher-item-count">{{ space.documentCount }}</span>
-                </div>
+      <!-- Hero/Header 区域 -->
+      <div class="dl-hero-section">
+        <div class="dl-hero-content">
+          <div class="dl-hero-left">
+            <!-- 个人空间选择器 -->
+            <div class="space-selector-modern" @click.stop="toggleSpaceDropdown">
+              <div class="space-selector-icon-modern">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <circle cx="10" cy="7" r="3.5" fill="currentColor" opacity="0.9"/>
+                  <path d="M5 18c0-3 2.5-6 5-6s5 3 5 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+                </svg>
               </div>
-            </transition>
+              <div class="space-selector-content-modern">
+                <div class="space-selector-name-modern">个人空间</div>
+                <div class="space-selector-count-modern">{{ currentSpaceDocumentCount }}个文档</div>
+              </div>
+              <svg class="space-selector-arrow-modern" :class="{ expanded: showSpaceDropdown }" width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M3.5 5.25l3.5 3.5 3.5-3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <!-- 空间切换下拉菜单 -->
+              <transition name="space-dropdown">
+                <div v-if="showSpaceDropdown" class="space-switcher-menu-modern">
+                  <div 
+                    class="space-switcher-item-modern"
+                    :class="{ active: !currentSpace || currentSpace.id === 'all' }"
+                    @click="selectSpace({ id: 'all', name: '全部' }, $event)"
+                  >
+                    <span class="space-switcher-item-text">全部</span>
+                    <span class="space-switcher-item-count">{{ allDocuments.filter(doc => !doc.deleted).length }}</span>
+                  </div>
+                  <div 
+                    v-for="space in spaces" 
+                    :key="space.id"
+                    class="space-switcher-item-modern"
+                    :class="{ active: currentSpace?.id === space.id }"
+                    @click="selectSpace(space, $event)"
+                  >
+                    <div class="space-switcher-item-icon" :style="{ background: space.color }">{{ space.icon }}</div>
+                    <span class="space-switcher-item-text">{{ space.name }}</span>
+                    <span class="space-switcher-item-count">{{ space.documentCount }}</span>
+                  </div>
+                </div>
+              </transition>
+            </div>
+            
+            <!-- 标题和统计 -->
+            <div class="dl-hero-title-section">
+              <h1 class="dl-hero-title">{{ currentViewTitle }}</h1>
+              <div class="dl-hero-stats" v-if="!loading && sortedAndFilteredDocuments.length > 0">
+                <span class="hero-stat-item">
+                  {{ sortedAndFilteredDocuments.length }}个文档
+                </span>
+                <span class="hero-stat-divider">·</span>
+                <span class="hero-stat-hint">可按标签筛选</span>
+              </div>
+            </div>
           </div>
           
-          <!-- 搜索框 -->
-          <div class="dl-top-bar-search">
-            <SearchBox v-model="searchQuery" placeholder="Q 搜索..." />
-          </div>
-        </div>
-        
-        <div class="dl-top-bar-right">
-          <!-- 筛选按钮 -->
-          <div class="filter-buttons">
-            <button 
-              class="filter-btn"
-              :class="{ active: spaceSubView === 'all' }"
-              @click="switchSpaceSubView('all')"
-            >
-              全部
-            </button>
-            <button 
-              class="filter-btn"
-              :class="{ active: spaceSubView === 'recent' }"
-              @click="switchSpaceSubView('recent')"
-            >
-              最近
-            </button>
-            <button 
-              class="filter-btn"
-              :class="{ active: spaceSubView === 'favorites' }"
-              @click="switchSpaceSubView('favorites')"
-            >
-              收藏
-            </button>
-            <button 
-              class="filter-btn"
-              :class="{ active: spaceSubView === 'liked' }"
-              @click="switchSpaceSubView('liked')"
-            >
-              点赞
-            </button>
-            <button 
-              class="filter-btn"
-              :class="{ active: spaceSubView === 'shared' }"
-              @click="switchSpaceSubView('shared')"
-            >
-              共享
+          <div class="dl-hero-right">
+            <!-- 主角式搜索框 -->
+            <div class="dl-hero-search">
+              <SearchBox v-model="searchQuery" placeholder="搜索文档、标签或内容..." />
+            </div>
+            
+            <!-- 新建按钮 -->
+            <button class="btn-modern btn-primary-modern" @click="showCreateDialog = true">
+              <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
+                <path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+              <span>新建</span>
             </button>
           </div>
-          
-          <!-- 新建按钮 -->
-          <button class="dl-top-bar-new-btn" @click="showCreateDialog = true">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            </svg>
-            新建
-          </button>
-          
-          <!-- 排序下拉 -->
-          <div class="sort-wrapper">
-            <select v-model="sortBy" class="sort-select" @change="handleSort">
-              <option value="time">按时间</option>
-              <option value="name">按名称</option>
-              <option value="size">按大小</option>
-            </select>
-          </div>
-          
-          <!-- 视图切换 -->
-          <ViewToggle v-model="viewMode" />
         </div>
       </div>
 
-      <!-- 标题栏 -->
-      <div class="dl-header">
-        <div class="dl-header-left">
-          <h1 class="dl-title">{{ currentViewTitle }}</h1>
-          <div class="dl-stats" v-if="!loading && sortedAndFilteredDocuments.length > 0">
-            <span class="stat-item">
-              {{ sortedAndFilteredDocuments.length }}个文档
-            </span>
+      <!-- 工具条区域（筛选、排序、视图切换） -->
+      <div class="dl-toolbar-section">
+        <div class="dl-toolbar-content">
+          <!-- 左侧：筛选按钮组 -->
+          <div class="toolbar-group toolbar-group-filters">
+            <div class="toolbar-group-label">筛选</div>
+            <div class="filter-buttons-modern">
+              <div class="filter-slider" :style="filterSliderStyle"></div>
+              <button 
+                class="filter-btn-modern"
+                :class="{ active: spaceSubView === 'all' }"
+                @click="switchSpaceSubView('all')"
+                data-filter="all"
+                ref="filterBtnRefs"
+              >
+                全部
+              </button>
+              <button 
+                class="filter-btn-modern"
+                :class="{ active: spaceSubView === 'recent' }"
+                @click="switchSpaceSubView('recent')"
+                data-filter="recent"
+                ref="filterBtnRefs"
+              >
+                最近
+              </button>
+              <button 
+                class="filter-btn-modern"
+                :class="{ active: spaceSubView === 'favorites' }"
+                @click="switchSpaceSubView('favorites')"
+                data-filter="favorites"
+                ref="filterBtnRefs"
+              >
+                收藏
+              </button>
+              <button 
+                class="filter-btn-modern"
+                :class="{ active: spaceSubView === 'liked' }"
+                @click="switchSpaceSubView('liked')"
+                data-filter="liked"
+                ref="filterBtnRefs"
+              >
+                点赞
+              </button>
+              <button 
+                class="filter-btn-modern"
+                :class="{ active: spaceSubView === 'shared' }"
+                @click="switchSpaceSubView('shared')"
+                data-filter="shared"
+                ref="filterBtnRefs"
+              >
+                共享
+              </button>
+            </div>
+          </div>
+          
+          <!-- 右侧：排序和视图切换 -->
+          <div class="toolbar-group toolbar-group-actions">
+            <div class="sort-wrapper-modern">
+              <select v-model="sortBy" class="sort-select-modern" @change="handleSort">
+                <option value="time">按时间</option>
+                <option value="name">按名称</option>
+                <option value="size">按大小</option>
+              </select>
+            </div>
+            <ViewToggle v-model="viewMode" />
           </div>
         </div>
       </div>
@@ -672,6 +693,17 @@ const trashCount = computed(() => {
   return allDocuments.value.filter(doc => doc.deleted).length
 })
 
+// 筛选按钮滑动指示器样式
+const filterSliderStyle = computed(() => {
+  const filterOptions = ['all', 'recent', 'favorites', 'liked', 'shared']
+  const currentIndex = filterOptions.indexOf(spaceSubView.value)
+  const index = currentIndex >= 0 ? currentIndex : 0
+  
+  return {
+    transform: `translateX(${index * 100}%)`,
+    width: `${100 / filterOptions.length}%`
+  }
+})
 
 // 目录树使用的文档列表（仅按空间过滤，不应用其他过滤）
 const treeDocuments = computed(() => {
@@ -1458,168 +1490,702 @@ onUnmounted(() => {
   color: var(--theme-accent, #165dff);
 }
 
-/* 顶部栏 */
-.dl-top-bar {
-  background: transparent;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-  padding: 12px 24px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+/* Hero/Header 区域 - 增强玻璃拟态 */
+.dl-hero-section {
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.4) 0%, 
+    rgba(255, 255, 255, 0.2) 50%,
+    rgba(255, 255, 255, 0.3) 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+  border-top: 1px solid rgba(255, 255, 255, 0.5);
+  padding: 20px 32px 16px 32px;
   position: relative;
   z-index: 10;
+  backdrop-filter: blur(40px) saturate(200%) brightness(1.1);
+  -webkit-backdrop-filter: blur(40px) saturate(200%) brightness(1.1);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.3);
 }
 
-.dl-top-bar-left {
+.dl-hero-section::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: 
+    radial-gradient(circle at 20% 50%, rgba(22, 93, 255, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 80% 50%, rgba(76, 127, 255, 0.06) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0;
+  animation: heroGlow 8s ease-in-out infinite;
+}
+
+@keyframes heroGlow {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 1; }
+}
+
+.dl-hero-content {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  max-width: 100%;
+  position: relative;
+  z-index: 1;
+}
+
+.dl-hero-left {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  flex: 1;
+  min-width: 0;
+}
+
+.dl-hero-title-section {
+  flex: 1;
+  min-width: 0;
+}
+
+.dl-hero-title {
+  font-size: 24px;
+  font-weight: 700;
+  background: linear-gradient(135deg, 
+    #165dff 0%, 
+    #4c7fff 50%,
+    #6b8eff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0 0 6px 0;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  position: relative;
+  display: inline-block;
+  filter: drop-shadow(0 2px 4px rgba(22, 93, 255, 0.2));
+}
+
+.dl-hero-stats {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.hero-stat-item {
+  font-weight: 500;
+  color: #374151;
+}
+
+.hero-stat-divider {
+  color: #d1d5db;
+}
+
+.hero-stat-hint {
+  color: #9ca3af;
+}
+
+.dl-hero-right {
   display: flex;
   align-items: center;
   gap: 16px;
+  flex-shrink: 0;
+}
+
+.dl-hero-search {
+  min-width: 320px;
+  max-width: 480px;
   flex: 1;
 }
 
-.dl-top-bar-right {
+/* 工具条区域 - 增强玻璃拟态 */
+.dl-toolbar-section {
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.3) 0%, 
+    rgba(255, 255, 255, 0.2) 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  border-top: 1px solid rgba(255, 255, 255, 0.4);
+  padding: 12px 32px;
+  backdrop-filter: blur(30px) saturate(200%) brightness(1.05);
+  -webkit-backdrop-filter: blur(30px) saturate(200%) brightness(1.05);
+  box-shadow: 
+    0 4px 16px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.2);
+  position: relative;
+}
+
+.dl-toolbar-section::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, 
+    transparent 0%,
+    rgba(22, 93, 255, 0.03) 50%,
+    transparent 100%);
+  pointer-events: none;
+  z-index: 0;
+  animation: toolbarShimmer 3s ease-in-out infinite;
+}
+
+@keyframes toolbarShimmer {
+  0%, 100% { transform: translateX(-100%); opacity: 0; }
+  50% { transform: translateX(100%); opacity: 1; }
+}
+
+.dl-toolbar-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  position: relative;
+  z-index: 1;
+}
+
+.toolbar-group {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-/* 个人空间选择器 */
-.space-selector {
+.toolbar-group-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-right: 4px;
+}
+
+.toolbar-group-filters {
+  flex: 1;
+}
+
+.toolbar-group-actions {
+  flex-shrink: 0;
+}
+
+/* ViewToggle 在工具栏中的样式 */
+.toolbar-group-actions :deep(.view-toggle) {
+  display: inline-flex;
+}
+
+.toolbar-group-actions :deep(.view-toggle-container) {
+  height: 36px;
+}
+
+.toolbar-group-actions :deep(.view-btn) {
+  width: 32px;
+  height: 32px;
+}
+
+/* 现代化个人空间选择器 - 增强玻璃拟态 */
+.space-selector-modern {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 12px;
-  border-radius: 8px;
+  padding: 10px 14px;
+  border-radius: 24px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
-  background: transparent;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.25) 0%, 
+    rgba(255, 255, 255, 0.15) 50%,
+    rgba(255, 255, 255, 0.2) 100%);
+  border: 1.5px solid rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(50px) saturate(200%) brightness(1.15);
+  -webkit-backdrop-filter: blur(50px) saturate(200%) brightness(1.15);
+  box-shadow: 
+    0 4px 16px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.3),
+    0 0 0 0 rgba(22, 93, 255, 0);
+  overflow: hidden;
 }
 
-.space-selector:hover {
-  background: rgba(0, 0, 0, 0.04);
+.space-selector-modern::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 24px;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.4) 0%, 
+    rgba(255, 255, 255, 0.15) 50%,
+    rgba(255, 255, 255, 0.3) 100%);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.8;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
 
-.space-selector-icon {
-  width: 20px;
-  height: 20px;
+.space-selector-modern::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(22, 93, 255, 0.1) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+
+.space-selector-modern:hover {
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.35) 0%, 
+    rgba(255, 255, 255, 0.25) 50%,
+    rgba(255, 255, 255, 0.3) 100%);
+  border-color: rgba(255, 255, 255, 0.7);
+  box-shadow: 
+    0 6px 20px rgba(22, 93, 255, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 1),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.4),
+    0 0 15px rgba(22, 93, 255, 0.1);
+  transform: translateY(-2px) scale(1.02);
+  backdrop-filter: blur(60px) saturate(200%) brightness(1.2);
+  -webkit-backdrop-filter: blur(60px) saturate(200%) brightness(1.2);
+}
+
+.space-selector-modern:hover::after {
+  opacity: 1;
+  animation: selectorPulse 2s ease-in-out infinite;
+}
+
+@keyframes selectorPulse {
+  0%, 100% { transform: scale(1); opacity: 0.3; }
+  50% { transform: scale(1.1); opacity: 0.6; }
+}
+
+.space-selector-icon-modern {
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(0, 0, 0, 0.7);
+  color: white;
   flex-shrink: 0;
+  background: linear-gradient(135deg, 
+    #165dff 0%, 
+    #4c7fff 50%,
+    #6b8eff 100%);
+  border-radius: 12px;
+  padding: 6px;
+  position: relative;
+  z-index: 1;
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 
+    0 2px 8px rgba(22, 93, 255, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    inset 0 -1px 0 rgba(22, 93, 255, 0.3);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
 }
 
-.space-selector-content {
+.space-selector-icon-modern::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.3) 0%, 
+    transparent 50%,
+    rgba(255, 255, 255, 0.1) 100%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.space-selector-icon-modern svg {
+  position: relative;
+  z-index: 1;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+}
+
+.space-selector-modern:hover .space-selector-icon-modern {
+  transform: scale(1.05);
+  box-shadow: 
+    0 3px 10px rgba(22, 93, 255, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -1px 0 rgba(22, 93, 255, 0.4);
+}
+
+.space-selector-content-modern {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  position: relative;
+  z-index: 1;
 }
 
-.space-selector-name {
-  font-size: 14px;
+.space-selector-name-modern {
+  font-size: 15px;
   font-weight: 600;
-  color: rgba(0, 0, 0, 0.9);
+  background: linear-gradient(135deg, 
+    #165dff 0%, 
+    #4c7fff 50%,
+    #6b8eff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   line-height: 1.2;
+  display: block;
+  width: fit-content;
 }
 
-.space-selector-count {
+.space-selector-count-modern {
   font-size: 12px;
-  color: rgba(0, 0, 0, 0.5);
+  color: #6b7280;
   line-height: 1.2;
 }
 
-.space-selector-arrow {
+.space-selector-arrow-modern {
   width: 14px;
   height: 14px;
-  color: rgba(0, 0, 0, 0.5);
-  transition: transform 0.2s ease;
+  color: #6b7280;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   flex-shrink: 0;
 }
 
-.space-selector-arrow.expanded {
+.space-selector-arrow-modern.expanded {
   transform: rotate(180deg);
 }
 
-/* 搜索框容器 */
-.dl-top-bar-search {
-  flex: 1;
-  max-width: 400px;
-  min-width: 200px;
-}
-
-.dl-top-bar-search :deep(.search-wrapper) {
+/* 现代化搜索框样式 - 增强玻璃拟态 */
+.dl-hero-search :deep(.search-wrapper) {
   width: 100%;
-  background: rgba(255, 255, 255, 0.7);
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 8px;
+  height: 40px;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.5) 0%, 
+    rgba(255, 255, 255, 0.3) 100%);
+  border: 1.5px solid rgba(255, 255, 255, 0.4);
+  border-radius: 12px;
+  padding: 0 18px;
+  box-shadow: 
+    0 4px 16px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    0 0 0 0 rgba(22, 93, 255, 0);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(40px) saturate(200%) brightness(1.1);
+  -webkit-backdrop-filter: blur(40px) saturate(200%) brightness(1.1);
+  position: relative;
+  overflow: hidden;
 }
 
-.dl-top-bar-search :deep(.search-wrapper:focus-within) {
-  background: rgba(255, 255, 255, 0.95);
+.dl-hero-search :deep(.search-wrapper::before) {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.6) 0%, 
+    rgba(255, 255, 255, 0.3) 50%,
+    rgba(255, 255, 255, 0.5) 100%);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.7;
+}
+
+.dl-hero-search :deep(.search-wrapper:hover) {
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.6) 0%, 
+    rgba(255, 255, 255, 0.4) 100%);
   border-color: rgba(22, 93, 255, 0.3);
+  box-shadow: 
+    0 6px 20px rgba(22, 93, 255, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 0 0 0 rgba(22, 93, 255, 0);
+  transform: translateY(-1px);
 }
 
-/* 筛选按钮 */
-.filter-buttons {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  background: rgba(0, 0, 0, 0.04);
-  border-radius: 8px;
-  padding: 4px;
+.dl-hero-search :deep(.search-wrapper:focus-within) {
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.8) 0%, 
+    rgba(255, 255, 255, 0.6) 100%);
+  border-color: rgba(22, 93, 255, 0.5);
+  box-shadow: 
+    0 12px 32px rgba(22, 93, 255, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 1),
+    0 0 0 4px rgba(22, 93, 255, 0.15),
+    0 0 30px rgba(22, 93, 255, 0.2);
+  transform: translateY(-2px) scale(1.01);
+  animation: searchGlow 2s ease-in-out infinite;
 }
 
-.filter-btn {
-  padding: 6px 12px;
-  border: none;
+@keyframes searchGlow {
+  0%, 100% { 
+    box-shadow: 
+      0 12px 32px rgba(22, 93, 255, 0.25),
+      inset 0 1px 0 rgba(255, 255, 255, 1),
+      0 0 0 4px rgba(22, 93, 255, 0.15),
+      0 0 30px rgba(22, 93, 255, 0.2);
+  }
+  50% { 
+    box-shadow: 
+      0 12px 32px rgba(22, 93, 255, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 1),
+      0 0 0 4px rgba(22, 93, 255, 0.2),
+      0 0 40px rgba(22, 93, 255, 0.3);
+  }
+}
+
+.dl-hero-search :deep(.search-icon) {
+  width: 18px;
+  height: 18px;
+  color: #6b7280;
+  margin-right: 12px;
+  position: relative;
+  z-index: 1;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dl-hero-search :deep(.search-wrapper:focus-within .search-icon) {
+  color: #165dff;
+  transform: scale(1.1);
+  filter: drop-shadow(0 2px 4px rgba(22, 93, 255, 0.3));
+}
+
+.dl-hero-search :deep(.search-input) {
+  font-size: 15px;
+  font-weight: 400;
+  position: relative;
+  z-index: 1;
   background: transparent;
-  color: rgba(0, 0, 0, 0.6);
-  font-size: 13px;
-  font-weight: 500;
+}
+
+.dl-hero-search :deep(.search-clear) {
+  width: 24px;
+  height: 24px;
   border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
 }
 
-.filter-btn:hover {
-  background: rgba(0, 0, 0, 0.06);
-  color: rgba(0, 0, 0, 0.8);
-}
-
-.filter-btn.active {
-  background: rgba(22, 93, 255, 0.1);
-  color: rgba(22, 93, 255, 1);
-  font-weight: 600;
-}
-
-/* 新建按钮 */
-.dl-top-bar-new-btn {
-  display: flex;
+/* 现代化筛选按钮 - 增强玻璃拟态 */
+.filter-buttons-modern {
+  position: relative;
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.4) 0%, 
+    rgba(255, 255, 255, 0.3) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 12px;
+  padding: 4px;
+  gap: 0;
+  backdrop-filter: blur(40px) saturate(200%) brightness(1.1);
+  -webkit-backdrop-filter: blur(40px) saturate(200%) brightness(1.1);
+  box-shadow: 
+    0 4px 16px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.3);
+  overflow: hidden;
+}
+
+.filter-buttons-modern::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.6) 0%, 
+    rgba(255, 255, 255, 0.3) 50%,
+    rgba(255, 255, 255, 0.5) 100%);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.7;
+  animation: filterShimmer 4s ease-in-out infinite;
+}
+
+@keyframes filterShimmer {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 0.8; }
+}
+
+.filter-slider {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  height: calc(100% - 8px);
+  background: linear-gradient(135deg, 
+    #165dff 0%, 
+    #4c7fff 50%,
+    #6b8eff 100%);
+  border-radius: 8px;
+  transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 
+    0 6px 20px rgba(22, 93, 255, 0.4),
+    0 3px 10px rgba(22, 93, 255, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    0 0 20px rgba(22, 93, 255, 0.3);
+  z-index: 1;
+  overflow: hidden;
+}
+
+.filter-slider::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.4) 0%, 
+    transparent 50%,
+    rgba(255, 255, 255, 0.2) 100%);
+  pointer-events: none;
+  animation: sliderShine 3s ease-in-out infinite;
+}
+
+@keyframes sliderShine {
+  0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+  100% { transform: translateX(200%) translateY(200%) rotate(45deg); }
+}
+
+.filter-btn-modern {
+  position: relative;
+  z-index: 2;
   padding: 8px 16px;
   border: none;
-  background: rgba(22, 93, 255, 1);
-  color: white;
+  background: transparent;
+  color: #6b7280;
   font-size: 13px;
   font-weight: 500;
   border-radius: 8px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
-.dl-top-bar-new-btn:hover {
-  background: rgba(22, 93, 255, 0.9);
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(22, 93, 255, 0.3);
+.filter-btn-modern:hover {
+  color: #111827;
+  transform: translateY(-2px) scale(1.05);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.dl-top-bar-new-btn svg {
+.filter-btn-modern.active {
+  color: white;
+  font-weight: 600;
+  text-shadow: 
+    0 1px 3px rgba(0, 0, 0, 0.3),
+    0 0 10px rgba(255, 255, 255, 0.3);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+/* 现代化按钮系统 */
+.btn-modern {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+  position: relative;
+  overflow: hidden;
+  height: 40px;
+  min-width: 40px;
+}
+
+.btn-modern::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.2) 0%, 
+    rgba(255, 255, 255, 0) 100%);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.btn-modern:hover::before {
+  opacity: 1;
+}
+
+.btn-modern svg {
   flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+}
+
+.btn-primary-modern {
+  background: linear-gradient(135deg, 
+    #165dff 0%, 
+    #4c7fff 50%,
+    #6b8eff 100%);
+  color: white;
+  padding: 0 24px;
+  box-shadow: 
+    0 6px 20px rgba(22, 93, 255, 0.4),
+    0 3px 10px rgba(22, 93, 255, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    0 0 20px rgba(22, 93, 255, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary-modern::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.3) 0%, 
+    transparent 50%,
+    rgba(255, 255, 255, 0.1) 100%);
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+.btn-primary-modern::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s;
+  animation: buttonShine 3s ease-in-out infinite;
+}
+
+@keyframes buttonShine {
+  0%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+  50% { opacity: 0.4; transform: translate(-50%, -50%) scale(1.2); }
+}
+
+.btn-primary-modern:hover {
+  background: linear-gradient(135deg, 
+    #0f4fd8 0%, 
+    #3d6eff 50%,
+    #5a7eff 100%);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 
+    0 10px 30px rgba(22, 93, 255, 0.5),
+    0 5px 15px rgba(22, 93, 255, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    0 0 30px rgba(22, 93, 255, 0.3);
+}
+
+.btn-primary-modern:hover::after {
+  opacity: 0.6;
+}
+
+.btn-primary-modern:active {
+  transform: translateY(0) scale(0.98);
+  box-shadow: 
+    0 4px 15px rgba(22, 93, 255, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 /* 空间区域 */
@@ -1700,56 +2266,84 @@ onUnmounted(() => {
   transform: rotate(180deg);
 }
 
-/* 空间切换菜单 */
-.space-switcher-menu {
+/* 现代化空间切换菜单 */
+.space-switcher-menu-modern {
   position: absolute;
-  top: calc(100% + 8px);
+  top: calc(100% + 12px);
   left: 0;
-  min-width: 240px;
-  max-width: 320px;
+  min-width: 280px;
+  max-width: 360px;
   max-height: 400px;
   overflow-y: auto;
-  background: rgba(255, 255, 255, 0.98);
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.3) 0%, 
+    rgba(255, 255, 255, 0.2) 50%,
+    rgba(255, 255, 255, 0.25) 100%);
+  border: 1.5px solid rgba(255, 255, 255, 0.5);
+  border-radius: 24px;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.08),
+    0 4px 16px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(50px) saturate(200%) brightness(1.15);
+  -webkit-backdrop-filter: blur(50px) saturate(200%) brightness(1.15);
   z-index: 1000;
   padding: 8px;
+  overflow: hidden;
 }
 
-.space-selector {
+.space-switcher-menu-modern::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 24px;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.4) 0%, 
+    rgba(255, 255, 255, 0.2) 50%,
+    rgba(255, 255, 255, 0.3) 100%);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.7;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.space-selector-modern {
   position: relative;
 }
 
-.space-switcher-item {
+.space-switcher-item-modern {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  border-radius: 8px;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 16px;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  font-size: 13px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 14px;
   color: #111827;
+  position: relative;
+  z-index: 1;
 }
 
-.space-switcher-item:hover {
-  background: rgba(22, 93, 255, 0.08);
+.space-switcher-item-modern:hover {
+  background: linear-gradient(135deg, rgba(22, 93, 255, 0.1) 0%, rgba(22, 93, 255, 0.05) 100%);
   transform: translateX(4px);
+  box-shadow: 0 2px 8px rgba(22, 93, 255, 0.1);
 }
 
-.space-switcher-item.active {
-  background: rgba(22, 93, 255, 0.12);
-  color: var(--theme-accent, #165dff);
+.space-switcher-item-modern.active {
+  background: linear-gradient(135deg, rgba(22, 93, 255, 0.15) 0%, rgba(22, 93, 255, 0.1) 100%);
+  color: #165dff;
   font-weight: 600;
+  box-shadow: 0 2px 8px rgba(22, 93, 255, 0.2);
 }
 
 .space-switcher-item-icon {
-  width: 22px;
-  height: 22px;
-  border-radius: 5px;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1757,6 +2351,12 @@ onUnmounted(() => {
   flex-shrink: 0;
   color: white;
   font-weight: 600;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.space-switcher-item-modern:hover .space-switcher-item-icon {
+  transform: scale(1.1) rotate(5deg);
 }
 
 .space-switcher-item-text {
@@ -1777,17 +2377,17 @@ onUnmounted(() => {
 /* 下拉菜单动画 */
 .space-dropdown-enter-active,
 .space-dropdown-leave-active {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .space-dropdown-enter-from {
   opacity: 0;
-  transform: translateY(-10px) scale(0.95);
+  transform: translateY(-12px) scale(0.96);
 }
 
 .space-dropdown-leave-to {
   opacity: 0;
-  transform: translateY(-10px) scale(0.95);
+  transform: translateY(-8px) scale(0.98);
 }
 
 .space-nav-actions {
@@ -1909,7 +2509,7 @@ onUnmounted(() => {
   flex: 1;
   min-width: 0;
   height: calc(100vh - 24px);
-  margin: 12px 12px 12px 0;
+  margin: 0px 0px 0px 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -1927,44 +2527,75 @@ onUnmounted(() => {
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.dl-header {
-  background: transparent;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-  padding: 16px 24px;
-  display: flex;
+/* 现代化排序选择器 */
+.sort-wrapper-modern {
+  position: relative;
+  display: inline-flex;
   align-items: center;
-  justify-content: space-between;
-  flex-shrink: 0;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  margin-top: 0;
 }
 
-.dl-header-left {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.dl-title {
-  font-size: 20px;
-  font-weight: 600;
-  color: #111827;
-  margin: 0;
-}
-
-.dl-stats {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.stat-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+.sort-select-modern {
+  padding: 10px 44px 10px 18px;
   font-size: 13px;
-  color: #6b7280;
+  font-weight: 500;
+  color: #111827;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.5) 0%, 
+    rgba(255, 255, 255, 0.3) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 10px;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 
+    0 4px 16px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(30px) saturate(200%) brightness(1.1);
+  -webkit-backdrop-filter: blur(30px) saturate(200%) brightness(1.1);
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 12 12' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3 4.5l3 3 3-3' stroke='%236b7280' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  min-width: 130px;
+  height: 36px;
+  position: relative;
+  overflow: hidden;
+}
+
+.sort-select-modern::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.6) 0%, 
+    rgba(255, 255, 255, 0.3) 50%,
+    rgba(255, 255, 255, 0.5) 100%);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.7;
+}
+
+.sort-select-modern:hover {
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.7) 0%, 
+    rgba(255, 255, 255, 0.5) 100%);
+  border-color: rgba(22, 93, 255, 0.3);
+  box-shadow: 
+    0 6px 20px rgba(22, 93, 255, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  transform: translateY(-1px);
+}
+
+.sort-select-modern:focus {
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.8) 0%, 
+    rgba(255, 255, 255, 0.6) 100%);
+  border-color: rgba(22, 93, 255, 0.5);
+  box-shadow: 
+    0 8px 24px rgba(22, 93, 255, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 1),
+    0 0 0 3px rgba(22, 93, 255, 0.15),
+    0 0 20px rgba(22, 93, 255, 0.2);
 }
 
 
@@ -1984,7 +2615,7 @@ onUnmounted(() => {
 .dl-content {
   flex: 1;
   overflow-y: auto;
-  padding: 24px;
+  padding: 24px 32px;
   background: transparent;
   min-width: 0;
   scrollbar-width: none; /* Firefox */
@@ -2002,24 +2633,24 @@ onUnmounted(() => {
 /* 网格视图 */
 .dl-grid-view {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
 }
 
 .doc-card {
   background: rgba(255, 255, 255, 0.95);
   border: 1px solid rgba(0, 0, 0, 0.06);
-  border-radius: 16px;
-  padding: 20px;
+  border-radius: 20px;
+  padding: 24px;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
   box-shadow: 
-    0 1px 3px rgba(0, 0, 0, 0.05),
-    0 1px 2px rgba(0, 0, 0, 0.03);
+    0 2px 8px rgba(0, 0, 0, 0.06),
+    0 1px 4px rgba(0, 0, 0, 0.04);
   position: relative;
   overflow: hidden;
 }
@@ -2038,11 +2669,12 @@ onUnmounted(() => {
 
 .doc-card:hover {
   background: rgba(255, 255, 255, 1);
-  border-color: rgba(22, 93, 255, 0.2);
+  border-color: rgba(22, 93, 255, 0.3);
   box-shadow: 
-    0 8px 24px rgba(0, 0, 0, 0.12),
-    0 4px 12px rgba(22, 93, 255, 0.15);
-  transform: translateY(-4px) scale(1.01);
+    0 12px 32px rgba(0, 0, 0, 0.12),
+    0 6px 16px rgba(22, 93, 255, 0.2),
+    0 0 0 1px rgba(22, 93, 255, 0.1);
+  transform: translateY(-6px) scale(1.02);
 }
 
 .doc-card:hover::before {
@@ -2057,9 +2689,9 @@ onUnmounted(() => {
 }
 
 .doc-icon {
-  width: 52px;
-  height: 52px;
-  border-radius: 12px;
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
   background: linear-gradient(135deg, var(--theme-accent, #165dff) 0%, #4c7fff 100%);
   display: flex;
   align-items: center;
@@ -2069,16 +2701,33 @@ onUnmounted(() => {
   box-shadow: 
     0 4px 12px rgba(22, 93, 255, 0.25),
     0 2px 4px rgba(22, 93, 255, 0.15);
-  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   transform: translateZ(0);
   will-change: transform;
+  position: relative;
+  overflow: hidden;
+}
+
+.doc-icon::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.3) 0%, 
+    rgba(255, 255, 255, 0) 100%);
+  opacity: 0;
+  transition: opacity 0.3s;
 }
 
 .doc-card:hover .doc-icon {
-  transform: scale(1.05) rotate(2deg);
+  transform: scale(1.08) rotate(3deg);
   box-shadow: 
-    0 6px 16px rgba(22, 93, 255, 0.35),
-    0 3px 6px rgba(22, 93, 255, 0.2);
+    0 8px 20px rgba(22, 93, 255, 0.4),
+    0 4px 8px rgba(22, 93, 255, 0.25);
+}
+
+.doc-card:hover .doc-icon::before {
+  opacity: 1;
 }
 
 .doc-actions {
@@ -2093,26 +2742,34 @@ onUnmounted(() => {
 }
 
 .doc-action-btn {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   border: none;
-  background: transparent;
+  background: rgba(255, 255, 255, 0.8);
   color: #6b7280;
   cursor: pointer;
-  border-radius: 4px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .doc-action-btn:hover {
-  background: #f3f4f6;
+  background: rgba(255, 255, 255, 1);
   color: #111827;
+  transform: translateY(-2px) scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.doc-action-btn:active {
+  transform: translateY(0) scale(1.05);
 }
 
 .doc-action-btn.active {
   color: #f59e0b;
+  background: rgba(245, 158, 11, 0.1);
 }
 
 .doc-card-body {
@@ -2292,9 +2949,11 @@ onUnmounted(() => {
 }
 
 .doc-row:hover {
-  background: rgba(255, 255, 255, 0.9);
-  transform: translateX(2px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  background: rgba(255, 255, 255, 0.95);
+  transform: translateX(4px);
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.08),
+    0 2px 4px rgba(22, 93, 255, 0.1);
 }
 
 .doc-row:hover::before {
@@ -2339,10 +2998,10 @@ onUnmounted(() => {
 }
 
 .doc-row:hover .doc-icon-small {
-  transform: scale(1.1);
+  transform: scale(1.15) rotate(2deg);
   box-shadow: 
-    0 4px 12px rgba(22, 93, 255, 0.3),
-    0 2px 4px rgba(22, 93, 255, 0.15);
+    0 6px 16px rgba(22, 93, 255, 0.35),
+    0 3px 6px rgba(22, 93, 255, 0.2);
 }
 
 .doc-name {
@@ -2387,22 +3046,29 @@ onUnmounted(() => {
 }
 
 .action-btn {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border: none;
-  background: transparent;
+  background: rgba(255, 255, 255, 0.8);
   color: #6b7280;
   cursor: pointer;
-  border-radius: 4px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .action-btn:hover {
-  background: #f3f4f6;
+  background: rgba(255, 255, 255, 1);
   color: #111827;
+  transform: translateY(-2px) scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.action-btn:active {
+  transform: translateY(0) scale(1.05);
 }
 
 /* 对话框样式已移至 common.css */
