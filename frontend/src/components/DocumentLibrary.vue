@@ -1,26 +1,246 @@
+.selected-folder-banner {
+  position: relative;
+  margin-bottom: 18px;
+  padding: 22px 26px;
+  border-radius: 24px;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  background: rgba(248, 250, 252, 0.9);
+  box-shadow: 0 18px 38px rgba(15, 23, 42, 0.12);
+  backdrop-filter: blur(20px);
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(200px, 0.6fr) auto;
+  gap: 24px;
+  align-items: center;
+}
+
+.folder-banner-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.folder-banner-icon {
+  width: 70px;
+  height: 70px;
+  border-radius: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  box-shadow:
+    0 14px 30px rgba(99, 102, 241, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.folder-banner-text {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.banner-chip-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.banner-chip {
+  font-size: 12px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-weight: 600;
+  background: rgba(15, 23, 42, 0.08);
+  color: #1f2937;
+}
+
+.banner-chip.accent {
+  background: rgba(14, 165, 233, 0.2);
+  color: #0ea5e9;
+}
+
+.folder-banner-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.folder-banner-title h3 {
+  margin: 0;
+  font-size: 20px;
+  color: #0f172a;
+}
+
+.folder-status-dot {
+  font-size: 12px;
+  color: #16a34a;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.folder-status-dot::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4ade80, #16a34a);
+  box-shadow: 0 0 8px rgba(74, 222, 128, 0.6);
+}
+
+.folder-banner-desc {
+  margin: 0;
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.5;
+}
+
+.folder-banner-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.folder-banner-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.folder-banner-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.banner-stat {
+  padding: 12px 14px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: center;
+}
+
+.banner-stat .stat-label {
+  font-size: 11px;
+  color: #94a3b8;
+  letter-spacing: 0.6px;
+}
+
+.banner-stat .stat-value {
+  font-size: 18px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.folder-banner-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.banner-btn {
+  border: none;
+  border-radius: 999px;
+  padding: 10px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform var(--motion-duration-fast) var(--motion-ease-soft);
+}
+
+.banner-btn.primary {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  color: #fff;
+  box-shadow: 0 12px 28px rgba(99, 102, 241, 0.35);
+}
+
+.banner-btn.ghost {
+  border: 1px solid rgba(71, 85, 105, 0.3);
+  background: transparent;
+  color: #1d4ed8;
+}
+
+.banner-btn:hover {
+  transform: translateY(-2px);
+}
+
+@media (max-width: 1200px) {
+  .selected-folder-banner {
+    grid-template-columns: 1fr;
+  }
+  .folder-banner-stats {
+    width: 100%;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  }
+  .folder-banner-actions {
+    align-items: flex-start;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+}
+
 <template>
-  <div class="document-library-page">
-    <!-- 主内容区（作为主侧边栏的子视图） -->
-    <div class="dl-main-wrapper">
-      <div class="dl-main">
+  <div class="document-library-page" :class="pageStateClasses">
+    <!-- 文档库首页 -->
+    <DocumentLibraryHome 
+      v-if="!currentSpace"
+        :page-phase="pageTransitionPhase"
+        :recent-space-id="lastVisitedSpaceId"
+        :home-return-tick="homeReturnTick"
+      @enter-space="handleEnterSpace"
+      @create-document="handleCreateFromHome"
+      @view-document="openDocument"
+    />
+    
+    <!-- 空间页面 -->
+    <div v-else class="dl-main-wrapper">
+      <div class="dl-main" :style="collapseStyleVars">
       <!-- Hero/Header 区域 -->
       <div class="dl-hero-section">
         <div class="dl-hero-content">
           <div class="dl-hero-left">
             <!-- 个人空间选择器 -->
+            <!-- 回首页按钮 -->
+            <button class="back-to-home-btn" @click="goToHome" title="返回首页">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="currentColor" stroke-width="2"
+                        fill="none"/>
+                <polyline points="9 22 9 12 15 12 15 22" stroke="currentColor" stroke-width="2" fill="none"/>
+              </svg>
+              <span>首页</span>
+            </button>
             <div class="space-selector-modern" @click.stop="toggleSpaceDropdown">
-              <div class="space-selector-icon-modern">
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <div class="space-selector-icon-modern" v-if="currentSpace && currentSpace.color"
+                     :style="{ background: currentSpace.color }">
+                  <span v-if="currentSpace.icon" class="space-icon-text">{{ currentSpace.icon }}</span>
+                  <svg v-else width="24" height="24" viewBox="0 0 20 20" fill="none">
                   <circle cx="10" cy="7" r="3.5" fill="currentColor" opacity="0.9"/>
-                  <path d="M5 18c0-3 2.5-6 5-6s5 3 5 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+                    <path d="M5 18c0-3 2.5-6 5-6s5 3 5 6" stroke="currentColor" stroke-width="1.8"
+                          stroke-linecap="round" fill="none"/>
+                  </svg>
+                </div>
+                <div class="space-selector-icon-modern" v-else>
+                  <svg width="24" height="24" viewBox="0 0 20 20" fill="none">
+                    <circle cx="10" cy="7" r="3.5" fill="currentColor" opacity="0.9"/>
+                    <path d="M5 18c0-3 2.5-6 5-6s5 3 5 6" stroke="currentColor" stroke-width="1.8"
+                          stroke-linecap="round" fill="none"/>
                 </svg>
               </div>
               <div class="space-selector-content-modern">
-                <div class="space-selector-name-modern">个人空间</div>
-                <div class="space-selector-count-modern">{{ currentSpaceDocumentCount }}个文档</div>
+                  <div class="space-selector-name-modern">{{ currentSpace?.name || '个人空间' }}</div>
               </div>
-              <svg class="space-selector-arrow-modern" :class="{ expanded: showSpaceDropdown }" width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <path d="M3.5 5.25l3.5 3.5 3.5-3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <svg class="space-selector-arrow-modern" :class="{ expanded: showSpaceDropdown }" width="16" height="16"
+                     viewBox="0 0 14 14" fill="none">
+                  <path d="M3.5 5.25l3.5 3.5 3.5-3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                        stroke-linejoin="round"/>
               </svg>
               <!-- 空间切换下拉菜单 -->
               <transition name="space-dropdown">
@@ -31,13 +251,14 @@
                     @click="selectSpace({ id: 'all', name: '全部' }, $event)"
                   >
                     <span class="space-switcher-item-text">全部</span>
-                    <span class="space-switcher-item-count">{{ allDocuments.filter(doc => !doc.deleted).length }}</span>
+                      <span class="space-switcher-item-count">{{ currentSpaceDocumentCount }}</span>
                   </div>
                   <div 
-                    v-for="space in spaces" 
+                        v-for="(space, index) in spaces"
                     :key="space.id"
                     class="space-switcher-item-modern"
                     :class="{ active: currentSpace?.id === space.id }"
+                        :style="{ '--index': index }"
                     @click="selectSpace(space, $event)"
                   >
                     <div class="space-switcher-item-icon" :style="{ background: space.color }">{{ space.icon }}</div>
@@ -50,13 +271,29 @@
             
             <!-- 标题和统计 -->
             <div class="dl-hero-title-section">
+                <div class="title-row">
               <h1 class="dl-hero-title">{{ currentViewTitle }}</h1>
-              <div class="dl-hero-stats" v-if="!loading && sortedAndFilteredDocuments.length > 0">
+                </div>
+                <div class="dl-hero-stats" v-if="!loading && filteredDocumentsCount > 0">
                 <span class="hero-stat-item">
-                  {{ sortedAndFilteredDocuments.length }}个文档
+                  {{ filteredDocumentsCount }}个文档
                 </span>
                 <span class="hero-stat-divider">·</span>
                 <span class="hero-stat-hint">可按标签筛选</span>
+              </div>
+                <!-- 活力提示文字 -->
+                <div class="hero-vibrant-tips" v-if="vibrantTips.length > 0">
+                  <div class="tips-container">
+                  <span
+                      v-for="(tip, index) in vibrantTips"
+                      :key="`${tip.id}-${tip.text}`"
+                      class="vibrant-tip"
+                      :style="{ animationDelay: `${index * 0.1}s` }"
+                  >
+                    <span class="tip-emoji">{{ tip.emoji }}</span>
+                    <span class="tip-text">{{ tip.text }}</span>
+                  </span>
+                  </div>
               </div>
             </div>
           </div>
@@ -64,7 +301,7 @@
           <div class="dl-hero-right">
             <!-- 主角式搜索框 -->
             <div class="dl-hero-search">
-              <SearchBox v-model="searchQuery" placeholder="搜索文档、标签或内容..." />
+                <SearchBox v-model="searchQuery" placeholder="搜索文档、标签或内容..."/>
             </div>
             
             <!-- 新建按钮 -->
@@ -137,15 +374,55 @@
           <!-- 右侧：排序和视图切换 -->
           <div class="toolbar-group toolbar-group-actions">
             <div class="sort-wrapper-modern">
-              <select v-model="sortBy" class="sort-select-modern" @change="handleSort">
-                <option value="time">按时间</option>
-                <option value="name">按名称</option>
-                <option value="size">按大小</option>
-              </select>
+                <button class="sort-select-trigger" :class="{ open: showSortMenu }" @click="toggleSortMenu">
+                  <span>{{ currentSortLabel }}</span>
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <path d="M3.5 5.25L7 8.5l3.5-3.25" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                          stroke-linejoin="round"/>
+                  </svg>
+                </button>
+                <transition name="sort-dropdown">
+                  <div v-if="showSortMenu" class="sort-dropdown-menu">
+                    <button
+                        v-for="option in sortOptions"
+                        :key="option.value"
+                        class="sort-dropdown-item"
+                        :class="{ active: sortBy === option.value }"
+                        @click="selectSortOption(option.value)"
+                    >
+                      <span>{{ option.label }}</span>
+                      <span class="sort-item-hint" v-if="sortBy === option.value">当前</span>
+                    </button>
             </div>
-            <ViewToggle v-model="viewMode" />
+                </transition>
           </div>
+              <ViewToggle v-model="viewMode"/>
         </div>
+          </div>
+          <transition name="bulk-bar">
+            <div v-if="hasSelection" class="bulk-selection-bar">
+              <div class="bulk-selection-info">
+                已选择 {{ selectedDocs.length }} 个文档
+              </div>
+              <div class="bulk-selection-actions">
+                <button class="bulk-action-btn" @click="handleBulkFavorite">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <path d="M7 2l1.5 3 3.5.5-2.5 2.5.5 3.5L7 10.5 4 11.5l.5-3.5L2 5.5l3.5-.5L7 2z"
+                          stroke="currentColor" stroke-width="1.2" fill="none"/>
+                  </svg>
+                  收藏
+                </button>
+                <button class="bulk-action-btn danger" @click="handleBulkDelete">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <path d="M3 4h8M5 4V3h4v1m-.5 0v7a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1V4" stroke="currentColor" stroke-width="1.2"
+                          stroke-linecap="round"/>
+                  </svg>
+                  删除
+                </button>
+                <button class="bulk-action-btn ghost" @click="clearSelection">取消</button>
+              </div>
+            </div>
+          </transition>
       </div>
 
       <!-- 内容区域（包含目录树和文档列表） -->
@@ -159,7 +436,7 @@
         />
 
         <!-- 文档列表 -->
-        <div class="dl-content">
+          <div class="dl-content" :class="contentAnimationClass" ref="contentRef">
         <!-- 调试信息（开发时可见） -->
         <!-- <div style="padding: 10px; background: #f0f0f0; margin-bottom: 10px; font-size: 12px;">
           加载中: {{ loading }} | 
@@ -169,12 +446,105 @@
           视图模式: {{ viewMode }}
         </div> -->
         
-        <!-- 加载状态 -->
-        <LoadingState v-if="loading" />
+            <!-- 当前文件夹信息 -->
+            <div
+              v-if="selectedFolderInfo && !loading"
+              class="selected-folder-banner"
+            >
+              <div class="folder-banner-left">
+                <div
+                  class="folder-banner-icon"
+                  :style="{ background: currentSpace?.color || '#8b5cf6' }"
+                >
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <path
+                      d="M3.5 7.5c0-.552.448-1 1-1H10l1.5 2H19c.552 0 1 .448 1 1V17c0 .552-.448 1-1 1H4.5c-.552 0-1-.448-1-1V7.5Z"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linejoin="round"
+                    />
+                    <path
+                      d="M3.5 9.5h16"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                    />
+                  </svg>
+                </div>
+                <div class="folder-banner-text">
+                  <div class="banner-chip-row">
+                    <span class="banner-chip">文件夹</span>
+                    <span
+                      class="banner-chip accent"
+                      v-if="selectedFolderInfo.shareLink"
+                    >已共享</span>
+                  </div>
+                  <div class="folder-banner-title">
+                    <h3>{{ selectedFolderInfo.name }}</h3>
+                    <span class="folder-status-dot">活跃</span>
+                  </div>
+                  <p class="folder-banner-desc">
+                    {{ selectedFolderInfo.description || '暂无文件夹描述' }}
+                  </p>
+                  <div class="folder-banner-meta">
+                    <span>{{ folderDocumentCount }} 个文档</span>
+                    <span>创建于 {{ formatDate(selectedFolderInfo.createdAt) }}</span>
+                    <span>更新于 {{ formatDate(selectedFolderInfo.updatedAt || selectedFolderInfo.createdAt) }}</span>
+                    <span v-if="selectedFolderInfo.owner?.name">由 {{ selectedFolderInfo.owner.name }} 管理</span>
+                  </div>
+                  <div class="folder-banner-tags" v-if="selectedFolderTags.length">
+                    <span
+                      v-for="tag in selectedFolderTags"
+                      :key="tag"
+                      class="folder-tag"
+                    >
+                      #{{ tag }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div class="folder-banner-stats">
+                <div class="banner-stat">
+                  <span class="stat-label">文档数</span>
+                  <span class="stat-value">{{ folderDocumentCount }}</span>
+                </div>
+                <div class="banner-stat">
+                  <span class="stat-label">负责人</span>
+                  <span class="stat-value">
+                    {{ selectedFolderInfo.owner?.name || '未指定' }}
+                  </span>
+                </div>
+                <div class="banner-stat">
+                  <span class="stat-label">大小</span>
+                  <span class="stat-value">
+                    {{ selectedFolderInfo.size ? formatSize(selectedFolderInfo.size) : '—' }}
+                  </span>
+                </div>
+              </div>
+              <div class="folder-banner-actions">
+                <button
+                  class="banner-btn primary"
+                  @click="handleFolderCardClick(selectedFolderInfo)"
+                >
+                  查看该文件夹
+                </button>
+                <button class="banner-btn ghost" @click="clearFolderSelection">
+                  清除筛选
+                </button>
+              </div>
+            </div>
+
+            <div v-if="loading" class="dl-skeleton">
+              <div class="skeleton-hero shimmer"></div>
+              <div class="skeleton-toolbar shimmer"></div>
+              <div class="skeleton-grid">
+                <div v-for="n in 8" :key="n" class="skeleton-card shimmer"></div>
+              </div>
+            </div>
 
         <!-- 空状态 -->
         <EmptyState 
-          v-else-if="sortedAndFilteredDocuments.length === 0"
+                v-else-if="filteredDocumentsCount === 0"
           title="暂无文档"
           description="创建第一个文档开始使用"
           :show-button="true"
@@ -183,22 +553,60 @@
         />
 
         <!-- 网格视图 -->
-        <div v-else-if="viewMode === 'grid'" class="dl-grid-view">
+            <div v-else-if="viewMode === 'grid'" class="dl-grid-view" :key="'grid-' + contentAnimationKey">
+              <div class="grid-container">
           <div 
-            v-for="doc in sortedAndFilteredDocuments" 
+                    v-for="(doc, index) in paginatedDocuments"
             :key="doc.id"
+                    v-memo="[doc.id, doc.name, doc.favorite, doc.updatedAt, doc.isFolder]"
             class="doc-card"
-            @click="openDocument(doc)"
+                    :class="{ selected: isDocSelected(doc.id), 'is-folder': doc.isFolder }"
+                    :style="{ '--card-index': index }"
+            @click="doc.isFolder ? handleFolderCardClick(doc) : openDocument(doc)"
             @contextmenu.prevent="showContextMenu($event, doc)"
           >
+                  <button
+                      class="card-select-toggle"
+                      :class="{ active: isDocSelected(doc.id), visible: hasSelection || isDocSelected(doc.id) }"
+                      @click.stop="toggleSelect(doc)"
+                  >
+                    <span class="card-select-ring"></span>
+                    <svg v-if="isDocSelected(doc.id)" width="12" height="12" viewBox="0 0 12 12" fill="none">
+                      <path d="M3 6l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                  </button>
             <div class="doc-card-header">
-              <div class="doc-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <div class="doc-icon" :class="{ 'is-folder': doc.isFolder }">
+                <svg v-if="doc.isFolder" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                  <path d="M3.5 7.5c0-.552.448-1 1-1H10l1.5 2H19c.552 0 1 .448 1 1V17c0 .552-.448 1-1 1H4.5c-.552 0-1-.448-1-1V7.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+                  <path d="M3.5 9.5h16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+                <svg v-else width="24" height="24" viewBox="0 0 24 24" fill="none">
                   <rect x="4" y="4" width="16" height="16" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/>
                   <path d="M8 8h8M8 12h8M8 16h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
                 </svg>
               </div>
-              <div class="doc-actions">
+              <div class="doc-actions" :class="{ 'folder-actions': doc.isFolder }">
+                <template v-if="doc.isFolder">
+                  <button class="folder-enter-btn" @click.stop="handleFolderCardClick(doc)">
+                    查看文件夹
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                      <path d="M3 6h6M6 3l3 3-3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </button>
+                  <button 
+                    class="doc-action-btn"
+                    @click.stop="showDocMenu($event, doc)"
+                    title="更多"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                      <circle cx="7" cy="3.5" r="1.5" fill="currentColor"/>
+                      <circle cx="7" cy="7" r="1.5" fill="currentColor"/>
+                      <circle cx="7" cy="10.5" r="1.5" fill="currentColor"/>
+                    </svg>
+                  </button>
+                </template>
+                <template v-else>
                 <button 
                   class="doc-action-btn"
                   :class="{ active: doc.favorite }"
@@ -223,25 +631,40 @@
                     <circle cx="7" cy="10.5" r="1.5" fill="currentColor"/>
                   </svg>
                 </button>
+                </template>
               </div>
             </div>
-            <div class="doc-card-body">
+            <div class="doc-card-body" :class="{ 'folder-card-body': doc.isFolder }">
+              <template v-if="doc.isFolder">
+                <div class="folder-card-top">
+                  <span class="folder-chip-badge">文件夹</span>
+                  <span class="folder-card-count">{{ folderChildCountMap[doc.id] || 0 }} 个文档</span>
+                </div>
+                <h3 class="doc-title">{{ doc.name || '未命名文件夹' }}</h3>
+                <p class="doc-desc">{{ doc.description || '暂无文件夹描述' }}</p>
+                <div class="folder-card-meta">
+                  <span>更新于 {{ formatDate(doc.updatedAt || doc.createdAt) }}</span>
+                  <span v-if="doc.owner?.name">由 {{ doc.owner.name }} 管理</span>
+                </div>
+              </template>
+              <template v-else>
               <h3 class="doc-title">{{ doc.name || '未命名文档' }}</h3>
               <p class="doc-desc" v-if="doc.description">{{ doc.description }}</p>
               
               <!-- 协作者和分享信息 -->
-              <div class="doc-collaborators" v-if="doc.collaborators?.length > 0 || doc.shareLink">
-                <div class="doc-collaborators-list" v-if="doc.collaborators?.length > 0">
-                  <div 
-                    v-for="(collab, idx) in doc.collaborators.slice(0, 3)" 
-                    :key="collab.user.id"
+                      <div class="doc-collaborators"
+                           v-if="(doc.collaborators && doc.collaborators.length > 0) || doc.shareLink">
+                        <div class="doc-collaborators-list" v-if="doc.collaborators && doc.collaborators.length > 0">
+                          <template v-for="(collab, idx) in (doc.collaborators || []).slice(0, 3)" :key="collab.user.id">
+                            <div
                     class="doc-collaborator-avatar"
                     :title="collab.user.name"
                     :style="{ zIndex: 10 - idx, marginLeft: idx > 0 ? '-8px' : '0' }"
                   >
                     {{ collab.user.avatar }}
                   </div>
-                  <span v-if="doc.collaborators.length > 3" class="doc-collaborator-more">
+                          </template>
+                          <span v-if="doc.collaborators && doc.collaborators.length > 3" class="doc-collaborator-more">
                     +{{ doc.collaborators.length - 3 }}
                   </span>
                 </div>
@@ -266,19 +689,40 @@
                   {{ doc.likeCount }}
                 </span>
               </div>
+              </template>
+            </div>
+            <div class="doc-card-footer" :class="{ 'folder-card-footer': doc.isFolder }">
+              <template v-if="doc.isFolder">
+                <button class="folder-link" @click.stop="handleFolderCardClick(doc)">
+                  进入文件夹
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                    <path d="M4 3l4 3-4 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>
+              </template>
+              <template v-else>
+                <div class="doc-meta">
+                  <span>{{ formatDate(doc.updatedAt || doc.createdAt) }}</span>
+                  <span v-if="doc.size">{{ formatSize(doc.size) }}</span>
+                </div>
+                <div class="doc-tags" v-if="doc.tags && doc.tags.length">
+                  <span v-for="tag in doc.tags" :key="tag">{{ tag }}</span>
+                </div>
+              </template>
+            </div>
             </div>
           </div>
         </div>
 
         <!-- 列表视图 -->
-        <div v-else class="dl-list-view">
+            <div v-else class="dl-list-view" :key="'list-' + contentAnimationKey">
           <table class="doc-table">
             <thead>
               <tr>
                 <th class="col-check">
                   <input 
                     type="checkbox" 
-                    :checked="selectedDocs.length === sortedAndFilteredDocuments.length && sortedAndFilteredDocuments.length > 0"
+                        :checked="selectedDocs.length === filteredDocumentsCount && filteredDocumentsCount > 0"
                     @change="toggleSelectAll"
                   />
                 </th>
@@ -291,27 +735,35 @@
             </thead>
             <tbody>
               <tr 
-                v-for="doc in sortedAndFilteredDocuments" 
+                    v-for="(doc, index) in paginatedDocuments"
                 :key="doc.id"
+                    v-memo="[doc.id, doc.name, doc.favorite, doc.updatedAt, isDocSelected(doc.id)]"
                 class="doc-row"
-                :class="{ selected: selectedDocs.includes(doc.id) }"
+                    :class="{ selected: isDocSelected(doc.id), 'is-folder': doc.isFolder }"
+                    :style="{ '--card-index': index }"
                 @click="toggleSelect(doc)"
-                @dblclick="openDocument(doc)"
+                @dblclick="doc.isFolder ? handleFolderCardClick(doc) : openDocument(doc)"
                 @contextmenu.prevent="showContextMenu($event, doc)"
               >
                 <td class="col-check">
                   <input 
                     type="checkbox" 
-                    :checked="selectedDocs.includes(doc.id)"
+                        :checked="isDocSelected(doc.id)"
                     @change.stop="toggleSelect(doc)"
                   />
                 </td>
                 <td class="col-name">
                   <div class="doc-name-cell">
                     <div class="doc-icon-small">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                        <rect x="4" y="4" width="16" height="16" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/>
-                        <path d="M8 8h8M8 12h8M8 16h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                      <svg v-if="doc.isFolder" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                        <path d="M3.5 7.5c0-.552.448-1 1-1H10l1.5 2H19c.552 0 1 .448 1 1V17c0 .552-.448 1-1 1H4.5c-.552 0-1-.448-1-1V7.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+                        <path d="M3.5 9.5h16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                      </svg>
+                      <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none">
+                          <rect x="4" y="4" width="16" height="16" rx="2" stroke="currentColor" stroke-width="1.5"
+                                fill="none"/>
+                          <path d="M8 8h8M8 12h8M8 16h4" stroke="currentColor" stroke-width="1.5"
+                                stroke-linecap="round"/>
                       </svg>
                     </div>
                     <span class="doc-name">{{ doc.name || '未命名文档' }}</span>
@@ -351,8 +803,53 @@
             </tbody>
           </table>
         </div>
+
+            <!-- 分页控件 -->
+            <div v-if="totalPages > 1" class="pagination-wrapper">
+              <button
+                  class="pagination-btn"
+                  :disabled="currentPage === 1"
+                  @click="currentPage = Math.max(1, currentPage - 1)"
+              >
+                上一页
+              </button>
+              <span class="pagination-info">
+            第 {{ currentPage }} / {{ totalPages }} 页（共 {{ filteredDocumentsCount }} 条）
+          </span>
+              <button
+                  class="pagination-btn"
+                  :disabled="currentPage >= totalPages"
+                  @click="currentPage = Math.min(totalPages, currentPage + 1)"
+              >
+                下一页
+              </button>
         </div>
       </div>
+        </div>
+      </div>
+      <div v-if="floatingMenuVisible" class="floating-tool-stack">
+        <button class="floating-tool-btn primary" @click="showCreateDialog = true">
+          <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
+            <path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+          </svg>
+          新建
+        </button>
+        <button class="floating-tool-btn" @click="handleFloatingFeedback">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M8 2a5 5 0 0 0-5 5c0 1.8.9 3.4 2.4 4.3v2.7l2.3-1.4c.1 0 .2.1.3.1a5 5 0 0 0 0-10Z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          反馈
+        </button>
+        <button
+            class="back-to-top-btn"
+            :class="{ visible: showBackToTop, pulse: backToTopPulse }"
+            @click="scrollToTop"
+            aria-label="回到顶部"
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M8 3l4 4M8 3 4 7M8 3v10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </button>
       </div>
     </div>
 
@@ -541,19 +1038,19 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
+import {computed, nextTick, onMounted, onUnmounted, ref, shallowRef, watch} from 'vue'
 import SearchBox from './SearchBox.vue'
 import ViewToggle from './ViewToggle.vue'
-import LoadingState from './LoadingState.vue'
 import EmptyState from './EmptyState.vue'
 import MessageToast from './MessageToast.vue'
 import ErrorDialog from './ErrorDialog.vue'
 import ShareDialog from './ShareDialog.vue'
 import DocumentTree from './DocumentTree.vue'
 import DocumentEditorPage from './DocumentEditorPage.vue'
-import { formatDate, formatSizeBytes } from '../utils/format.js'
-import { useSession } from '../composables/useSession.js'
-import { generateDocuments, generateSpaces, generateTasks, generateCalendarEvents } from '../utils/mockData.js'
+import DocumentLibraryHome from './DocumentLibraryHome.vue'
+import {formatDate, formatSizeBytes} from '../utils/format.js'
+import {useSession} from '../composables/useSession.js'
+import {generateCalendarEvents, generateDocuments, generateSpaces, generateTasks} from '../utils/mockData.js'
 
 // Props: 接收外部传入的空间ID或视图类型
 const props = defineProps({
@@ -572,13 +1069,20 @@ const session = useSession()
 
 // 响应式数据
 const currentView = ref('home') // home, recent, favorites, liked, shared, knowledge, tasks, calendar, trash
-const currentSpace = ref(null)
+const currentSpace = ref(null) // null 表示显示首页，有值时显示空间页面
+const pageTransitionPhase = ref('home') // home, space-enter, space-active, space-leave
+const lastVisitedSpaceId = ref(null)
+const homeReturnTick = ref(0)
+let pagePhaseTimer = null
+let pendingSpace = null
+const PAGE_PHASE_DURATION = 360
 const spaceSubView = ref('all') // all, recent, favorites, liked, shared (空间子视图)
 const spaces = ref([])
 const showSpaces = ref(false)
 const showSpaceDropdown = ref(false)
 const documents = ref([])
-const allDocuments = ref([]) // 所有文档（包括假数据）
+// 使用 shallowRef 减少深度响应式追踪，提高大数据量时的性能
+const allDocuments = shallowRef([]) // 所有文档（包括假数据）
 const tasks = ref([])
 const calendarEvents = ref([])
 const loading = ref(false)
@@ -586,8 +1090,200 @@ const searchQuery = ref('')
 const sortBy = ref('time') // time, name, size
 const viewMode = ref('grid') // grid, list
 const selectedDocs = ref([])
+// 使用 Set 缓存选中状态，避免频繁的 includes 调用导致重新渲染
+const selectedDocsSet = computed(() => new Set(selectedDocs.value))
 const selectedTreeId = ref(null)
 const selectedFolderId = ref(null)
+const contentAnimationKey = ref(0)
+const contentAnimationReason = ref('initial')
+const showSortMenu = ref(false)
+const contentRef = ref(null)
+const headerCollapseProgress = ref(0)
+const showBackToTop = ref(false)
+const backToTopPulse = ref(false)
+const floatingMenuVisible = computed(() => !!currentSpace.value)
+let scrollRaf = null
+let collapseRafId = null
+let collapseTarget = 0
+const selectedFolderInfo = computed(() => {
+  if (!selectedFolderId.value) return null
+  return allDocuments.value.find(doc => doc.isFolder && doc.id === selectedFolderId.value) || null
+})
+
+const folderDocumentCount = computed(() => {
+  if (!selectedFolderId.value) return 0
+  return allDocuments.value.filter(doc =>
+    !doc.deleted &&
+    !doc.isFolder &&
+    doc.parentId === selectedFolderId.value
+  ).length
+})
+
+const selectedFolderTags = computed(() => {
+  if (!selectedFolderInfo.value) return []
+  const tags = selectedFolderInfo.value.tags
+  return Array.isArray(tags) ? tags.filter(Boolean) : []
+})
+
+const folderChildCountMap = computed(() => {
+  const map = Object.create(null)
+  allDocuments.value.forEach(doc => {
+    if (!doc.deleted && !doc.isFolder && doc.parentId) {
+      map[doc.parentId] = (map[doc.parentId] || 0) + 1
+    }
+  })
+  return map
+})
+const sortOptions = [
+  {value: 'time', label: '按时间'},
+  {value: 'name', label: '按名称'},
+  {value: 'size', label: '按大小'}
+]
+
+const pageStateClasses = computed(() => ({
+  'state-home': pageTransitionPhase.value === 'home',
+  'state-entering-space': pageTransitionPhase.value === 'space-enter',
+  'state-space-active': pageTransitionPhase.value === 'space-active',
+  'state-leaving-space': pageTransitionPhase.value === 'space-leave'
+}))
+
+const contentAnimationClass = computed(() => `refresh-${contentAnimationReason.value}`)
+const hasSelection = computed(() => selectedDocs.value.length > 0)
+const currentSortLabel = computed(() => {
+  const match = sortOptions.find(opt => opt.value === sortBy.value)
+  return match ? match.label : '按时间'
+})
+
+const collapseStyleVars = computed(() => ({
+  '--collapse-progress': headerCollapseProgress.value
+}))
+
+const triggerContentAnimation = (reason = 'default') => {
+  contentAnimationReason.value = reason
+  contentAnimationKey.value = Date.now()
+}
+
+const toggleSortMenu = () => {
+  showSortMenu.value = !showSortMenu.value
+}
+
+const selectSortOption = (value) => {
+  if (sortBy.value !== value) {
+    sortBy.value = value
+    triggerContentAnimation('sort')
+  }
+  showSortMenu.value = false
+}
+
+const clearSelection = () => {
+  selectedDocs.value = []
+}
+
+const handleBulkFavorite = () => {
+  selectedDocs.value.forEach((id) => {
+    const doc = allDocuments.value.find(d => d.id === id)
+    if (doc) {
+      doc.favorite = true
+    }
+  })
+  triggerContentAnimation('bulk')
+}
+
+const handleBulkDelete = () => {
+  selectedDocs.value.forEach((id) => {
+    const doc = allDocuments.value.find(d => d.id === id)
+    if (doc) {
+      doc.deleted = true
+    }
+  })
+  selectedDocs.value = []
+  triggerContentAnimation('bulk')
+}
+
+const clearFolderSelection = () => {
+  selectedFolderId.value = null
+}
+
+const animateCollapse = () => {
+  const current = headerCollapseProgress.value
+  const diff = collapseTarget - current
+  if (Math.abs(diff) < 0.003) {
+    headerCollapseProgress.value = collapseTarget
+    collapseRafId = null
+    return
+  }
+  headerCollapseProgress.value = current + diff * 0.25
+  collapseRafId = requestAnimationFrame(animateCollapse)
+}
+
+const setCollapseTarget = (value) => {
+  collapseTarget = value
+  if (!collapseRafId) {
+    collapseRafId = requestAnimationFrame(animateCollapse)
+  }
+}
+
+const updateScrollState = () => {
+  if (!contentRef.value) {
+    return
+  }
+  const top = contentRef.value.scrollTop
+  const progress = Math.min(top / 80, 1)
+  setCollapseTarget(progress)
+  showBackToTop.value = top > 400
+}
+
+const handleContentScroll = () => {
+  if (scrollRaf) {
+    cancelAnimationFrame(scrollRaf)
+  }
+  scrollRaf = requestAnimationFrame(() => {
+    updateScrollState()
+    scrollRaf = null
+  })
+}
+
+const attachScrollListener = () => {
+  if (!contentRef.value) {
+    return
+  }
+  contentRef.value.addEventListener('scroll', handleContentScroll, {passive: true})
+  updateScrollState()
+}
+
+const detachScrollListener = () => {
+  if (contentRef.value) {
+    contentRef.value.removeEventListener('scroll', handleContentScroll)
+  }
+  if (scrollRaf) {
+    cancelAnimationFrame(scrollRaf)
+    scrollRaf = null
+  }
+  if (collapseRafId) {
+    cancelAnimationFrame(collapseRafId)
+    collapseRafId = null
+  }
+}
+
+const scrollToTop = () => {
+  if (!contentRef.value) {
+    return
+  }
+  backToTopPulse.value = true
+  contentRef.value.scrollTo({top: 0, behavior: 'smooth'})
+  setTimeout(() => {
+    backToTopPulse.value = false
+  }, 400)
+}
+
+const handleFloatingFeedback = () => {
+  showMessage('已收到你的反馈，感谢支持 ✨', 'info')
+}
+
+// 分页相关
+const currentPage = ref(1)
+const pageSize = ref(20) // 每页显示20条
+
 const showCreateDialog = ref(false)
 const showRenameDialog = ref(false)
 const showShareDialog = ref(false)
@@ -611,6 +1307,21 @@ const contextMenu = ref({
 const showToast = ref(false)
 const toastMessage = ref('')
 const toastType = ref('info') // 'info', 'success'
+
+// 活力提示文字
+const vibrantTips = ref([])
+const tipMessages = [
+  {emoji: '🚀', text: '让想法起飞'},
+  {emoji: '✨', text: '灵感正在闪烁'},
+  {emoji: '💡', text: '创意无限'},
+  {emoji: '🎯', text: '专注创作'},
+  {emoji: '🔥', text: '保持热情'},
+  {emoji: '⭐', text: '记录每一个闪光点'},
+  {emoji: '🌈', text: '让知识多彩'},
+  {emoji: '🎨', text: '创作从这里开始'}
+]
+
+// 移除动画缓存，不再使用进入动画
 
 // 错误对话框相关
 const showErrorDialog = ref(false)
@@ -655,34 +1366,28 @@ const currentViewTitle = computed(() => {
   return '文档库'
 })
 
-// 当前空间的文档数量（实时计算）
+// 当前空间的文档数量（数据已经由后端过滤好，直接使用长度）
 const currentSpaceDocumentCount = computed(() => {
-  if (!currentSpace.value || currentSpace.value.id === 'all') {
-    return allDocuments.value.filter(doc => !doc.deleted).length
-  }
-  return allDocuments.value.filter(doc => 
-    doc.spaceId === currentSpace.value.id && !doc.deleted
-  ).length
+  return allDocuments.value.length
 })
 
-// 统计数据
+// 统计数据 - 数据已经由后端提供，直接使用长度（如果后端提供统计信息的话）
+// 如果后端不提供统计，这些计算属性可以返回固定值或从后端获取
 const recentCount = computed(() => {
-  return allDocuments.value.filter(doc => {
-    const daysSinceUpdate = (Date.now() - doc.updatedAt) / (24 * 60 * 60 * 1000)
-    return daysSinceUpdate <= 7
-  }).length
+  // 后端应该提供统计信息，这里暂时返回0或从后端数据获取
+  return 0
 })
 
 const favoriteCount = computed(() => {
-  return allDocuments.value.filter(doc => doc.favorite).length
+  return 0
 })
 
 const likedCount = computed(() => {
-  return allDocuments.value.filter(doc => doc.liked).length
+  return 0
 })
 
 const sharedCount = computed(() => {
-  return allDocuments.value.filter(doc => doc.shareLink || doc.collaborators?.length > 0).length
+  return 0
 })
 
 const taskCount = computed(() => {
@@ -690,7 +1395,7 @@ const taskCount = computed(() => {
 })
 
 const trashCount = computed(() => {
-  return allDocuments.value.filter(doc => doc.deleted).length
+  return 0
 })
 
 // 筛选按钮滑动指示器样式
@@ -705,82 +1410,152 @@ const filterSliderStyle = computed(() => {
   }
 })
 
-// 目录树使用的文档列表（仅按空间过滤，不应用其他过滤）
+// 目录树使用的文档列表（数据已经由后端过滤好，直接使用）
 const treeDocuments = computed(() => {
-  let result = [...allDocuments.value]
-  
-  // 只显示未删除的文档
-  result = result.filter(doc => !doc.deleted)
-  
-  // 如果选择了特定空间，按空间过滤
-  if (currentSpace.value && currentSpace.value.id !== 'all') {
-    result = result.filter(doc => doc.spaceId === currentSpace.value.id)
-  }
-  
-  return result
+  return allDocuments.value
 })
 
+// 移除时间缓存，因为数据已经由后端处理
+
+// 移除缓存机制，因为数据已经由后端处理，不需要复杂缓存
+
+// 数据已经由后端完全处理（过滤、排序、搜索），前端直接使用，不做任何处理
 const sortedAndFilteredDocuments = computed(() => {
-  let result = [...allDocuments.value]
-  
-  // 视图过滤
-  if (currentView.value === 'trash') {
-    result = result.filter(doc => doc.deleted)
-  } else if (currentView.value === 'home') {
-    // 文档库视图
-    result = result.filter(doc => !doc.deleted)
-    
-    // 如果选择了特定空间，按空间过滤
-    if (currentSpace.value && currentSpace.value.id !== 'all') {
-      result = result.filter(doc => doc.spaceId === currentSpace.value.id)
-    }
-    
-    // 应用空间子视图过滤（无论是否选择空间）
-    if (spaceSubView.value === 'recent') {
-      result = result.filter(doc => {
-        const daysSinceUpdate = (Date.now() - doc.updatedAt) / (24 * 60 * 60 * 1000)
-        return daysSinceUpdate <= 7
-      })
-    } else if (spaceSubView.value === 'favorites') {
-      result = result.filter(doc => doc.favorite)
-    } else if (spaceSubView.value === 'liked') {
-      result = result.filter(doc => doc.liked)
-    } else if (spaceSubView.value === 'shared') {
-      result = result.filter(doc => doc.shareLink || doc.collaborators?.length > 0)
-    }
-    // spaceSubView.value === 'all' 时不过滤
-    
-    // 如果选择了文件夹，只显示该文件夹下的文档
-    if (selectedFolderId.value) {
-      result = result.filter(doc => doc.parentId === selectedFolderId.value)
-    }
+  // 直接返回后端提供的数据，不做任何过滤、排序或搜索
+  return allDocuments.value
+})
+
+// 缓存文档数量，避免频繁访问 length 属性
+const filteredDocumentsCount = computed(() => sortedAndFilteredDocuments.value.length)
+
+// 总页数
+const totalPages = computed(() => Math.ceil(filteredDocumentsCount.value / pageSize.value))
+
+// 分页后的文档列表（使用 ref 而不是 computed，减少依赖追踪）
+const paginatedDocuments = ref([])
+
+// 更新分页数据（只在必要时调用）
+// 使用 requestAnimationFrame 延迟更新，减少频繁渲染
+let updateTimer = null
+const updatePaginatedDocuments = () => {
+  if (updateTimer) {
+    cancelAnimationFrame(updateTimer)
   }
-  
-  // 搜索过滤
-  if (searchQuery.value) {
-    const query = searchQuery.value.toLowerCase()
-    result = result.filter(doc => 
-      doc.name?.toLowerCase().includes(query) ||
-      doc.description?.toLowerCase().includes(query) ||
-      doc.owner?.name?.toLowerCase().includes(query)
-    )
+  updateTimer = requestAnimationFrame(() => {
+    const start = (currentPage.value - 1) * pageSize.value
+    const end = start + pageSize.value
+    paginatedDocuments.value = sortedAndFilteredDocuments.value.slice(start, end)
+    updateTimer = null
+  })
+}
+
+// 监听分页相关变化，更新分页数据
+// 使用 flush: 'post' 和 deep: false 减少不必要的更新
+watch([sortedAndFilteredDocuments, currentPage], () => {
+  updatePaginatedDocuments()
+}, { immediate: true, flush: 'post' })
+
+// 更新活力提示（只在切换空间时更新，不受筛选影响）
+let updateTipsTimer = null
+let lastSpaceId = null
+
+const updateVibrantTips = () => {
+  // 清除之前的定时器
+  if (updateTipsTimer) {
+    clearTimeout(updateTipsTimer)
   }
-  
-  // 排序
-  result.sort((a, b) => {
-    if (sortBy.value === 'name') {
-      return (a.name || '').localeCompare(b.name || '')
-    } else if (sortBy.value === 'size') {
-      return (b.size || 0) - (a.size || 0)
+
+  // 使用防抖，避免频繁更新
+  updateTipsTimer = setTimeout(() => {
+    if (!currentSpace.value) {
+      if (vibrantTips.value.length > 0) {
+        vibrantTips.value = []
+      }
+      lastSpaceId = null
+      return
+    }
+
+    const currentSpaceId = currentSpace.value?.id
+
+    // 只在空间真正变化时才更新
+    if (currentSpaceId === lastSpaceId) {
+      return
+    }
+
+    lastSpaceId = currentSpaceId
+
+    // 数据已经由后端过滤好，直接使用长度
+    const spaceDocCount = allDocuments.value.length
+
+    const tips = []
+
+    // 根据空间的文档总数显示不同的提示
+    if (spaceDocCount === 0) {
+      tips.push({id: 1, emoji: '🎉', text: '新空间，新开始！'})
+      tips.push({id: 2, emoji: '✨', text: '创建第一个文档吧'})
+    } else if (spaceDocCount < 5) {
+      tips.push({id: 1, emoji: '🌱', text: '正在成长中'})
+      tips.push({id: 2, emoji: '💪', text: '继续加油'})
+    } else if (spaceDocCount < 20) {
+      tips.push({id: 1, emoji: '🚀', text: '势头不错'})
+      tips.push({id: 2, emoji: '⭐', text: '保持节奏'})
     } else {
-      // 按时间
-      const timeA = a.updatedAt || a.createdAt || 0
-      const timeB = b.updatedAt || b.createdAt || 0
-      return timeB - timeA
+      tips.push({id: 1, emoji: '🔥', text: '知识库满满'})
+      tips.push({id: 2, emoji: '🎯', text: '高效创作中'})
+    }
+
+    // 只在内容真正变化时才更新，避免不必要的重新渲染
+    const currentTips = vibrantTips.value
+    const needsUpdate = currentTips.length !== tips.length ||
+        currentTips.some((tip, index) => tip.id !== tips[index]?.id || tip.text !== tips[index]?.text)
+
+    if (needsUpdate) {
+      // 使用 nextTick 确保在 DOM 更新后设置，减少闪烁
+      nextTick(() => {
+        vibrantTips.value = tips
+      })
+    }
+  }, 300) // 300ms 防抖
+}
+
+// 只监听空间变化，不监听筛选
+watch(
+    () => currentSpace.value?.id,
+    (newSpaceId, oldSpaceId) => {
+      // 只在空间真正变化时才更新
+      if (newSpaceId !== oldSpaceId) {
+        updateVibrantTips()
+        // 切换空间时重置到第一页
+        currentPage.value = 1
+      }
+    },
+    {immediate: false}
+)
+
+// 监听筛选条件变化，重置到第一页
+watch([searchQuery, spaceSubView, sortBy, selectedFolderId], () => {
+  currentPage.value = 1
+})
+
+watch(viewMode, () => {
+  triggerContentAnimation('view')
+})
+
+watch(loading, (isLoading) => {
+  if (!isLoading) {
+    nextTick(() => {
+      updateScrollState()
+    })
+  }
+})
+
+watch(currentSpace, () => {
+  nextTick(() => {
+    detachScrollListener()
+    if (currentSpace.value) {
+      attachScrollListener()
     }
   })
-  
-  return result
 })
 
 // 方法
@@ -862,6 +1637,7 @@ const switchSpaceSubView = (subView) => {
     selectedTreeId.value = null
   }
   // sortedAndFilteredDocuments 会自动更新
+  triggerContentAnimation('filter')
 }
 
 const loadSpaces = async () => {
@@ -869,17 +1645,8 @@ const loadSpaces = async () => {
     // 使用假数据
     spaces.value = generateSpaces()
     
-    // 如果没有当前空间，默认设置为个人空间
-    if (!currentSpace.value) {
-      const personalSpace = spaces.value.find(s => s.id === 'personal' || s.name === '个人空间')
-      if (personalSpace) {
-        currentSpace.value = personalSpace
-      } else if (spaces.value.length > 0) {
-        currentSpace.value = spaces.value[0]
-      } else {
-        currentSpace.value = { id: 'personal', name: '个人空间', type: 'personal', color: '#8b5cf6', icon: '个' }
-      }
-    }
+    // 不再自动设置默认空间，保持 currentSpace 为 null 以显示首页
+    // 只有在明确传入 spaceId 或用户选择空间时才设置
   } catch (error) {
     console.error('加载空间列表失败:', error)
   }
@@ -888,15 +1655,7 @@ const loadSpaces = async () => {
 const loadDocuments = async () => {
   loading.value = true
   try {
-    // 确保有当前空间，默认使用个人空间
-    if (!currentSpace.value) {
-      const personalSpace = spaces.value.find(s => s.id === 'personal' || s.name === '个人空间')
-      if (personalSpace) {
-        currentSpace.value = personalSpace
-      } else {
-        currentSpace.value = { id: 'personal', name: '个人空间', type: 'personal', color: '#8b5cf6', icon: '个' }
-      }
-    }
+    // 不再自动设置默认空间，允许 currentSpace 为 null 以显示首页
     
     // 先尝试从API加载
     try {
@@ -923,7 +1682,7 @@ const loadDocuments = async () => {
           likeCount: 0,
           collaborators: [],
           shareLink: null,
-          owner: { id: doc.owner || userId, name: '当前用户' },
+          owner: {id: doc.owner || userId, name: '当前用户'},
           spaceId: currentSpace.value.id,
           deleted: false
         }))
@@ -968,16 +1727,20 @@ const loadDocuments = async () => {
   }
 }
 
-const handleSort = () => {
-  // 排序逻辑已在computed中处理
-}
-
 const toggleSelectAll = (event) => {
   if (event.target.checked) {
-    selectedDocs.value = sortedAndFilteredDocuments.value.map(doc => doc.id)
+    // 只选中当前页的文档，避免选中所有文档导致性能问题
+    selectedDocs.value = paginatedDocuments.value.map(doc => doc.id)
   } else {
-    selectedDocs.value = []
+    // 取消选中时，只取消当前页的选中状态
+    const currentPageIds = new Set(paginatedDocuments.value.map(doc => doc.id))
+    selectedDocs.value = selectedDocs.value.filter(id => !currentPageIds.has(id))
   }
+}
+
+// 优化的选中状态检查函数
+const isDocSelected = (docId) => {
+  return selectedDocsSet.value.has(docId)
 }
 
 const toggleSelect = (doc) => {
@@ -1057,6 +1820,13 @@ const handleFolderSelect = (folderId) => {
   selectedFolderId.value = folderId
 }
 
+const handleFolderCardClick = (folder) => {
+  spaceSubView.value = 'all'
+  selectedFolderId.value = folder.id
+  selectedTreeId.value = folder.id
+  triggerContentAnimation('filter')
+}
+
 // 关闭创建对话框并重置表单
 const closeCreateDialog = () => {
   showCreateDialog.value = false
@@ -1078,7 +1848,7 @@ const createDocument = async (type) => {
       if (personalSpace) {
         currentSpace.value = personalSpace
       } else {
-        currentSpace.value = { id: 'personal', name: '个人空间', type: 'personal', color: '#8b5cf6', icon: '个' }
+        currentSpace.value = {id: 'personal', name: '个人空间', type: 'personal', color: '#8b5cf6', icon: '个'}
       }
     }
     
@@ -1122,7 +1892,7 @@ const createDocument = async (type) => {
       size: (doc.text || '').length,
       favorite: false,
       shared: false,
-      owner: { id: doc.owner || userId, name: '当前用户' },
+      owner: {id: doc.owner || userId, name: '当前用户'},
       spaceId: currentSpace.value.id
     }
     
@@ -1311,25 +2081,78 @@ const getOwnerInitial = (owner) => {
 
 // 点击外部关闭菜单
 const handleClickOutside = (event) => {
-  if (contextMenu.value.show && !event.target.closest('.context-menu')) {
+  const target = event.target
+  if (!(target instanceof Element)) {
+    return
+  }
+  if (contextMenu.value.show && !target.closest('.context-menu')) {
     contextMenu.value.show = false
   }
-  if (showRenameDialog && !event.target.closest('.dialog')) {
+  if (showRenameDialog && !target.closest('.dialog')) {
     showRenameDialog.value = false
   }
-  if (showSpaceDropdown && !event.target.closest('.space-selector-dropdown')) {
+  if (showSpaceDropdown && !target.closest('.space-selector-dropdown')) {
     showSpaceDropdown.value = false
+  }
+  if (showSortMenu.value && !target.closest('.sort-wrapper-modern')) {
+    showSortMenu.value = false
   }
 }
 
 // 刷新处理函数
 const handleRefresh = (event) => {
-  const { view } = event.detail || {}
+  const {view} = event.detail || {}
   if (view === 'docs') {
     console.log('刷新文档库')
     loadDocuments()
     loadSpaces()
   }
+}
+
+// 返回首页
+const goToHome = () => {
+  if (pageTransitionPhase.value === 'space-leave' || !currentSpace.value) return
+  pageTransitionPhase.value = 'space-leave'
+  if (pagePhaseTimer) {
+    clearTimeout(pagePhaseTimer)
+  }
+  pagePhaseTimer = setTimeout(() => {
+  currentSpace.value = null
+  currentView.value = 'home'
+  spaceSubView.value = 'all'
+    pageTransitionPhase.value = 'home'
+    homeReturnTick.value = Date.now()
+  }, PAGE_PHASE_DURATION)
+}
+
+// 处理从首页进入空间
+const handleEnterSpace = (spaceId) => {
+  if (pageTransitionPhase.value === 'space-enter') return
+  // 根据 spaceId 查找对应的空间对象
+  const space = spaces.value.find(s => s.id === spaceId)
+  if (!space) {
+    console.error('未找到空间:', spaceId)
+    return
+  }
+  pendingSpace = space
+  lastVisitedSpaceId.value = space.id
+  pageTransitionPhase.value = 'space-enter'
+  if (pagePhaseTimer) {
+    clearTimeout(pagePhaseTimer)
+  }
+  pagePhaseTimer = setTimeout(() => {
+    currentSpace.value = pendingSpace
+    currentView.value = 'home'
+    spaceSubView.value = 'all'
+    pendingSpace = null
+    loadDocuments()
+    pageTransitionPhase.value = 'space-active'
+  }, PAGE_PHASE_DURATION)
+}
+
+// 处理从首页创建文档
+const handleCreateFromHome = () => {
+  showCreateDialog.value = true
 }
 
 // 监听创建对话框打开，自动聚焦到名称输入框
@@ -1342,7 +2165,10 @@ watch(showCreateDialog, (newVal) => {
 })
 
 onMounted(async () => {
-  // 先加载空间，确保个人空间存在
+  // 默认显示首页，除非有spaceId
+  currentSpace.value = null
+  
+  // 先加载空间
   await loadSpaces()
   
   // 如果外部传入了spaceId，自动选择该空间
@@ -1351,15 +2177,8 @@ onMounted(async () => {
     if (space) {
       currentSpace.value = space
       currentView.value = 'home'
+      spaceSubView.value = 'all'
       console.log('外部传入空间ID:', props.spaceId, '空间名称:', space.name)
-    }
-  } else if (!currentSpace.value) {
-    // 确保默认选中个人空间
-    const personalSpace = spaces.value.find(s => s.id === 'personal' || s.name === '个人空间')
-    if (personalSpace) {
-      currentSpace.value = personalSpace
-    } else {
-      currentSpace.value = { id: 'personal', name: '个人空间', type: 'personal', color: '#8b5cf6', icon: '个' }
     }
   }
   
@@ -1373,7 +2192,7 @@ onMounted(async () => {
     }
   }
   
-  // 加载文档列表
+  // 加载文档列表（首页和空间页面都需要）
   await loadDocuments()
   
   // 确保有数据，生成50个文档
@@ -1381,260 +2200,626 @@ onMounted(async () => {
     console.warn('文档列表为空，生成50个假数据文档')
     allDocuments.value = generateDocuments(50)
   }
+
+  // 更新活力提示
+  updateVibrantTips()
   
   console.log('组件挂载完成，文档总数:', allDocuments.value.length)
-  console.log('当前空间:', currentSpace.value?.name)
+  console.log('当前空间:', currentSpace.value?.name || '首页')
   console.log('当前视图:', currentView.value)
   console.log('个人空间文档数:', allDocuments.value.filter(doc => doc.spaceId === 'personal').length)
   
   document.addEventListener('click', handleClickOutside)
   // 监听刷新事件
   window.addEventListener('tab-refresh', handleRefresh)
+  nextTick(() => {
+    attachScrollListener()
+  })
 })
 
 // 清理
 onUnmounted(() => {
   window.removeEventListener('tab-refresh', handleRefresh)
   document.removeEventListener('click', handleClickOutside)
+  // 清理防抖定时器
+  if (updateTipsTimer) {
+    clearTimeout(updateTipsTimer)
+  }
+  if (pagePhaseTimer) {
+    clearTimeout(pagePhaseTimer)
+    pagePhaseTimer = null
+  }
+  pendingSpace = null
+  detachScrollListener()
 })
 </script>
 
 <style scoped>
 .document-library-page {
-  display: flex;
-  height: 100vh;
+  align-items: stretch;
+  position: relative;
+  gap: 0;
+  height: 100%; /* 改为 100%，让外层布局控制高度 */
   background: #f5f5f7;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  padding: 0;
+  --collapse-progress: 0;
 }
 
+.document-library-page.state-space-active .dl-hero-section {
+  animation: heroSlideIn var(--motion-duration-normal) var(--motion-ease-enter);
+}
+
+.document-library-page.state-space-active .dl-toolbar-section {
+  animation: toolbarFadeIn var(--motion-duration-normal) var(--motion-ease-enter);
+  animation-delay: 80ms;
+}
+
+.document-library-page.state-space-active .document-tree {
+  animation: treeListReveal var(--motion-duration-normal) var(--motion-ease-enter);
+  animation-delay: 120ms;
+  animation-fill-mode: both;
+}
+
+.document-library-page.state-leaving-space .dl-main-wrapper {
+  opacity: 0;
+  transform: translateX(12px);
+  transition:
+    opacity var(--motion-duration-normal) var(--motion-ease-exit),
+    transform var(--motion-duration-normal) var(--motion-ease-exit);
+}
+
+.document-library-page.state-space-active .doc-card {
+  animation: cardCascade var(--motion-duration-slow) var(--motion-ease-enter);
+  animation-delay: calc(0.1s + (var(--card-index, 0) * 40ms));
+  animation-fill-mode: both;
+}
+
+.document-library-page.state-space-active .doc-row {
+  animation: rowCascade var(--motion-duration-normal) var(--motion-ease-enter);
+  animation-delay: calc(0.12s + (var(--card-index, 0) * 30ms));
+  animation-fill-mode: both;
+}
+
+@keyframes heroSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes toolbarFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes treeListReveal {
+  from {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes cardCascade {
+  0% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(-2px) scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes rowCascade {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 主容器 */
 .dl-main-wrapper {
   display: flex;
   flex: 1;
   overflow: hidden;
   min-width: 0;
-  align-items: stretch;
+  height: 100%; /* 改为 100%，使用 flex 布局 */
   position: relative;
-  gap: 0;
-  height: 100vh;
 }
 
-/* 顶部导航栏 */
-.dl-top-nav {
-  background: rgba(255, 255, 255, 0.5);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-  padding: 12px 24px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-shrink: 0;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
-
-.dl-nav-left {
-  display: flex;
-  align-items: center;
-  gap: 24px;
+.dl-main {
   flex: 1;
-}
-
-.dl-view-tabs {
+  min-width: 0;
+  /* 移除 height: 100vh，使用 flex 布局即可 */
+  margin: 0;
   display: flex;
-  align-items: center;
-  gap: 4px;
+  flex-direction: column;
+  overflow: hidden;
+  background: #f5f5f7;
 }
 
-.view-tab {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 12px;
-  border: none;
-  background: transparent;
-  color: #6b7280;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  border-radius: 6px;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-}
 
-.view-tab:hover {
-  background: rgba(0, 0, 0, 0.04);
-  color: #111827;
-}
-
-.view-tab.active {
-  background: rgba(22, 93, 255, 0.1);
-  color: var(--theme-accent, #165dff);
-}
-
-.view-tab svg {
-  flex-shrink: 0;
-}
-
-.tab-badge {
-  font-size: 11px;
-  font-weight: 600;
-  color: #6b7280;
-  background: #f3f4f6;
-  padding: 2px 6px;
-  border-radius: 10px;
-  min-width: 18px;
-  text-align: center;
-}
-
-.view-tab.active .tab-badge {
-  background: rgba(22, 93, 255, 0.15);
-  color: var(--theme-accent, #165dff);
-}
-
-/* Hero/Header 区域 - 增强玻璃拟态 */
 .dl-hero-section {
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.4) 0%, 
-    rgba(255, 255, 255, 0.2) 50%,
-    rgba(255, 255, 255, 0.3) 100%);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-  border-top: 1px solid rgba(255, 255, 255, 0.5);
-  padding: 20px 32px 16px 32px;
   position: relative;
+  overflow: hidden;
+  border-bottom: none;
+  box-shadow: 0 calc(1px + 5px * var(--collapse-progress)) calc(12px * var(--collapse-progress)) rgba(15, 23, 42, 0.08);
+  padding: calc(24px - 10px * var(--collapse-progress)) 20px calc(24px - 6px * var(--collapse-progress)) 20px;
+  position: sticky;
+  top: 0;
   z-index: 10;
-  backdrop-filter: blur(40px) saturate(200%) brightness(1.1);
-  -webkit-backdrop-filter: blur(40px) saturate(200%) brightness(1.1);
-  box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.3);
+  transition:
+    padding var(--motion-duration-normal) var(--motion-ease-soft),
+    box-shadow var(--motion-duration-normal) var(--motion-ease-soft);
 }
 
+/* 将 backdrop-filter 放到独立的背景层，不参与 hover 交互 */
 .dl-hero-section::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: 
-    radial-gradient(circle at 20% 50%, rgba(22, 93, 255, 0.08) 0%, transparent 50%),
-    radial-gradient(circle at 80% 50%, rgba(76, 127, 255, 0.06) 0%, transparent 50%);
+  background: linear-gradient(180deg,
+    rgba(255, 255, 255, 0.78) 0%,
+    rgba(255, 255, 255, 0.58) 55%,
+    rgba(240, 244, 255, 0.45) 100%);
+  backdrop-filter: blur(26px) saturate(170%);
+  -webkit-backdrop-filter: blur(26px) saturate(170%);
   pointer-events: none;
-  z-index: 0;
-  opacity: 0;
-  animation: heroGlow 8s ease-in-out infinite;
-}
-
-@keyframes heroGlow {
-  0%, 100% { opacity: 0; }
-  50% { opacity: 1; }
+  z-index: -1;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+  opacity: calc(0.85 + 0.1 * var(--collapse-progress));
+  transition: opacity var(--motion-duration-normal) var(--motion-ease-soft);
 }
 
 .dl-hero-content {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 24px;
-  max-width: 100%;
   position: relative;
   z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  width: 100%;
+  margin: 0;
+  transform: translateY(calc(-4px * var(--collapse-progress)));
+  transition: transform var(--motion-duration-normal) var(--motion-ease-soft);
 }
 
 .dl-hero-left {
   display: flex;
-  align-items: flex-start;
-  gap: 20px;
+  align-items: center;
+  gap: 16px;
   flex: 1;
   min-width: 0;
 }
 
-.dl-hero-title-section {
-  flex: 1;
-  min-width: 0;
+.dl-hero-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  margin-left: auto;
 }
 
-.dl-hero-title {
-  font-size: 24px;
-  font-weight: 700;
-  background: linear-gradient(135deg, 
-    #165dff 0%, 
-    #4c7fff 50%,
-    #6b8eff 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin: 0 0 6px 0;
-  letter-spacing: -0.02em;
-  line-height: 1.2;
-  position: relative;
-  display: inline-block;
-  filter: drop-shadow(0 2px 4px rgba(22, 93, 255, 0.2));
+.dl-hero-search {
+  min-width: 280px;
+  max-width: 500px;
 }
 
 .dl-hero-stats {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 14px;
+  font-size: 13px;
   color: #6b7280;
+  margin-top: 4px;
 }
 
 .hero-stat-item {
   font-weight: 500;
-  color: #374151;
 }
 
 .hero-stat-divider {
-  color: #d1d5db;
+  opacity: 0.5;
 }
 
 .hero-stat-hint {
-  color: #9ca3af;
+  opacity: 0.7;
 }
 
-.dl-hero-right {
+/* 活力提示文字 */
+.hero-vibrant-tips {
+  margin-top: 8px;
+}
+
+.tips-container {
   display: flex;
   align-items: center;
-  gap: 16px;
-  flex-shrink: 0;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
-.dl-hero-search {
-  min-width: 320px;
-  max-width: 480px;
+.vibrant-tip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: linear-gradient(135deg,
+  rgba(22, 93, 255, 0.1) 0%,
+  rgba(139, 92, 246, 0.08) 100%);
+  border: 1px solid rgba(22, 93, 255, 0.15);
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #165dff;
+  animation: tipPulse 2s ease-in-out infinite;
+  cursor: default;
+  position: relative;
+  overflow: hidden;
+}
+
+.vibrant-tip::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg,
+  transparent 0%,
+  rgba(255, 255, 255, 0.4) 50%,
+  transparent 100%);
+  animation: tipShine 3s ease-in-out infinite;
+}
+
+/* 删除 hover 动画以诊断闪烁问题 */
+/* .vibrant-tip:hover {
+  transform: translateY(-2px) scale(1.05);
+  background: linear-gradient(135deg,
+  rgba(22, 93, 255, 0.15) 0%,
+  rgba(139, 92, 246, 0.12) 100%);
+  border-color: rgba(22, 93, 255, 0.25);
+} */
+
+.tip-emoji {
+  font-size: 16px;
+  animation: tipBounce 2s ease-in-out infinite;
+  display: inline-block;
+}
+
+.tip-text {
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+@keyframes tipPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.02);
+    opacity: 0.95;
+  }
+}
+
+@keyframes tipBounce {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-3px) rotate(-5deg);
+  }
+  75% {
+    transform: translateY(-3px) rotate(5deg);
+  }
+}
+
+@keyframes tipShine {
+  0% {
+    left: -100%;
+  }
+  50%, 100% {
+    left: 100%;
+  }
+}
+
+.tip-fade-enter-active,
+.tip-fade-leave-active {
+  transition:
+    opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tip-fade-enter-from {
+  opacity: 0;
+  transform: translateY(-10px) scale(0.9);
+}
+
+.tip-fade-leave-to {
+  opacity: 0;
+  transform: translateY(10px) scale(0.9);
+}
+
+/* 空间选择器 - 玻璃拟态风格，与标题协调 */
+.space-selector-modern {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 18px;
+  height: 44px;
+  /* 移除 backdrop-filter，改用普通半透明背景 */
+  background: linear-gradient(135deg,
+  rgba(255, 255, 255, 0.85) 0%,
+  rgba(255, 255, 255, 0.75) 50%,
+  rgba(255, 255, 255, 0.7) 100%);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 20px;
+  cursor: pointer;
+  /* 静态阴影，hover 时不变 */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08),
+  inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  overflow: hidden;
+  /* 只动画 transform，不动画背景/边框/阴影 */
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.space-selector-modern::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 24px;
+  background: linear-gradient(135deg,
+  rgba(255, 255, 255, 0.4) 0%,
+  transparent 50%,
+  rgba(255, 255, 255, 0.2) 100%);
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+
+/* 删除 hover 动画以诊断闪烁问题 */
+/* .space-selector-modern:hover {
+  transform: translateY(-2px) scale(1.02) translateZ(0);
+} */
+
+.space-selector-modern:active {
+  transform: translateY(0) scale(0.98) translateZ(0);
+  transition-duration: 0.15s;
+}
+
+/* 删除 hover 动画以诊断闪烁问题 */
+/* .space-selector-modern:hover::before {
+  opacity: 1;
+} */
+
+.space-selector-icon-modern {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12),
+  inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  will-change: transform;
+  transform: translateZ(0);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+  box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 删除 hover 动画以诊断闪烁问题 */
+/* .space-selector-modern:hover .space-selector-icon-modern {
+  transform: scale(1.1) rotate(5deg) translateZ(0);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15),
+  inset 0 1px 0 rgba(255, 255, 255, 0.4);
+} */
+
+.space-selector-icon-modern svg {
+  width: 24px;
+  height: 24px;
+  color: #6b7280;
+}
+
+.space-icon-text {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.space-selector-content-modern {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
   flex: 1;
 }
 
-/* 工具条区域 - 增强玻璃拟态 */
+.space-selector-name-modern {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  white-space: nowrap;
+  letter-spacing: 0.1px;
+  transition: color 0.3s;
+  line-height: 1.4;
+}
+
+.space-selector-arrow-modern {
+  width: 16px;
+  height: 16px;
+  color: #6b7280;
+  flex-shrink: 0;
+  will-change: transform;
+  transform: translateZ(0);
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* 删除 hover 动画以诊断闪烁问题 */
+/* .space-selector-modern:hover .space-selector-arrow-modern {
+  transform: translateY(2px) translateZ(0);
+} */
+
+.space-selector-arrow-modern.expanded {
+  transform: rotate(180deg);
+}
+
+.space-switcher-menu-modern {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  min-width: 240px;
+  /* 移除 backdrop-filter，改用普通半透明背景 */
+  background: rgba(255, 255, 255, 0.98);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  /* 静态阴影 */
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  padding: 8px;
+  z-index: 1000;
+  max-height: 400px;
+  overflow-y: auto;
+  transform: translateZ(0);
+}
+
+.space-switcher-item-modern {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #111827;
+  font-size: 14px;
+  transform: translateZ(0);
+  /* 只动画 transform，不动画 background */
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  /* 进入动画 */
+  animation: menuItemSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  animation-delay: calc(var(--index, 0) * 0.05s);
+}
+
+@keyframes menuItemSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px) translateZ(0);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) translateZ(0);
+  }
+}
+
+/* 删除 hover 动画以诊断闪烁问题 */
+/* .space-switcher-item-modern:hover {
+  background: rgba(22, 93, 255, 0.08);
+  transform: translateX(4px) scale(1.02) translateZ(0);
+} */
+
+.space-switcher-item-modern:active {
+  transform: translateX(2px) scale(0.98) translateZ(0);
+  transition-duration: 0.15s;
+}
+
+.space-switcher-item-modern.active {
+  background: linear-gradient(135deg, #165dff 0%, #4c7fff 100%);
+  color: white;
+  animation: activePulse 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes activePulse {
+  0%, 100% {
+    transform: scale(1) translateZ(0);
+  }
+  50% {
+    transform: scale(1.05) translateZ(0);
+  }
+}
+
+.space-switcher-item-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.space-switcher-item-text {
+  flex: 1;
+  font-weight: 500;
+}
+
+.space-switcher-item-count {
+  font-size: 12px;
+  opacity: 0.7;
+  font-weight: 500;
+}
+
+
 .dl-toolbar-section {
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.3) 0%, 
-    rgba(255, 255, 255, 0.2) 100%);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-  border-top: 1px solid rgba(255, 255, 255, 0.4);
-  padding: 12px 32px;
-  backdrop-filter: blur(30px) saturate(200%) brightness(1.05);
-  -webkit-backdrop-filter: blur(30px) saturate(200%) brightness(1.05);
-  box-shadow: 
-    0 4px 16px rgba(0, 0, 0, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.2);
   position: relative;
+  overflow: hidden;
+  /* 移除 backdrop-filter，改用普通半透明背景 */
+  background: rgba(255, 255, 255, 0.78);
+  border-bottom: none;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.02);
+  padding: calc(16px - 6px * var(--collapse-progress)) 20px calc(16px - 2px * var(--collapse-progress)) 20px;
+  transition:
+    padding var(--motion-duration-normal) var(--motion-ease-soft),
+    box-shadow var(--motion-duration-normal) var(--motion-ease-soft);
 }
 
 .dl-toolbar-section::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, 
-    transparent 0%,
-    rgba(22, 93, 255, 0.03) 50%,
-    transparent 100%);
+  background: linear-gradient(180deg,
+    rgba(255, 255, 255, 0.85) 0%,
+    rgba(255, 255, 255, 0.62) 60%,
+    rgba(240, 244, 255, 0.45) 100%);
+  backdrop-filter: blur(22px) saturate(160%);
+  -webkit-backdrop-filter: blur(22px) saturate(160%);
   pointer-events: none;
   z-index: 0;
-  animation: toolbarShimmer 3s ease-in-out infinite;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.35);
+  opacity: calc(0.85 + 0.1 * var(--collapse-progress));
+  transition: opacity var(--motion-duration-normal) var(--motion-ease-soft);
 }
 
-@keyframes toolbarShimmer {
-  0%, 100% { transform: translateX(-100%); opacity: 0; }
-  50% { transform: translateX(100%); opacity: 1; }
+.dl-toolbar-content {
+  position: relative;
+  z-index: 1;
+  transform: translateY(calc(-4px * var(--collapse-progress)));
+  transition: transform var(--motion-duration-normal) var(--motion-ease-soft);
 }
 
 .dl-toolbar-content {
@@ -1642,14 +2827,14 @@ onUnmounted(() => {
   align-items: center;
   justify-content: space-between;
   gap: 24px;
-  position: relative;
-  z-index: 1;
+  width: 100%;
+  margin: 0;
 }
 
 .toolbar-group {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
 }
 
 .toolbar-group-label {
@@ -1658,7 +2843,6 @@ onUnmounted(() => {
   color: #6b7280;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  margin-right: 4px;
 }
 
 .toolbar-group-filters {
@@ -1667,343 +2851,20 @@ onUnmounted(() => {
 
 .toolbar-group-actions {
   flex-shrink: 0;
+  margin-left: auto;
 }
 
-/* ViewToggle 在工具栏中的样式 */
-.toolbar-group-actions :deep(.view-toggle) {
-  display: inline-flex;
-}
-
-.toolbar-group-actions :deep(.view-toggle-container) {
-  height: 36px;
-}
-
-.toolbar-group-actions :deep(.view-btn) {
-  width: 32px;
-  height: 32px;
-}
-
-/* 现代化个人空间选择器 - 增强玻璃拟态 */
-.space-selector-modern {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 14px;
-  border-radius: 24px;
-  cursor: pointer;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.25) 0%, 
-    rgba(255, 255, 255, 0.15) 50%,
-    rgba(255, 255, 255, 0.2) 100%);
-  border: 1.5px solid rgba(255, 255, 255, 0.5);
-  backdrop-filter: blur(50px) saturate(200%) brightness(1.15);
-  -webkit-backdrop-filter: blur(50px) saturate(200%) brightness(1.15);
-  box-shadow: 
-    0 4px 16px rgba(0, 0, 0, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.3),
-    0 0 0 0 rgba(22, 93, 255, 0);
-  overflow: hidden;
-}
-
-.space-selector-modern::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 24px;
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.4) 0%, 
-    rgba(255, 255, 255, 0.15) 50%,
-    rgba(255, 255, 255, 0.3) 100%);
-  pointer-events: none;
-  z-index: 0;
-  opacity: 0.8;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-}
-
-.space-selector-modern::after {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(circle, rgba(22, 93, 255, 0.1) 0%, transparent 70%);
-  pointer-events: none;
-  z-index: 0;
-  opacity: 0;
-  transition: opacity 0.4s;
-}
-
-.space-selector-modern:hover {
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.35) 0%, 
-    rgba(255, 255, 255, 0.25) 50%,
-    rgba(255, 255, 255, 0.3) 100%);
-  border-color: rgba(255, 255, 255, 0.7);
-  box-shadow: 
-    0 6px 20px rgba(22, 93, 255, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 1),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.4),
-    0 0 15px rgba(22, 93, 255, 0.1);
-  transform: translateY(-2px) scale(1.02);
-  backdrop-filter: blur(60px) saturate(200%) brightness(1.2);
-  -webkit-backdrop-filter: blur(60px) saturate(200%) brightness(1.2);
-}
-
-.space-selector-modern:hover::after {
-  opacity: 1;
-  animation: selectorPulse 2s ease-in-out infinite;
-}
-
-@keyframes selectorPulse {
-  0%, 100% { transform: scale(1); opacity: 0.3; }
-  50% { transform: scale(1.1); opacity: 0.6; }
-}
-
-.space-selector-icon-modern {
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  flex-shrink: 0;
-  background: linear-gradient(135deg, 
-    #165dff 0%, 
-    #4c7fff 50%,
-    #6b8eff 100%);
-  border-radius: 12px;
-  padding: 6px;
-  position: relative;
-  z-index: 1;
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 
-    0 2px 8px rgba(22, 93, 255, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.4),
-    inset 0 -1px 0 rgba(22, 93, 255, 0.3);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  overflow: hidden;
-}
-
-.space-selector-icon-modern::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.3) 0%, 
-    transparent 50%,
-    rgba(255, 255, 255, 0.1) 100%);
-  pointer-events: none;
-  z-index: 0;
-}
-
-.space-selector-icon-modern svg {
-  position: relative;
-  z-index: 1;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
-}
-
-.space-selector-modern:hover .space-selector-icon-modern {
-  transform: scale(1.05);
-  box-shadow: 
-    0 3px 10px rgba(22, 93, 255, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.5),
-    inset 0 -1px 0 rgba(22, 93, 255, 0.4);
-}
-
-.space-selector-content-modern {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  position: relative;
-  z-index: 1;
-}
-
-.space-selector-name-modern {
-  font-size: 15px;
-  font-weight: 600;
-  background: linear-gradient(135deg, 
-    #165dff 0%, 
-    #4c7fff 50%,
-    #6b8eff 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  line-height: 1.2;
-  display: block;
-  width: fit-content;
-}
-
-.space-selector-count-modern {
-  font-size: 12px;
-  color: #6b7280;
-  line-height: 1.2;
-}
-
-.space-selector-arrow-modern {
-  width: 14px;
-  height: 14px;
-  color: #6b7280;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  flex-shrink: 0;
-}
-
-.space-selector-arrow-modern.expanded {
-  transform: rotate(180deg);
-}
-
-/* 现代化搜索框样式 - 增强玻璃拟态 */
-.dl-hero-search :deep(.search-wrapper) {
-  width: 100%;
-  height: 40px;
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.5) 0%, 
-    rgba(255, 255, 255, 0.3) 100%);
-  border: 1.5px solid rgba(255, 255, 255, 0.4);
-  border-radius: 12px;
-  padding: 0 18px;
-  box-shadow: 
-    0 4px 16px rgba(0, 0, 0, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8),
-    0 0 0 0 rgba(22, 93, 255, 0);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  backdrop-filter: blur(40px) saturate(200%) brightness(1.1);
-  -webkit-backdrop-filter: blur(40px) saturate(200%) brightness(1.1);
-  position: relative;
-  overflow: hidden;
-}
-
-.dl-hero-search :deep(.search-wrapper::before) {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.6) 0%, 
-    rgba(255, 255, 255, 0.3) 50%,
-    rgba(255, 255, 255, 0.5) 100%);
-  pointer-events: none;
-  z-index: 0;
-  opacity: 0.7;
-}
-
-.dl-hero-search :deep(.search-wrapper:hover) {
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.6) 0%, 
-    rgba(255, 255, 255, 0.4) 100%);
-  border-color: rgba(22, 93, 255, 0.3);
-  box-shadow: 
-    0 6px 20px rgba(22, 93, 255, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9),
-    0 0 0 0 rgba(22, 93, 255, 0);
-  transform: translateY(-1px);
-}
-
-.dl-hero-search :deep(.search-wrapper:focus-within) {
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.8) 0%, 
-    rgba(255, 255, 255, 0.6) 100%);
-  border-color: rgba(22, 93, 255, 0.5);
-  box-shadow: 
-    0 12px 32px rgba(22, 93, 255, 0.25),
-    inset 0 1px 0 rgba(255, 255, 255, 1),
-    0 0 0 4px rgba(22, 93, 255, 0.15),
-    0 0 30px rgba(22, 93, 255, 0.2);
-  transform: translateY(-2px) scale(1.01);
-  animation: searchGlow 2s ease-in-out infinite;
-}
-
-@keyframes searchGlow {
-  0%, 100% { 
-    box-shadow: 
-      0 12px 32px rgba(22, 93, 255, 0.25),
-      inset 0 1px 0 rgba(255, 255, 255, 1),
-      0 0 0 4px rgba(22, 93, 255, 0.15),
-      0 0 30px rgba(22, 93, 255, 0.2);
-  }
-  50% { 
-    box-shadow: 
-      0 12px 32px rgba(22, 93, 255, 0.3),
-      inset 0 1px 0 rgba(255, 255, 255, 1),
-      0 0 0 4px rgba(22, 93, 255, 0.2),
-      0 0 40px rgba(22, 93, 255, 0.3);
-  }
-}
-
-.dl-hero-search :deep(.search-icon) {
-  width: 18px;
-  height: 18px;
-  color: #6b7280;
-  margin-right: 12px;
-  position: relative;
-  z-index: 1;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.dl-hero-search :deep(.search-wrapper:focus-within .search-icon) {
-  color: #165dff;
-  transform: scale(1.1);
-  filter: drop-shadow(0 2px 4px rgba(22, 93, 255, 0.3));
-}
-
-.dl-hero-search :deep(.search-input) {
-  font-size: 15px;
-  font-weight: 400;
-  position: relative;
-  z-index: 1;
-  background: transparent;
-}
-
-.dl-hero-search :deep(.search-clear) {
-  width: 24px;
-  height: 24px;
-  border-radius: 6px;
-}
-
-/* 现代化筛选按钮 - 增强玻璃拟态 */
+/* 筛选按钮组 */
 .filter-buttons-modern {
   position: relative;
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.4) 0%, 
-    rgba(255, 255, 255, 0.3) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  gap: 8px;
+  /* 移除 backdrop-filter，改用普通半透明背景 */
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 12px;
   padding: 4px;
-  gap: 0;
-  backdrop-filter: blur(40px) saturate(200%) brightness(1.1);
-  -webkit-backdrop-filter: blur(40px) saturate(200%) brightness(1.1);
-  box-shadow: 
-    0 4px 16px rgba(0, 0, 0, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.3);
-  overflow: hidden;
-}
-
-.filter-buttons-modern::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 12px;
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.6) 0%, 
-    rgba(255, 255, 255, 0.3) 50%,
-    rgba(255, 255, 255, 0.5) 100%);
-  pointer-events: none;
-  z-index: 0;
-  opacity: 0.7;
-  animation: filterShimmer 4s ease-in-out infinite;
-}
-
-@keyframes filterShimmer {
-  0%, 100% { opacity: 0.5; }
-  50% { opacity: 0.8; }
 }
 
 .filter-slider {
@@ -2011,67 +2872,380 @@ onUnmounted(() => {
   top: 4px;
   left: 4px;
   height: calc(100% - 8px);
-  background: linear-gradient(135deg, 
-    #165dff 0%, 
-    #4c7fff 50%,
-    #6b8eff 100%);
+  background: linear-gradient(135deg, #165dff 0%, #4c7fff 100%);
   border-radius: 8px;
-  transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-  box-shadow: 
-    0 6px 20px rgba(22, 93, 255, 0.4),
-    0 3px 10px rgba(22, 93, 255, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6),
-    0 0 20px rgba(22, 93, 255, 0.3);
-  z-index: 1;
-  overflow: hidden;
-}
-
-.filter-slider::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.4) 0%, 
-    transparent 50%,
-    rgba(255, 255, 255, 0.2) 100%);
-  pointer-events: none;
-  animation: sliderShine 3s ease-in-out infinite;
-}
-
-@keyframes sliderShine {
-  0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
-  100% { transform: translateX(200%) translateY(200%) rotate(45deg); }
+  z-index: 0;
+  box-shadow: 0 2px 8px rgba(22, 93, 255, 0.3);
+  will-change: transform, width;
+  transform: translateZ(0);
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+  width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .filter-btn-modern {
   position: relative;
-  z-index: 2;
-  padding: 8px 16px;
+  z-index: 1;
+  padding: 8px 20px;
   border: none;
   background: transparent;
   color: #6b7280;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
-  border-radius: 8px;
   cursor: pointer;
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: 8px;
   white-space: nowrap;
-  flex: 1;
-  min-width: 0;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  will-change: transform, color;
+  transform: translateZ(0);
+  transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+  transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .filter-btn-modern:hover {
   color: #111827;
-  transform: translateY(-2px) scale(1.05);
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px) scale(1.03) translateZ(0);
+}
+
+.filter-btn-modern:active {
+  transform: translateY(0) scale(0.98) translateZ(0);
+  transition-duration: 0.15s;
 }
 
 .filter-btn-modern.active {
   color: white;
   font-weight: 600;
-  text-shadow: 
-    0 1px 3px rgba(0, 0, 0, 0.3),
+  animation: filterActive 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes filterActive {
+  0% {
+    transform: scale(0.95) translateZ(0);
+  }
+  50% {
+    transform: scale(1.08) translateZ(0);
+  }
+  100% {
+    transform: scale(1) translateZ(0);
+  }
+}
+
+/* 排序选择器 */
+.sort-wrapper-modern {
+  position: relative;
+}
+
+.sort-select-trigger {
+  padding: 10px 32px 10px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #111827;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  cursor: pointer;
+  outline: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  min-width: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  transition:
+    transform var(--motion-duration-fast) var(--motion-ease-soft),
+    color var(--motion-duration-fast) var(--motion-ease-soft);
+}
+
+.sort-select-trigger svg {
+  color: #9ca3af;
+  transition: transform var(--motion-duration-fast) var(--motion-ease-soft);
+}
+
+.sort-select-trigger:hover {
+  transform: translateY(-2px);
+}
+
+.sort-select-trigger.open svg {
+  transform: rotate(180deg);
+  color: #165dff;
+}
+
+.sort-dropdown-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 14px;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.15);
+  padding: 8px;
+  width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 30;
+}
+
+.sort-dropdown-item {
+  width: 100%;
+  border: none;
+  background: transparent;
+  border-radius: 10px;
+  padding: 10px 12px;
+  text-align: left;
+  font-size: 14px;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition:
+    background var(--motion-duration-fast) var(--motion-ease-soft),
+    color var(--motion-duration-fast) var(--motion-ease-soft),
+    transform var(--motion-duration-fast) var(--motion-ease-soft);
+}
+
+.sort-dropdown-item:hover {
+  background: rgba(22, 93, 255, 0.08);
+  color: #165dff;
+  transform: translateX(2px);
+}
+
+.sort-dropdown-item.active {
+  background: rgba(22, 93, 255, 0.12);
+  color: #165dff;
+  font-weight: 600;
+}
+
+.sort-item-hint {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.sort-dropdown-enter-active,
+.sort-dropdown-leave-active {
+  transition:
+    opacity var(--motion-duration-fast) var(--motion-ease-enter),
+    transform var(--motion-duration-fast) var(--motion-ease-enter);
+}
+
+.sort-dropdown-enter-from,
+.sort-dropdown-leave-to {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+
+.sort-dropdown-enter-to,
+.sort-dropdown-leave-from {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.bulk-selection-bar {
+  margin-top: 12px;
+  padding: 12px 16px;
+  background: rgba(22, 93, 255, 0.08);
+  border: 1px solid rgba(22, 93, 255, 0.2);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  animation: bulkBarDrop var(--motion-duration-normal) var(--motion-ease-enter);
+}
+
+.bulk-selection-info {
+  font-size: 14px;
+  font-weight: 600;
+  color: #165dff;
+}
+
+.bulk-selection-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bulk-action-btn {
+  border: none;
+  background: rgba(22, 93, 255, 0.12);
+  color: #165dff;
+  border-radius: 8px;
+  padding: 8px 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: transform var(--motion-duration-fast) var(--motion-ease-soft);
+}
+
+.bulk-action-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.bulk-action-btn:hover {
+  transform: translateY(-2px);
+}
+
+.bulk-action-btn.danger {
+  background: rgba(239, 68, 68, 0.12);
+  color: #dc2626;
+}
+
+.bulk-action-btn.ghost {
+  background: transparent;
+  border: 1px dashed rgba(22, 93, 255, 0.3);
+}
+
+.bulk-bar-enter-active,
+.bulk-bar-leave-active {
+  transition: opacity var(--motion-duration-fast) var(--motion-ease-exit),
+  transform var(--motion-duration-fast) var(--motion-ease-exit);
+}
+
+.bulk-bar-enter-from,
+.bulk-bar-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
+.bulk-bar-enter-to,
+.bulk-bar-leave-from {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@keyframes bulkBarDrop {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 内容包装器 */
+.dl-content-wrapper {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* 顶部导航栏 */
+.dl-top-nav {
+  background: rgba(255, 255, 255, 0.5);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  padding: 12px 24px;
+}
+
+.back-to-home-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  height: 40px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.3) 100%);
+  border: none;
+  border-radius: 12px;
+  color: #6b7280;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  /* 静态阴影 */
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08),
+  inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  white-space: nowrap;
+  flex-shrink: 0;
+  /* 只动画 transform 和 color */
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+  color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 删除 hover 动画以诊断闪烁问题 */
+/* .back-to-home-btn:hover {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0.5) 100%);
+  color: #165dff;
+  transform: translateY(-3px) scale(1.05) translateZ(0);
+} */
+
+.back-to-home-btn:active {
+  transform: translateY(-1px) scale(0.98) translateZ(0);
+  transition-duration: 0.15s;
+}
+
+.back-to-home-btn svg {
+  flex-shrink: 0;
+  transition: transform 0.3s;
+}
+
+.back-to-home-btn:hover {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0.5) 100%);
+  color: #165dff;
+  transform: translateY(-3px) scale(1.05) translateZ(0);
+}
+
+.dl-hero-title-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.dl-hero-title {
+  font-size: calc(24px - 4px * var(--collapse-progress));
+  font-weight: 700;
+  background: linear-gradient(135deg, 
+    #165dff 0%, 
+    #4c7fff 50%,
+    #6b8eff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  position: relative;
+  display: inline-block;
+  filter: drop-shadow(0 2px 4px rgba(22, 93, 255, 0.2));
+  transition: font-size var(--motion-duration-normal) var(--motion-ease-soft);
+}
+
+.title-divider {
+  width: 1px;
+  height: 20px;
+  background: linear-gradient(180deg,
+  transparent 0%,
+  rgba(0, 0, 0, 0.1) 50%,
+  transparent 100%);
+  opacity: 0.3;
+}
+
+.dl-hero-stats {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* 删除 hover 动画以诊断闪烁问题 */
+/* .filter-btn-modern:hover {
+  color: #111827;
+  transform: translateY(-2px) scale(1.05);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+} */
+
+.filter-btn-modern.active {
+  color: white;
+  font-weight: 600;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3),
     0 0 10px rgba(255, 255, 255, 0.3);
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
 }
@@ -2088,7 +3262,9 @@ onUnmounted(() => {
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition:
+    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   white-space: nowrap;
   position: relative;
   overflow: hidden;
@@ -2107,9 +3283,10 @@ onUnmounted(() => {
   transition: opacity 0.3s;
 }
 
-.btn-modern:hover::before {
+/* 删除 hover 动画以诊断闪烁问题 */
+/* .btn-modern:hover::before {
   opacity: 1;
-}
+} */
 
 .btn-modern svg {
   flex-shrink: 0;
@@ -2124,13 +3301,14 @@ onUnmounted(() => {
     #6b8eff 100%);
   color: white;
   padding: 0 24px;
-  box-shadow: 
-    0 6px 20px rgba(22, 93, 255, 0.4),
-    0 3px 10px rgba(22, 93, 255, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3),
-    0 0 20px rgba(22, 93, 255, 0.2);
+  /* 静态阴影，hover 时不变 */
+  box-shadow: 0 6px 20px rgba(22, 93, 255, 0.35),
+  0 3px 10px rgba(22, 93, 255, 0.25),
+  inset 0 1px 0 rgba(255, 255, 255, 0.3);
   position: relative;
   overflow: hidden;
+  /* 只动画 transform */
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .btn-primary-modern::before {
@@ -2160,8 +3338,14 @@ onUnmounted(() => {
 }
 
 @keyframes buttonShine {
-  0%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
-  50% { opacity: 0.4; transform: translate(-50%, -50%) scale(1.2); }
+  0%, 100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+  50% {
+    opacity: 0.4;
+    transform: translate(-50%, -50%) scale(1.2);
+  }
 }
 
 .btn-primary-modern:hover {
@@ -2169,445 +3353,22 @@ onUnmounted(() => {
     #0f4fd8 0%, 
     #3d6eff 50%,
     #5a7eff 100%);
-  transform: translateY(-2px) scale(1.02);
-  box-shadow: 
-    0 10px 30px rgba(22, 93, 255, 0.5),
-    0 5px 15px rgba(22, 93, 255, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.4),
-    0 0 30px rgba(22, 93, 255, 0.3);
+  transform: translateY(-3px) scale(1.05) translateZ(0);
+}
+
+.btn-primary-modern:active {
+  transform: translateY(0) scale(0.98) translateZ(0);
+  transition-duration: 0.15s;
 }
 
 .btn-primary-modern:hover::after {
   opacity: 0.6;
 }
 
-.btn-primary-modern:active {
-  transform: translateY(0) scale(0.98);
-  box-shadow: 
-    0 4px 15px rgba(22, 93, 255, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
-}
-
 /* 空间区域 */
 .space-section {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex: 1;
-}
-
-.space-section-label {
-  font-size: 14px;
-  font-weight: 600;
-  color: #111827;
-  white-space: nowrap;
-}
-
-/* 空间切换器 */
-.space-switcher {
-  position: relative;
-  z-index: 1000;
-}
-
-.space-current {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 16px;
-  border: 2px solid rgba(22, 93, 255, 0.2);
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 10px;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  min-width: 180px;
-}
-
-.space-current:hover {
-  border-color: var(--theme-accent, #165dff);
-  background: rgba(255, 255, 255, 1);
-  box-shadow: 0 4px 12px rgba(22, 93, 255, 0.15);
-  transform: translateY(-1px);
-}
-
-.space-current-icon {
-  width: 24px;
-  height: 24px;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 13px;
-  flex-shrink: 0;
-  color: white;
-  font-weight: 600;
-}
-
-.space-current-name {
-  flex: 1;
-  font-size: 14px;
-  font-weight: 600;
-  color: #111827;
-  text-align: left;
-}
-
-.space-current-count {
-  font-size: 12px;
-  color: #6b7280;
-  font-weight: 400;
-}
-
-.space-switcher-arrow {
-  flex-shrink: 0;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  color: #6b7280;
-}
-
-.space-switcher-arrow.expanded {
-  transform: rotate(180deg);
-}
-
-/* 现代化空间切换菜单 */
-.space-switcher-menu-modern {
-  position: absolute;
-  top: calc(100% + 12px);
-  left: 0;
-  min-width: 280px;
-  max-width: 360px;
-  max-height: 400px;
-  overflow-y: auto;
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.3) 0%, 
-    rgba(255, 255, 255, 0.2) 50%,
-    rgba(255, 255, 255, 0.25) 100%);
-  border: 1.5px solid rgba(255, 255, 255, 0.5);
-  border-radius: 24px;
-  box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.08),
-    0 4px 16px rgba(0, 0, 0, 0.05),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.3);
-  backdrop-filter: blur(50px) saturate(200%) brightness(1.15);
-  -webkit-backdrop-filter: blur(50px) saturate(200%) brightness(1.15);
-  z-index: 1000;
-  padding: 8px;
-  overflow: hidden;
-}
-
-.space-switcher-menu-modern::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 24px;
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.4) 0%, 
-    rgba(255, 255, 255, 0.2) 50%,
-    rgba(255, 255, 255, 0.3) 100%);
-  pointer-events: none;
-  z-index: 0;
-  opacity: 0.7;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-}
-
-.space-selector-modern {
-  position: relative;
-}
-
-.space-switcher-item-modern {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  border-radius: 16px;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  font-size: 14px;
-  color: #111827;
-  position: relative;
-  z-index: 1;
-}
-
-.space-switcher-item-modern:hover {
-  background: linear-gradient(135deg, rgba(22, 93, 255, 0.1) 0%, rgba(22, 93, 255, 0.05) 100%);
-  transform: translateX(4px);
-  box-shadow: 0 2px 8px rgba(22, 93, 255, 0.1);
-}
-
-.space-switcher-item-modern.active {
-  background: linear-gradient(135deg, rgba(22, 93, 255, 0.15) 0%, rgba(22, 93, 255, 0.1) 100%);
-  color: #165dff;
-  font-weight: 600;
-  box-shadow: 0 2px 8px rgba(22, 93, 255, 0.2);
-}
-
-.space-switcher-item-icon {
-  width: 24px;
-  height: 24px;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  flex-shrink: 0;
-  color: white;
-  font-weight: 600;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.space-switcher-item-modern:hover .space-switcher-item-icon {
-  transform: scale(1.1) rotate(5deg);
-}
-
-.space-switcher-item-text {
-  flex: 1;
-  text-align: left;
-}
-
-.space-switcher-item-count {
-  font-size: 12px;
-  color: #9ca3af;
-  font-weight: 400;
-}
-
-.space-switcher-item.active .space-switcher-item-count {
-  color: var(--theme-accent, #165dff);
-}
-
-/* 下拉菜单动画 */
-.space-dropdown-enter-active,
-.space-dropdown-leave-active {
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.space-dropdown-enter-from {
-  opacity: 0;
-  transform: translateY(-12px) scale(0.96);
-}
-
-.space-dropdown-leave-to {
-  opacity: 0;
-  transform: translateY(-8px) scale(0.98);
-}
-
-.space-nav-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-left: auto;
-}
-
-.space-nav-search {
-  min-width: 200px;
-  max-width: 320px;
-  flex: 1;
-}
-
-.space-nav-search :deep(.search-wrapper) {
-  width: 100%;
-  background: rgba(255, 255, 255, 0.7);
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
-
-.space-nav-search :deep(.search-wrapper:focus-within) {
-  background: rgba(255, 255, 255, 0.95);
-  border-color: var(--theme-accent, #165dff);
-  box-shadow: 0 0 0 3px rgba(22, 93, 255, 0.1);
-}
-
-.space-nav-action-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  background: rgba(255, 255, 255, 0.6);
-  color: #6b7280;
-  font-size: 13px;
-  font-weight: 500;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  white-space: nowrap;
-}
-
-.space-nav-action-btn:hover {
-  background: rgba(255, 255, 255, 0.8);
-  border-color: rgba(0, 0, 0, 0.15);
-  color: #111827;
-}
-
-.space-nav-action-btn.active {
-  background: rgba(22, 93, 255, 0.1);
-  border-color: var(--theme-accent, #165dff);
-  color: var(--theme-accent, #165dff);
-}
-
-.space-nav-action-btn.primary {
-  background: var(--theme-accent, #165dff);
-  border-color: var(--theme-accent, #165dff);
-  color: white;
-}
-
-.space-nav-action-btn.primary:hover {
-  background: color-mix(in srgb, var(--theme-accent, #165dff) 90%, black);
-  border-color: color-mix(in srgb, var(--theme-accent, #165dff) 90%, black);
-}
-
-.space-nav-action-btn svg {
-  flex-shrink: 0;
-}
-
-.action-badge {
-  font-size: 11px;
-  font-weight: 600;
-  background: rgba(255, 255, 255, 0.8);
-  color: #6b7280;
-  padding: 2px 6px;
-  border-radius: 10px;
-  min-width: 18px;
-  text-align: center;
-}
-
-.space-nav-action-btn.active .action-badge {
-  background: rgba(22, 93, 255, 0.15);
-  color: var(--theme-accent, #165dff);
-}
-
-
-.dl-nav-right {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.nav-action-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  border: none;
-  background: var(--theme-accent, #165dff);
-  color: white;
-  font-size: 14px;
-  font-weight: 500;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.nav-action-btn:hover {
-  background: color-mix(in srgb, var(--theme-accent, #165dff) 90%, black);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(22, 93, 255, 0.2);
-}
-
-/* 主内容区 */
-.dl-main {
-  flex: 1;
-  min-width: 0;
   height: calc(100vh - 24px);
   margin: 0px 0px 0px 0;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  position: relative;
-  z-index: 1;
-  background: var(--theme-background-gradient, none);
-  background-color: var(--theme-background, #f5f5f7);
-  border: none;
-  border-radius: 16px;
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  box-shadow: 
-    0 0 0 1px rgba(0, 0, 0, 0.03) inset,
-    0 2px 8px rgba(0, 0, 0, 0.04);
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-/* 现代化排序选择器 */
-.sort-wrapper-modern {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-}
-
-.sort-select-modern {
-  padding: 10px 44px 10px 18px;
-  font-size: 13px;
-  font-weight: 500;
-  color: #111827;
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.5) 0%, 
-    rgba(255, 255, 255, 0.3) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  border-radius: 10px;
-  cursor: pointer;
-  outline: none;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 
-    0 4px 16px rgba(0, 0, 0, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(30px) saturate(200%) brightness(1.1);
-  -webkit-backdrop-filter: blur(30px) saturate(200%) brightness(1.1);
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 12 12' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3 4.5l3 3 3-3' stroke='%236b7280' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 14px center;
-  min-width: 130px;
-  height: 36px;
-  position: relative;
-  overflow: hidden;
-}
-
-.sort-select-modern::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.6) 0%, 
-    rgba(255, 255, 255, 0.3) 50%,
-    rgba(255, 255, 255, 0.5) 100%);
-  pointer-events: none;
-  z-index: 0;
-  opacity: 0.7;
-}
-
-.sort-select-modern:hover {
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.7) 0%, 
-    rgba(255, 255, 255, 0.5) 100%);
-  border-color: rgba(22, 93, 255, 0.3);
-  box-shadow: 
-    0 6px 20px rgba(22, 93, 255, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
-  transform: translateY(-1px);
-}
-
-.sort-select-modern:focus {
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.8) 0%, 
-    rgba(255, 255, 255, 0.6) 100%);
-  border-color: rgba(22, 93, 255, 0.5);
-  box-shadow: 
-    0 8px 24px rgba(22, 93, 255, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 1),
-    0 0 0 3px rgba(22, 93, 255, 0.15),
-    0 0 20px rgba(22, 93, 255, 0.2);
-}
-
-
-/* 搜索框、排序、视图切换样式已移至 common.css */
-
-/* 内容区域包装器 */
-.dl-content-wrapper {
-  flex: 1;
-  display: flex;
-  overflow: hidden;
-  gap: 0;
-  min-width: 0;
   background: transparent;
 }
 
@@ -2615,11 +3376,210 @@ onUnmounted(() => {
 .dl-content {
   flex: 1;
   overflow-y: auto;
-  padding: 24px 32px;
+  padding: 24px 24px 24px 20px;
   background: transparent;
   min-width: 0;
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
+  /* 使用 contain 限定重绘范围 */
+  contain: layout paint;
+}
+
+.dl-content.refresh-sort .doc-card,
+.dl-content.refresh-sort .doc-row {
+  animation: sortFlash 0.2s ease-out;
+}
+
+.dl-content.refresh-view .doc-card,
+.dl-content.refresh-view .doc-row {
+  animation: contentRefresh var(--motion-duration-normal) var(--motion-ease-enter);
+}
+
+.dl-content.refresh-bulk .doc-card.selected {
+  animation: bulkGlow 0.4s var(--motion-ease-enter);
+}
+
+@keyframes sortFlash {
+  0% {
+    filter: brightness(1.15);
+  }
+  100% {
+    filter: brightness(1);
+  }
+}
+
+@keyframes bulkGlow {
+  0% {
+    box-shadow: 0 0 0 rgba(22, 93, 255, 0);
+  }
+  50% {
+    box-shadow: 0 0 24px rgba(22, 93, 255, 0.35);
+  }
+  100% {
+    box-shadow: 0 0 0 rgba(22, 93, 255, 0);
+  }
+}
+
+.dl-content.refresh-filter .dl-grid-view,
+.dl-content.refresh-filter .dl-list-view,
+.dl-content.refresh-sort .dl-grid-view,
+.dl-content.refresh-sort .dl-list-view,
+.dl-content.refresh-bulk .dl-grid-view,
+.dl-content.refresh-bulk .dl-list-view {
+  animation: contentRefresh var(--motion-duration-normal) var(--motion-ease-enter);
+  animation-fill-mode: both;
+}
+
+@keyframes contentRefresh {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+.dl-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.skeleton-hero,
+.skeleton-toolbar {
+  height: 64px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.skeleton-card {
+  height: 180px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.6);
+}
+
+
+.shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -150%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(120deg, transparent 0%, rgba(255, 255, 255, 0.4) 50%, transparent 100%);
+  animation: shimmerMove 1.4s infinite;
+}
+
+@keyframes shimmerMove {
+  0% {
+    left: -150%;
+  }
+  100% {
+    left: 150%;
+  }
+}
+
+.floating-tool-stack {
+  position: absolute;
+  right: 24px;
+  bottom: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 40;
+}
+
+.floating-tool-btn {
+  border: none;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 999px;
+  padding: 12px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #111827;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.16);
+  cursor: pointer;
+  transition: transform var(--motion-duration-fast) var(--motion-ease-soft);
+}
+
+.floating-tool-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.floating-tool-btn:hover {
+  transform: translateY(-3px);
+}
+
+.floating-tool-btn.primary {
+  background: linear-gradient(135deg, #2563eb 0%, #60a5fa 100%);
+  color: #fff;
+  animation: floatingBreath 2.4s ease-in-out infinite;
+}
+
+@keyframes floatingBreath {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 12px 30px rgba(37, 99, 235, 0.3);
+  }
+  50% {
+    transform: scale(1.03);
+    box-shadow: 0 16px 34px rgba(37, 99, 235, 0.4);
+  }
+}
+
+.back-to-top-btn {
+  border: none;
+  background: rgba(15, 23, 42, 0.8);
+  color: white;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transform: translateY(12px);
+  transition:
+    opacity var(--motion-duration-fast) var(--motion-ease-exit),
+    transform var(--motion-duration-fast) var(--motion-ease-exit),
+    background var(--motion-duration-fast) var(--motion-ease-exit);
+}
+
+.back-to-top-btn.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.back-to-top-btn.pulse {
+  animation: backTopPulse 0.4s var(--motion-ease-enter);
+}
+
+@keyframes backTopPulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.94);
+  }
+  100% {
+    transform: scale(1.05);
+  }
+}
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* 隐藏滚动条但保持滚动功能 */
@@ -2632,6 +3592,10 @@ onUnmounted(() => {
 
 /* 网格视图 */
 .dl-grid-view {
+  width: 100%;
+}
+
+.grid-container {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 20px;
@@ -2643,41 +3607,112 @@ onUnmounted(() => {
   border-radius: 20px;
   padding: 24px;
   cursor: pointer;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  display: flex;
-  flex-direction: column;
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  box-shadow: 
-    0 2px 8px rgba(0, 0, 0, 0.06),
-    0 1px 4px rgba(0, 0, 0, 0.04);
+  opacity: 1;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+  opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateZ(0);
   position: relative;
   overflow: hidden;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
 }
 
 .doc-card::before {
   content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, var(--theme-accent, #165dff) 0%, #4c7fff 100%);
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(22, 93, 255, 0.08));
   opacity: 0;
-  transition: opacity 0.3s;
+  transition: opacity var(--motion-duration-fast) var(--motion-ease-soft);
+  pointer-events: none;
+}
+
+.doc-card::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 22px;
+  border: 1px solid rgba(22, 93, 255, 0.25);
+  opacity: 0;
+  transition: opacity var(--motion-duration-fast) var(--motion-ease-soft);
+  pointer-events: none;
+}
+
+.doc-card.is-folder {
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  box-shadow:
+    0 18px 36px rgba(99, 102, 241, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.doc-card.is-folder::before {
+  background: linear-gradient(135deg, rgba(129, 140, 248, 0.5), rgba(59, 130, 246, 0.2));
+  opacity: 0.25;
+}
+
+.doc-card.is-folder::after {
+  border-color: rgba(99, 102, 241, 0.45);
+  opacity: 1;
 }
 
 .doc-card:hover {
-  background: rgba(255, 255, 255, 1);
-  border-color: rgba(22, 93, 255, 0.3);
-  box-shadow: 
-    0 12px 32px rgba(0, 0, 0, 0.12),
-    0 6px 16px rgba(22, 93, 255, 0.2),
-    0 0 0 1px rgba(22, 93, 255, 0.1);
-  transform: translateY(-6px) scale(1.02);
+  transform: translateY(-4px) scale(1.02);
 }
 
 .doc-card:hover::before {
+  opacity: 1;
+}
+
+.doc-card:active {
+  transform: translateY(-2px) scale(0.98) translateZ(0);
+  transition-duration: 0.15s;
+}
+
+.card-select-toggle {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  background: rgba(15, 23, 42, 0.35);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transform: scale(0.8);
+  transition:
+    opacity var(--motion-duration-fast) var(--motion-ease-enter),
+    transform var(--motion-duration-fast) var(--motion-ease-enter),
+    background var(--motion-duration-fast) var(--motion-ease-enter);
+  z-index: 2;
+}
+
+.card-select-toggle .card-select-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+}
+
+.card-select-toggle.visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.card-select-toggle.active {
+  background: #165dff;
+  border-color: transparent;
+}
+
+.doc-card:hover .card-select-toggle {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.doc-card.selected::after {
   opacity: 1;
 }
 
@@ -2685,131 +3720,203 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 
 .doc-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 14px;
-  background: linear-gradient(135deg, var(--theme-accent, #165dff) 0%, #4c7fff 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  flex-shrink: 0;
-  box-shadow: 
-    0 4px 12px rgba(22, 93, 255, 0.25),
-    0 2px 4px rgba(22, 93, 255, 0.15);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  color: #165dff;
   transform: translateZ(0);
-  will-change: transform;
-  position: relative;
-  overflow: hidden;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  /* 移除 will-change，避免 hover 时触发重新渲染 */
 }
 
-.doc-icon::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.3) 0%, 
-    rgba(255, 255, 255, 0) 100%);
-  opacity: 0;
-  transition: opacity 0.3s;
+.doc-icon.is-folder {
+  color: #6366f1;
 }
 
 .doc-card:hover .doc-icon {
-  transform: scale(1.08) rotate(3deg);
-  box-shadow: 
-    0 8px 20px rgba(22, 93, 255, 0.4),
-    0 4px 8px rgba(22, 93, 255, 0.25);
-}
-
-.doc-card:hover .doc-icon::before {
-  opacity: 1;
+  transform: scale(1.1) rotate(4deg) translateZ(0);
 }
 
 .doc-actions {
   display: flex;
-  gap: 4px;
+  gap: 8px;
   opacity: 0;
-  transition: opacity 0.15s;
+  transform: translateX(8px) translateZ(0);
+  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+  transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  /* 移除 will-change，避免 hover 时触发重新渲染 */
 }
 
 .doc-card:hover .doc-actions {
   opacity: 1;
+  transform: translateX(0) translateZ(0);
 }
 
 .doc-action-btn {
-  width: 32px;
-  height: 32px;
-  border: none;
-  background: rgba(255, 255, 255, 0.8);
-  color: #6b7280;
-  cursor: pointer;
-  border-radius: 8px;
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: none;
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: 6px;
+  cursor: pointer;
+  color: #6b7280;
+  /* 移除 will-change，避免 hover 时触发重新渲染 */
+  transform: translateZ(0);
+  /* 优化：只使用 transform，避免 background 和 color 变化导致重绘 */
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .doc-action-btn:hover {
-  background: rgba(255, 255, 255, 1);
-  color: #111827;
-  transform: translateY(-2px) scale(1.1);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px) scale(1.05) translateZ(0);
 }
 
 .doc-action-btn:active {
-  transform: translateY(0) scale(1.05);
+  transform: translateY(0) scale(0.95) translateZ(0);
 }
 
 .doc-action-btn.active {
-  color: #f59e0b;
-  background: rgba(245, 158, 11, 0.1);
+  background: rgba(22, 93, 255, 0.15);
+  color: #165dff;
+  animation: pulseActive 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes pulseActive {
+  0%, 100% {
+    transform: scale(1) translateZ(0);
+  }
+  50% {
+    transform: scale(1.15) translateZ(0);
+  }
 }
 
 .doc-card-body {
-  flex: 1;
   display: flex;
   flex-direction: column;
+  gap: 12px;
+}
+
+.folder-card-body {
+  gap: 10px;
+}
+
+.folder-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.folder-chip-badge {
+  font-size: 12px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.5);
+  color: #4338ca;
+  font-weight: 600;
+}
+
+.folder-card-count {
+  font-size: 12px;
+  color: #4c1d95;
+  font-weight: 500;
+}
+
+.folder-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 12px;
+  color: #4c1d95;
+  opacity: 0.8;
+}
+
+.folder-actions {
+  gap: 6px;
+}
+
+.folder-enter-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: none;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12px;
+  background: rgba(255, 255, 255, 0.85);
+  color: #4338ca;
+  cursor: pointer;
+  transition: transform var(--motion-duration-fast) var(--motion-ease-soft);
+}
+
+.folder-enter-btn svg {
+  width: 12px;
+  height: 12px;
+}
+
+.folder-enter-btn:hover {
+  transform: translateY(-2px);
+}
+
+.folder-card-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.folder-link {
+  border: none;
+  background: transparent;
+  color: #4338ca;
+  font-weight: 600;
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: transform var(--motion-duration-fast) var(--motion-ease-soft);
+}
+
+.folder-link svg {
+  width: 12px;
+  height: 12px;
+}
+
+.folder-link:hover {
+  transform: translateX(4px);
 }
 
 .doc-title {
   font-size: 16px;
   font-weight: 600;
   color: #111827;
-  margin: 0 0 10px 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  margin: 0;
   line-height: 1.4;
-  letter-spacing: -0.01em;
+  transform: translateZ(0);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  /* 移除 will-change，避免 hover 时触发重新渲染 */
+}
+
+.doc-card:hover .doc-title {
+  transform: translateY(-2px) translateZ(0);
 }
 
 .doc-desc {
   font-size: 13px;
   color: #6b7280;
-  margin: 0 0 12px 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  margin: 0;
+  line-height: 1.5;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
-  flex: 1;
+  overflow: hidden;
 }
 
 .doc-collaborators {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin: 8px 0;
-  min-height: 24px;
 }
 
 .doc-collaborators-list {
@@ -2821,7 +3928,7 @@ onUnmounted(() => {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #165dff 0%, #4c7fff 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2829,7 +3936,13 @@ onUnmounted(() => {
   font-size: 11px;
   font-weight: 600;
   border: 2px solid white;
-  flex-shrink: 0;
+  transform: translateZ(0);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  /* 移除 will-change，避免 hover 时触发重新渲染 */
+}
+
+.doc-card:hover .doc-collaborator-avatar {
+  transform: scale(1.08) translateZ(0);
 }
 
 .doc-collaborator-more {
@@ -2843,10 +3956,32 @@ onUnmounted(() => {
   align-items: center;
   gap: 4px;
   font-size: 11px;
-  color: #165dff;
-  background: #eff6ff;
+  color: #8b5cf6;
+  background: rgba(139, 92, 246, 0.1);
   padding: 4px 8px;
-  border-radius: 4px;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: transform var(--motion-duration-fast) var(--motion-ease-soft);
+}
+
+.doc-share-badge:active,
+.favorite-badge:active {
+  animation: badgePop var(--motion-duration-fast) var(--motion-ease-enter);
+}
+.favorite-badge {
+  transition: transform var(--motion-duration-fast) var(--motion-ease-soft);
+}
+
+@keyframes badgePop {
+  from {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  to {
+    transform: scale(1);
+  }
 }
 
 .doc-meta {
@@ -2855,7 +3990,6 @@ onUnmounted(() => {
   gap: 12px;
   font-size: 12px;
   color: #9ca3af;
-  margin-top: auto;
 }
 
 .doc-likes {
@@ -2867,39 +4001,93 @@ onUnmounted(() => {
 
 /* 列表视图 */
 .dl-list-view {
-  background: transparent;
-  border: none;
-  border-radius: 0;
-  overflow: visible;
+  width: 100%;
 }
 
 .doc-table {
   width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
+  border-collapse: collapse;
+  background: transparent;
 }
 
 .doc-table thead {
-  background: transparent;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
+  background: rgba(255, 255, 255, 0.5);
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: 5;
 }
 
 .doc-table th {
-  padding: 14px 20px;
+  padding: 12px 16px;
   text-align: left;
   font-size: 12px;
   font-weight: 600;
   color: #6b7280;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.doc-table td {
+  padding: 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.doc-row {
+  background: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  /* 初始状态 - 不透明，避免闪烁 */
+  opacity: 1;
+  transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+  transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+  background 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  /* GPU 加速 */
+  transform: translateZ(0);
+  /* 移除 contain，避免与 transform 动画冲突导致重绘 */
+  /* contain: layout style paint; */
+}
+
+/* 移除进入动画，避免闪烁 */
+
+/* 只在首次渲染时触发进入动画 */
+.doc-row[data-animated="true"] {
+  animation: rowSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: var(--delay, 0s);
+  animation-fill-mode: both;
+}
+
+@keyframes rowSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.doc-row.is-folder {
+  background: rgba(99, 102, 241, 0.08);
+}
+
+.doc-row:hover {
+  transform: translateX(4px) translateZ(0);
   background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-bottom: 2px solid rgba(0, 0, 0, 0.06);
+}
+
+.doc-row.selected {
+  background: rgba(22, 93, 255, 0.08);
+  animation: selectPulse 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes selectPulse {
+  0%, 100% {
+    background: rgba(22, 93, 255, 0.08);
+  }
+  50% {
+    background: rgba(22, 93, 255, 0.15);
+  }
 }
 
 .col-check {
@@ -2907,72 +4095,23 @@ onUnmounted(() => {
 }
 
 .col-name {
-  width: 40%;
+  min-width: 200px;
 }
 
 .col-owner {
-  width: 15%;
+  width: 150px;
 }
 
 .col-updated {
-  width: 20%;
+  width: 150px;
 }
 
 .col-size {
-  width: 10%;
+  width: 100px;
 }
 
 .col-actions {
   width: 60px;
-}
-
-.doc-row {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
-  cursor: pointer;
-  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  background: rgba(255, 255, 255, 0.5);
-  position: relative;
-  transform: translateZ(0);
-  will-change: transform, background;
-}
-
-.doc-row::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 3px;
-  background: linear-gradient(180deg, var(--theme-accent, #165dff) 0%, #4c7fff 100%);
-  opacity: 0;
-  transition: opacity 0.2s;
-}
-
-.doc-row:hover {
-  background: rgba(255, 255, 255, 0.95);
-  transform: translateX(4px);
-  box-shadow: 
-    0 4px 12px rgba(0, 0, 0, 0.08),
-    0 2px 4px rgba(22, 93, 255, 0.1);
-}
-
-.doc-row:hover::before {
-  opacity: 1;
-}
-
-.doc-row.selected {
-  background: rgba(22, 93, 255, 0.08);
-}
-
-.doc-row.selected::before {
-  opacity: 1;
-}
-
-.doc-row td {
-  padding: 16px 20px;
-  font-size: 14px;
-  color: #111827;
-  vertical-align: middle;
 }
 
 .doc-name-cell {
@@ -2982,46 +4121,60 @@ onUnmounted(() => {
 }
 
 .doc-icon-small {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, var(--theme-accent, #165dff) 0%, #4c7fff 100%);
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
+  background: rgba(22, 93, 255, 0.1);
+  border-radius: 8px;
+  color: #165dff;
   flex-shrink: 0;
-  box-shadow: 
-    0 2px 8px rgba(22, 93, 255, 0.2),
-    0 1px 3px rgba(22, 93, 255, 0.1);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateZ(0);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  /* 移除 will-change，避免 hover 时触发重新渲染 */
 }
 
-.doc-row:hover .doc-icon-small {
-  transform: scale(1.15) rotate(2deg);
-  box-shadow: 
-    0 6px 16px rgba(22, 93, 255, 0.35),
-    0 3px 6px rgba(22, 93, 255, 0.2);
+.doc-row.is-folder .doc-icon-small {
+  background: rgba(99, 102, 241, 0.15);
+  color: #4338ca;
 }
+
+/* 删除 hover 动画以诊断闪烁问题 */
+/* .doc-row:hover .doc-icon-small {
+  transform: scale(1.1) rotate(5deg) translateZ(0);
+} */
 
 .doc-name {
+  font-size: 14px;
   font-weight: 500;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  color: #111827;
 }
 
 .favorite-badge {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border: none;
   background: transparent;
   color: #f59e0b;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   flex-shrink: 0;
+  transform: translateZ(0);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  /* 移除 will-change，避免 hover 时触发重新渲染 */
+}
+
+/* 删除 hover 动画以诊断闪烁问题 */
+/* .favorite-badge:hover {
+  transform: scale(1.3) rotate(15deg) translateZ(0);
+} */
+
+.favorite-badge:active {
+  transform: scale(1.1) rotate(15deg) translateZ(0);
+  transition-duration: 0.15s;
 }
 
 .owner-cell {
@@ -3031,241 +4184,168 @@ onUnmounted(() => {
 }
 
 .owner-avatar {
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--theme-accent, #165dff) 0%, #4c7fff 100%);
+  background: linear-gradient(135deg, #165dff 0%, #4c7fff 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   flex-shrink: 0;
-  box-shadow: 0 2px 4px rgba(22, 93, 255, 0.2);
+  transform: translateZ(0);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  /* 移除 will-change，避免 hover 时触发重新渲染 */
 }
+
+/* 删除 hover 动画以诊断闪烁问题 */
+/* .doc-row:hover .owner-avatar {
+  transform: scale(1.15) rotate(5deg) translateZ(0);
+} */
 
 .action-btn {
-  width: 36px;
-  height: 36px;
-  border: none;
-  background: rgba(255, 255, 255, 0.8);
-  color: #6b7280;
-  cursor: pointer;
-  border-radius: 8px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #9ca3af;
+  transform: translateZ(0);
+  /* 优化：只使用 transform，避免 background 和 color 变化导致重绘 */
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  /* 移除 will-change，避免 hover 时触发重新渲染 */
 }
 
-.action-btn:hover {
-  background: rgba(255, 255, 255, 1);
-  color: #111827;
-  transform: translateY(-2px) scale(1.1);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
+/* 删除 hover 动画以诊断闪烁问题 */
+/* .action-btn:hover {
+  transform: scale(1.15) rotate(90deg) translateZ(0);
+} */
 
 .action-btn:active {
-  transform: translateY(0) scale(1.05);
+  transform: scale(0.9) rotate(90deg) translateZ(0);
+  transition-duration: 0.15s;
 }
 
-/* 对话框样式已移至 common.css */
-
-.create-options {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
-}
-
-.create-option {
-  padding: 24px;
-  border: 2px solid #e5e7eb;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  text-align: center;
-}
-
-.create-option:hover {
-  border-color: var(--theme-accent, #165dff);
-  background: color-mix(in srgb, var(--theme-accent, #165dff) 10%, transparent);
-}
-
-.option-icon {
-  margin-bottom: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--theme-accent, #165dff);
-}
-
-.create-option h4 {
-  font-size: 16px;
-  font-weight: 600;
-  color: #111827;
-  margin: 0 0 8px 0;
-}
-
-.create-option p {
-  font-size: 13px;
-  color: #6b7280;
-  margin: 0;
-}
-
-/* 创建文档表单样式 */
-.create-doc-dialog {
-  max-width: 600px;
-  width: 90%;
-}
-
-.form-group {
-  margin-bottom: 20px;
-}
-
-.form-group:last-child {
-  margin-bottom: 0;
-}
-
-.form-label {
-  display: block;
-  font-size: 14px;
-  font-weight: 500;
-  color: #111827;
-  margin-bottom: 8px;
-}
-
-.form-input,
-.form-textarea {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  font-size: 14px;
-  font-family: inherit;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  background: var(--theme-background-gradient, none);
-  background-color: var(--theme-background, #f5f5f7);
-  color: var(--theme-text, #111827);
-  box-sizing: border-box;
-}
-
-.form-input:focus,
-.form-textarea:focus {
-  outline: none;
-  border-color: var(--theme-accent, #165dff);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--theme-accent, #165dff) 15%, transparent);
-}
-
-.form-textarea {
-  resize: vertical;
-  min-height: 120px;
-  line-height: 1.5;
-}
-
-.type-options {
-  display: flex;
-  gap: 12px;
-}
-
-.type-option {
-  flex: 1;
-  padding: 12px 16px;
-  border: 2px solid #e5e7eb;
-  border-radius: 6px;
-  background: var(--theme-background-gradient, none);
-  background-color: var(--theme-background, #f5f5f7);
-  color: #6b7280;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
-.type-option:hover {
-  border-color: var(--theme-accent, #165dff);
-  color: var(--theme-accent, #165dff);
-}
-
-.type-option.active {
-  border-color: var(--theme-accent, #165dff);
-  background: color-mix(in srgb, var(--theme-accent, #165dff) 10%, transparent);
-  color: var(--theme-accent, #165dff);
-}
-
-.type-option svg {
-  flex-shrink: 0;
-}
-
-.rename-input {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  font-size: 14px;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.rename-input:focus {
-  outline: none;
-  border-color: var(--theme-accent, #165dff);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--theme-accent, #165dff) 15%, transparent);
-}
-
-/* 对话框footer和按钮样式已移至 common.css */
-
-/* 右键菜单 */
+/* 上下文菜单 */
 .context-menu {
   position: fixed;
-  background: var(--theme-background-gradient, none);
-  background-color: var(--theme-background, #f5f5f7);
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  padding: 4px;
-  z-index: 1001;
-  min-width: 160px;
-  animation: fadeIn 0.15s;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  padding: 8px;
+  z-index: 2000;
+  min-width: 180px;
+  transform-origin: top right;
+  animation: contextMenuPop var(--motion-duration-fast) var(--motion-ease-enter);
 }
 
 .context-menu-item {
-  padding: 8px 12px;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  cursor: pointer;
   font-size: 14px;
   color: #111827;
-  cursor: pointer;
-  border-radius: 4px;
-  transition: background 0.15s;
+  transition:
+    transform var(--motion-duration-fast) var(--motion-ease-soft),
+    background var(--motion-duration-fast) var(--motion-ease-soft),
+    color var(--motion-duration-fast) var(--motion-ease-soft);
 }
 
 .context-menu-item:hover {
-  background: #f3f4f6;
+  background: rgba(22, 93, 255, 0.08);
+  color: #165dff;
+  transform: translateX(4px);
 }
 
 .context-menu-item.danger {
-  color: #dc2626;
+  color: #ef4444;
 }
 
 .context-menu-item.danger:hover {
-  background: #fef2f2;
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
 }
 
-.context-menu-item svg {
-  flex-shrink: 0;
-  color: currentColor;
+@keyframes contextMenuPop {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .context-menu-divider {
   height: 1px;
-  background: #e5e7eb;
+  background: rgba(0, 0, 0, 0.06);
   margin: 4px 0;
 }
-</style>
 
+/* 分页控件样式 */
+.pagination-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 24px;
+  margin-top: 24px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.pagination-btn {
+  padding: 8px 16px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.8);
+  color: #111827;
+  font-size: 14px;
+  cursor: pointer;
+  transition: transform var(--motion-duration-fast) var(--motion-ease-soft),
+  color var(--motion-duration-fast) var(--motion-ease-soft);
+}
+
+.pagination-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  color: #165dff;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pagination-info {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+/* 空间下拉菜单动画 */
+.space-dropdown-enter-active,
+.space-dropdown-leave-active {
+  transition:
+    opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.space-dropdown-enter-from {
+  opacity: 0;
+  transform: translateY(-8px) scale(0.95);
+}
+
+.space-dropdown-leave-to {
+  opacity: 0;
+  transform: translateY(-8px) scale(0.95);
+}
+</style>

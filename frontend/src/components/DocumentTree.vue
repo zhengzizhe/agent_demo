@@ -10,19 +10,19 @@
       </div>
       
       <div v-else class="tree-list">
-        <transition-group name="tree-node" tag="div">
+        <div class="tree-node-list">
           <TreeNode
-            v-for="node in treeData"
-            :key="node.id"
-            :node="node"
-            :selected-id="selectedId"
-            :expanded-ids="expandedIds"
-            :depth="0"
-            @select="handleNodeSelect"
-            @toggle="handleNodeToggle"
-            @open="handleNodeOpen"
+              v-for="node in treeData"
+              :key="node.id"
+              :node="node"
+              :selected-id="selectedId"
+              :expanded-ids="expandedIds"
+              :depth="0"
+              @select="handleNodeSelect"
+              @toggle="handleNodeToggle"
+              @open="handleNodeOpen"
           />
-        </transition-group>
+        </div>
       </div>
     </div>
   </div>
@@ -176,37 +176,8 @@ watch(() => props.selectedId, (newId) => {
   transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   /* GPU加速 */
   transform: translateZ(0);
-  contain: layout style paint;
+  contain: layout paint;
   /* 移除will-change，减少内存占用 */
-}
-
-/* 树节点列表动画 - 性能优化 */
-.tree-node-enter-active {
-  transition: opacity 0.15s cubic-bezier(0.16, 1, 0.3, 1), transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
-  /* 移除will-change */
-}
-
-.tree-node-leave-active {
-  transition: opacity 0.12s cubic-bezier(0.4, 0, 1, 1), transform 0.12s cubic-bezier(0.4, 0, 1, 1);
-  /* 移除will-change */
-}
-
-.tree-node-enter-from {
-  opacity: 0;
-  transform: translate3d(-12px, 0, 0);
-}
-
-.tree-node-leave-to {
-  opacity: 0;
-  transform: translate3d(-8px, 0, 0);
-}
-
-.tree-node-move {
-  transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
-  /* 移除will-change */
-  flex-shrink: 0;
-  position: relative;
-  overflow: hidden;
 }
 
 .document-tree::before {
@@ -247,6 +218,12 @@ watch(() => props.selectedId, (newId) => {
   overflow-y: auto;
   overflow-x: hidden;
   height: 100%;
+}
+
+.tree-node-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .tree-list::-webkit-scrollbar {

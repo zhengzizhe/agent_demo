@@ -103,12 +103,14 @@ const sliderStyle = computed(() => {
   width: calc(50% - 4px);
   background: linear-gradient(135deg, var(--theme-accent) 0%, var(--theme-accent-light) 100%);
   border-radius: var(--radius-small);
-  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
   box-shadow: 
     0 4px 16px var(--theme-accent-glow),
     0 2px 6px rgba(0, 102, 255, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.4);
   z-index: 1;
+  will-change: transform;
+  transform: translateZ(0);
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .view-btn {
@@ -124,31 +126,54 @@ const sliderStyle = computed(() => {
   color: var(--color-text-secondary);
   cursor: pointer;
   border-radius: var(--radius-small);
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, color;
+  transform: translateZ(0);
+  transition: 
+    all 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .view-btn:hover {
   color: var(--color-text-primary);
-  transform: translateY(-2px) scale(1.1);
+  transform: translateY(-3px) scale(1.08) translateZ(0);
+}
+
+.view-btn:active {
+  transform: translateY(-1px) scale(1.05) translateZ(0);
+  transition-duration: 0.15s;
 }
 
 .view-btn svg {
-  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
+  transform: translateZ(0);
+  transition: 
+    transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
+    filter 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   z-index: 1;
 }
 
 .view-btn:hover svg {
-  transform: scale(1.15);
+  transform: scale(1.15) rotate(5deg) translateZ(0);
 }
 
 .view-btn.active {
   color: white;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  animation: viewActivePulse 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes viewActivePulse {
+  0%, 100% {
+    transform: scale(1) translateZ(0);
+  }
+  50% {
+    transform: scale(1.1) translateZ(0);
+  }
 }
 
 .view-btn.active svg {
-  transform: scale(1.2);
+  transform: scale(1.25) translateZ(0);
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
 }
 </style>

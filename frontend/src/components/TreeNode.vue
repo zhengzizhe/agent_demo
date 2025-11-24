@@ -4,7 +4,7 @@
     <div 
       class="tree-node-custom" 
       :class="{ selected: isSelected, 'has-children': hasChildren }"
-      :style="{ paddingLeft: `${16 + depth * 24}px` }"
+      :style="{ paddingLeft: `${16 + depth * 24}px`, '--tree-depth': depth }"
       @click="handleClick"
       @dblclick="handleDoubleClick"
     >
@@ -207,7 +207,10 @@ const handleChildOpen = (node) => {
   margin: 1px 0;
   border-radius: 10px;
   cursor: pointer;
-  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition:
+    background var(--motion-duration-fast) var(--motion-ease-soft),
+    transform var(--motion-duration-fast) var(--motion-ease-soft),
+    color var(--motion-duration-fast) var(--motion-ease-soft);
   min-height: 40px;
   position: relative;
   background: transparent;
@@ -238,12 +241,10 @@ const handleChildOpen = (node) => {
   position: absolute;
   inset: 0;
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0);
-  backdrop-filter: blur(0px);
-  -webkit-backdrop-filter: blur(0px);
-  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), backdrop-filter 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  background: rgba(255, 255, 255, 0.08);
   z-index: 0;
   opacity: 0;
+  transition: opacity var(--motion-duration-fast) var(--motion-ease-soft);
 }
 
 /* 四周光晕（选中时） */
@@ -252,53 +253,36 @@ const handleChildOpen = (node) => {
   position: absolute;
   inset: -2px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0);
-  opacity: 0;
-  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  z-index: -1;
-  filter: blur(2px);
-}
-
-/* Hover: 白色10-15%透明 */
-.tree-node-custom:hover {
   background: transparent;
-  transform: translate3d(2px, 0, 0);
+  opacity: 0;
+  z-index: -1;
 }
 
-.tree-node-custom:hover::before {
-  background: rgba(255, 255, 255, 0.12);
-  /* 90fps性能优化：大幅降低blur值 */
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  opacity: 1;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+.tree-node-custom:hover {
+  background: rgba(255, 255, 255, 0.06);
+  transform: translateX(3px);
 }
 
 /* Active: 白色20%透明玻璃 + 四周光晕 + 左侧高光 */
 .tree-node-custom.selected {
   background: transparent;
-  transform: translate3d(3px, 0, 0);
+  transform: translateX(3px);
   font-weight: 500;
 }
 
 .tree-node-custom.selected::before {
-  background: rgba(255, 255, 255, 0.2);
-  /* 90fps性能优化：大幅降低blur值 */
-  backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: blur(5px);
+  background: rgba(22, 93, 255, 0.12);
   opacity: 1;
-  box-shadow: 
-    0 2px 8px rgba(0, 0, 0, 0.06),
-    0 0 0 1px rgba(255, 255, 255, 0.3) inset;
 }
 
 .tree-node-custom.selected::after {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(22, 93, 255, 0.2);
   opacity: 1;
 }
 
 .tree-node-custom.selected .tree-node-highlight {
   opacity: 1;
+  animation: highlightGrow var(--motion-duration-fast) var(--motion-ease-enter);
 }
 
 .tree-node-custom.selected .tree-node-name {
@@ -315,7 +299,7 @@ const handleChildOpen = (node) => {
   align-items: center;
   justify-content: center;
   border-radius: 6px;
-  transition: all 0.16s ease;
+  transition: transform var(--motion-duration-fast) var(--motion-ease-soft);
   cursor: pointer;
   background: transparent;
   border: none;
@@ -330,19 +314,15 @@ const handleChildOpen = (node) => {
   width: 12px;
   height: 12px;
   color: #9ca3af;
-  transition: all 0.16s ease;
+  transition: transform var(--motion-duration-fast) var(--motion-ease-soft),
+  color var(--motion-duration-fast) var(--motion-ease-soft);
   transform: rotate(-90deg);
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
 }
 
 .tree-node-toggle:hover {
   background: rgba(22, 93, 255, 0.08);
-  transform: scale(1.1);
-}
-
-.tree-node-toggle:hover svg {
-  color: #165dff;
-  filter: drop-shadow(0 0 4px rgba(22, 93, 255, 0.3));
+  transform: scale(1.05);
 }
 
 .tree-node-toggle.expanded svg {
@@ -374,7 +354,7 @@ const handleChildOpen = (node) => {
 .icon-document {
   width: 20px;
   height: 20px;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
 }
 
@@ -390,7 +370,7 @@ const handleChildOpen = (node) => {
   letter-spacing: -0.01em;
   position: relative;
   z-index: 2;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: color var(--motion-duration-fast) var(--motion-ease-soft);
 }
 
 /* 状态徽章 */
@@ -411,7 +391,7 @@ const handleChildOpen = (node) => {
   align-items: center;
   justify-content: center;
   border-radius: 4px;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform var(--motion-duration-fast) var(--motion-ease-soft);
   position: relative;
   flex-shrink: 0;
 }
@@ -445,19 +425,9 @@ const handleChildOpen = (node) => {
   background: rgba(245, 158, 11, 0.12);
 }
 
-.status-badge.favorite:hover {
-  background: rgba(245, 158, 11, 0.2);
-  transform: scale(1.15);
-}
-
 .status-badge.shared {
   color: #06b6d4;
   background: rgba(6, 182, 212, 0.12);
-}
-
-.status-badge.shared:hover {
-  background: rgba(6, 182, 212, 0.2);
-  transform: scale(1.15);
 }
 
 .status-badge.locked {
@@ -465,11 +435,9 @@ const handleChildOpen = (node) => {
   background: rgba(107, 114, 128, 0.1);
 }
 
-.status-badge.locked:hover {
-  background: rgba(107, 114, 128, 0.15);
-  transform: scale(1.15);
+.status-badge:hover {
+  transform: scale(1.1);
 }
-
 .status-badge.new,
 .status-badge.updated {
   background: transparent;
@@ -479,12 +447,16 @@ const handleChildOpen = (node) => {
 .tree-node-children {
   margin-left: 0;
   padding-left: 0;
+  animation: treeExpand var(--motion-duration-normal) var(--motion-ease-enter);
+  transform-origin: top;
 }
 
 /* 展开动画 */
 .tree-expand-enter-active,
 .tree-expand-leave-active {
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transition:
+    opacity var(--motion-duration-normal) var(--motion-ease-enter),
+    max-height var(--motion-duration-normal) var(--motion-ease-enter);
   overflow: hidden;
 }
 
@@ -506,6 +478,45 @@ const handleChildOpen = (node) => {
 .tree-expand-leave-to {
   opacity: 0;
   max-height: 0;
+}
+
+.tree-node-children > .tree-node-wrapper {
+  animation: treeChildFade var(--motion-duration-normal) var(--motion-ease-enter);
+  animation-delay: calc(var(--tree-depth, 0) * 40ms);
+  animation-fill-mode: both;
+}
+
+@keyframes treeChildFade {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes treeExpand {
+  from {
+    opacity: 0;
+    transform: scaleY(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+}
+
+@keyframes highlightGrow {
+  from {
+    opacity: 0;
+    transform: scaleY(0.4);
+  }
+  to {
+    opacity: 1;
+    transform: scaleY(1);
+  }
 }
 
 /* 脉冲动画 */

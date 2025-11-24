@@ -8,6 +8,9 @@ import com.example.ddd.interfaces.response.Result;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -36,9 +39,8 @@ public class AuthController {
     @PostMapping("/login")
     public Result<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         log.info("用户登录请求: loginType={}, email={}", request.getLoginType(), request.getEmail());
+        authService.login(request);
         // TODO: 实现登录逻辑
-        String loginType = request.getLoginType();
-
         // 2. 验证用户凭证（密码/验证码/OAuth）
         // 3. 查询用户信息
         // 4. 生成 JWT Token
@@ -173,6 +175,17 @@ public class AuthController {
 
         return Result.success(response);
     }
+
+    @GetMapping("/profile")
+    public String profile(Model model, @AuthenticationPrincipal OAuth2User oauth2User) {
+        if (oauth2User != null) {
+            model.addAttribute("name", oauth2User.getAttribute("login")); // GitHub 登录名
+            model.addAttribute("avatar", oauth2User.getAttribute("avatar_url"));
+        }
+        return "profile";
+    }
+
+
 }
 
 

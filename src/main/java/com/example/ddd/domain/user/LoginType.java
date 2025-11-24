@@ -10,7 +10,9 @@ import static com.example.ddd.common.exception.ErrorCode.INTERNAL_ERROR;
 
 @AllArgsConstructor
 public enum LoginType {
-    Email(1, "email");
+    Email(1, "email"),
+
+    Github(2, "github");
     private Integer code;
     private String desc;
 

@@ -1,6 +1,42 @@
 /**
- * 公共样式
+ * 公共样式与动效变量
  */
+
+:root {
+  --motion-duration-fast: 160ms;
+  --motion-duration-normal: 220ms;
+  --motion-duration-slow: 320ms;
+  --motion-duration-page: 360ms;
+  --motion-duration-active: 120ms;
+
+  --motion-ease-enter: cubic-bezier(0.16, 1, 0.3, 1);
+  --motion-ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --motion-ease-soft: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --motion-ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  --glass-bg: rgba(255, 255, 255, 0.55);
+  --glass-border: rgba(255, 255, 255, 0.35);
+  --glass-highlight: rgba(255, 255, 255, 0.65);
+  --shadow-soft: 0 12px 30px rgba(15, 23, 42, 0.12);
+  --shadow-floating: 0 18px 36px rgba(15, 23, 42, 0.18);
+
+  --theme-accent: #2563eb;
+  --theme-accent-light: #60a5fa;
+  --theme-accent-subtle: rgba(37, 99, 235, 0.08);
+  --theme-accent-glow: rgba(37, 99, 235, 0.35);
+
+  --radius-small: 8px;
+  --radius-medium: 14px;
+  --radius-large: 20px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
 
 /* 按钮样式 */
 .btn {
@@ -159,22 +195,49 @@
   gap: 12px;
 }
 
-/* 搜索框样式 */
+/* 搜索框样式 - 流畅动画 */
 .search-wrapper {
   position: relative;
   display: flex;
   align-items: center;
-  width: 280px;
+  width: 240px;
   background: #f2f3f5;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   padding: 8px 12px;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform, box-shadow, background, width;
+  transform: translateZ(0);
+  transition:
+    width var(--motion-duration-normal) var(--motion-ease-soft),
+    box-shadow var(--motion-duration-normal) var(--motion-ease-soft),
+    background var(--motion-duration-normal) var(--motion-ease-soft),
+    transform var(--motion-duration-fast) var(--motion-ease-soft);
+  animation: searchFadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.3s backwards;
+}
+
+@keyframes searchFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px) scale(0.95) translateZ(0);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1) translateZ(0);
+  }
+}
+
+.search-wrapper:hover {
+  transform: translateY(-1px) scale(1.01) translateZ(0);
+  box-shadow: 0 2px 8px rgba(22, 93, 255, 0.08);
 }
 
 .search-wrapper:focus-within {
   background: #ffffff;
-  box-shadow: 0 0 0 2px rgba(22, 93, 255, 0.1);
+  box-shadow: 
+    0 0 0 2px rgba(22, 93, 255, 0.15),
+    0 4px 12px rgba(22, 93, 255, 0.1);
+  transform: translateY(-2px) scale(1.02) translateZ(0);
+  width: 320px;
 }
 
 .search-icon {
@@ -183,6 +246,16 @@
   color: #9ca3af;
   flex-shrink: 0;
   margin-right: 8px;
+  will-change: transform, color;
+  transform: translateZ(0);
+  transition: 
+    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+    color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.search-wrapper:focus-within .search-icon {
+  color: #165dff;
+  transform: scale(1.1) rotate(5deg) translateZ(0);
 }
 
 .search-input {
@@ -209,13 +282,36 @@
   border-radius: 4px;
   color: #9ca3af;
   cursor: pointer;
-  transition: all 0.15s ease-out;
   flex-shrink: 0;
+  will-change: transform, background, color;
+  transform: translateZ(0);
+  transition: 
+    all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+    transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  /* 进入动画 */
+  animation: clearFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes clearFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8) rotate(-90deg) translateZ(0);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0deg) translateZ(0);
+  }
 }
 
 .search-clear:hover {
   background: #f3f4f6;
   color: #6b7280;
+  transform: scale(1.2) rotate(90deg) translateZ(0);
+}
+
+.search-clear:active {
+  transform: scale(0.9) rotate(90deg) translateZ(0);
+  transition-duration: 0.15s;
 }
 
 /* 视图切换样式 - Craft 风格 */
@@ -302,6 +398,7 @@
   justify-content: center;
   padding: 80px 20px;
   text-align: center;
+  animation: emptyFloat 2.4s ease-in-out infinite;
 }
 
 .empty-icon {
@@ -338,6 +435,26 @@
   align-items: center;
   position: relative;
   overflow: hidden;
+  animation: emptyBtnBreath 2.4s ease-in-out infinite;
+}
+
+@keyframes emptyFloat {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes emptyBtnBreath {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.04);
+  }
 }
 
 .empty-btn:hover {

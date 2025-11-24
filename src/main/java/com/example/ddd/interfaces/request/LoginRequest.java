@@ -15,7 +15,7 @@ public class LoginRequest {
      * 登录方式：email / email_code / oauth
      */
     @NotBlank(message = "登录方式不能为空")
-    private String loginType;
+    private Integer loginType;
 
     /**
      * 邮箱（邮箱密码登录或邮箱验证码登录时使用）

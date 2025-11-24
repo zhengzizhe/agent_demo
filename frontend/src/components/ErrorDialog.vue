@@ -86,6 +86,7 @@ onMounted(() => {
   min-width: 280px;
   max-width: 480px;
   width: auto;
+  animation: errorShake 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .notification-content {
@@ -149,6 +150,24 @@ onMounted(() => {
 .notification-close:hover {
   background: rgba(239, 68, 68, 0.1);
   color: #991B1B;
+}
+
+@keyframes errorShake {
+  0% {
+    transform: translateX(-50%);
+  }
+  25% {
+    transform: translateX(calc(-50% + 5px));
+  }
+  50% {
+    transform: translateX(calc(-50% - 5px));
+  }
+  75% {
+    transform: translateX(calc(-50% + 2px));
+  }
+  100% {
+    transform: translateX(-50%);
+  }
 }
 
 /* 过渡动画 - 从顶部滑入（飞书风格） */

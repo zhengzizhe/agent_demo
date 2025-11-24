@@ -34,28 +34,28 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            // 禁用 CSRF（前后端分离项目通常不需要）
-            .csrf(csrf -> csrf.disable())
-            // 配置 CORS
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            // 配置会话管理：无状态（使用 JWT）
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            // 配置请求授权
-            .authorizeHttpRequests(auth -> auth
-                // 公开接口：登录、注册、验证码等
-                .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/api/public/**").permitAll()
-                // 健康检查接口
-                .requestMatchers("/rag/health").permitAll()
-                // 其他接口需要认证
-                .anyRequest().authenticated()
-            )
-            .addFilterBefore(ipAndUserAgentFilter, UsernamePasswordAuthenticationFilter.class)
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-            // 禁用默认的登录页面
-            .formLogin(form -> form.disable())
-            // 禁用 HTTP Basic 认证
-            .httpBasic(basic -> basic.disable());
+                // 禁用 CSRF（前后端分离项目通常不需要）
+                .csrf(csrf -> csrf.disable())
+                // 配置 CORS
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                // 配置会话管理：无状态（使用 JWT）
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                // 配置请求授权
+                .authorizeHttpRequests(auth -> auth
+                        // 公开接口：登录、注册、验证码等
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/public/**").permitAll()
+                        // 健康检查接口
+                        .requestMatchers("/rag/health").permitAll()
+                        // 其他接口需要认证
+                        .anyRequest().authenticated()
+                ).oauth2Login(outh2 -> outh2.defaultSuccessUrl("/profile"))
+                .addFilterBefore(ipAndUserAgentFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                // 禁用默认的登录页面
+                .formLogin(form -> form.disable())
+                // 禁用 HTTP Basic 认证
+                .httpBasic(basic -> basic.disable());
         return http.build();
     }
 

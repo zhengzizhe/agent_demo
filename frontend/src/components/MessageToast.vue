@@ -40,7 +40,7 @@ const props = defineProps({
   },
   duration: {
     type: Number,
-    default: 3000 // 自动关闭时间（毫秒）
+    default: 2500 // 自动关闭时间（毫秒）
   }
 })
 
@@ -184,11 +184,11 @@ onMounted(() => {
 
 /* 过渡动画 - 从顶部滑入（飞书风格） */
 .toast-fade-enter-active {
-  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: all 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .toast-fade-leave-active {
-  transition: all 0.25s cubic-bezier(0.4, 0, 1, 1);
+  transition: all 0.16s cubic-bezier(0.4, 0, 1, 1);
 }
 
 .toast-fade-enter-from {
