@@ -634,7 +634,15 @@
                 </template>
               </div>
             </div>
-            <div class="doc-card-body" :class="{ 'folder-card-body': doc.isFolder }">
+            <!-- 文档类型条（纸张感） -->
+            <div v-if="!doc.isFolder" class="doc-type-bar" :class="getDocTypeClass(doc.type)">
+              <span class="doc-type-label">{{ getDocTypeLabel(doc.type) }}</span>
+            </div>
+            
+            <!-- 文档封面色块（左侧） -->
+            <div v-if="!doc.isFolder" class="doc-cover" :style="getDocCoverStyle(doc)"></div>
+            
+            <div class="doc-card-body" :class="{ 'folder-card-body': doc.isFolder, 'has-cover': !doc.isFolder }">
               <template v-if="doc.isFolder">
                 <div class="folder-card-top">
                   <span class="folder-chip-badge">文件夹</span>
@@ -649,36 +657,76 @@
               </template>
               <template v-else>
               <h3 class="doc-title">{{ doc.name || '未命名文档' }}</h3>
-              <p class="doc-desc" v-if="doc.description">{{ doc.description }}</p>
               
-              <!-- 协作者和分享信息 -->
-                      <div class="doc-collaborators"
-                           v-if="(doc.collaborators && doc.collaborators.length > 0) || doc.shareLink">
-                        <div class="doc-collaborators-list" v-if="doc.collaborators && doc.collaborators.length > 0">
-                          <template v-for="(collab, idx) in (doc.collaborators || []).slice(0, 3)" :key="collab.user.id">
-                            <div
-                    class="doc-collaborator-avatar"
-                    :title="collab.user.name"
-                    :style="{ zIndex: 10 - idx, marginLeft: idx > 0 ? '-8px' : '0' }"
-                  >
-                    {{ collab.user.avatar }}
+              <!-- 摘要内容（显示前2-3行） -->
+              <p class="doc-desc doc-preview" v-if="doc.description || doc.content">
+                {{ getDocPreview(doc) }}
+              </p>
+              
+              <!-- 作者和元信息 -->
+              <div class="doc-author-meta">
+                <div class="doc-author-info">
+                  <div class="doc-author-avatar" :style="getAuthorAvatarStyle(doc.owner)">
+                    {{ getOwnerInitial(doc.owner) }}
                   </div>
-                          </template>
-                          <span v-if="doc.collaborators && doc.collaborators.length > 3" class="doc-collaborator-more">
-                    +{{ doc.collaborators.length - 3 }}
-                  </span>
+                  <div class="doc-author-details">
+                    <span class="doc-author-name">{{ doc.owner?.name || '未知' }}</span>
+                    <span class="doc-time-badge">
+                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                        <circle cx="6" cy="6" r="5" stroke="currentColor" stroke-width="1" fill="none"/>
+                        <path d="M6 3v3l2 1" stroke="currentColor" stroke-width="1" stroke-linecap="round"/>
+                      </svg>
+                      {{ getRelativeTime(doc.updatedAt || doc.createdAt) }}
+                    </span>
+                  </div>
                 </div>
-                <div class="doc-share-badge" v-if="doc.shareLink">
-                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                    <path d="M6 1L1 3v4l5 2 5-2V3L6 1z" stroke="currentColor" stroke-width="1.5" fill="none"/>
-                  </svg>
-                  已分享
+                
+                <!-- 协作者和分享信息 -->
+                <div class="doc-collaborators"
+                     v-if="(doc.collaborators && doc.collaborators.length > 0) || doc.shareLink">
+                  <div class="doc-collaborators-list" v-if="doc.collaborators && doc.collaborators.length > 0">
+                    <template v-for="(collab, idx) in (doc.collaborators || []).slice(0, 3)" :key="collab.user.id">
+                      <div
+                        class="doc-collaborator-avatar"
+                        :title="collab.user.name"
+                        :style="{ zIndex: 10 - idx, marginLeft: idx > 0 ? '-8px' : '0' }"
+                      >
+                        {{ collab.user.avatar }}
+                      </div>
+                    </template>
+                    <span v-if="doc.collaborators && doc.collaborators.length > 3" class="doc-collaborator-more">
+                      +{{ doc.collaborators.length - 3 }}
+                    </span>
+                  </div>
+                  <div class="doc-share-badge" v-if="doc.shareLink">
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                      <path d="M6 1L1 3v4l5 2 5-2V3L6 1z" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                    </svg>
+                    已分享
+                  </div>
                 </div>
               </div>
               
-              <div class="doc-meta">
-                <span class="doc-time">{{ formatDate(doc.updatedAt || doc.createdAt) }}</span>
-                <span class="doc-size" v-if="doc.size">{{ formatSize(doc.size) }}</span>
+              <!-- 标签（彩色化） -->
+              <div class="doc-tags" v-if="doc.tags && doc.tags.length">
+                <span 
+                  v-for="(tag, idx) in doc.tags" 
+                  :key="tag" 
+                  class="doc-tag"
+                  :class="`tag-color-${(idx % 6) + 1}`"
+                >
+                  #{{ tag }}
+                </span>
+              </div>
+              
+              <!-- 底部元信息 -->
+              <div class="doc-meta-footer">
+                <span class="doc-size-badge" v-if="doc.size">
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                    <rect x="2" y="2" width="8" height="8" rx="1" stroke="currentColor" stroke-width="1" fill="none"/>
+                  </svg>
+                  {{ formatSize(doc.size) }}
+                </span>
                 <span class="doc-likes" v-if="doc.likeCount > 0">
                   <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                     <path d="M6 1l1 1 3 .5-2 2 .5 3L6 8 3 7.5l.5-3-2-2 3-.5L6 1z" 
@@ -689,25 +737,6 @@
                   {{ doc.likeCount }}
                 </span>
               </div>
-              </template>
-            </div>
-            <div class="doc-card-footer" :class="{ 'folder-card-footer': doc.isFolder }">
-              <template v-if="doc.isFolder">
-                <button class="folder-link" @click.stop="handleFolderCardClick(doc)">
-                  进入文件夹
-                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                    <path d="M4 3l4 3-4 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
-                </button>
-              </template>
-              <template v-else>
-                <div class="doc-meta">
-                  <span>{{ formatDate(doc.updatedAt || doc.createdAt) }}</span>
-                  <span v-if="doc.size">{{ formatSize(doc.size) }}</span>
-                </div>
-                <div class="doc-tags" v-if="doc.tags && doc.tags.length">
-                  <span v-for="tag in doc.tags" :key="tag">{{ tag }}</span>
-                </div>
               </template>
             </div>
             </div>
@@ -2077,6 +2106,100 @@ const formatSize = formatSizeBytes
 const getOwnerInitial = (owner) => {
   if (!owner || !owner.name) return '?'
   return owner.name.charAt(0).toUpperCase()
+}
+
+// 获取文档类型样式类
+const getDocTypeClass = (type) => {
+  const typeMap = {
+    'PDF': 'type-pdf',
+    'DOC': 'type-doc',
+    'DOCX': 'type-doc',
+    '表格': 'type-sheet',
+    '演示文稿': 'type-slide',
+    '思维导图': 'type-mindmap',
+    '白板': 'type-board',
+    '文档': 'type-doc',
+    'markdown': 'type-markdown',
+    'text': 'type-text'
+  }
+  return typeMap[type] || 'type-default'
+}
+
+// 获取文档类型标签
+const getDocTypeLabel = (type) => {
+  if (!type) return '文档'
+  return type
+}
+
+// 获取文档封面色块样式
+const getDocCoverStyle = (doc) => {
+  // 根据文档类型或ID生成不同的渐变色
+  const colors = [
+    'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+    'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+    'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+    'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+    'linear-gradient(135deg, #30cfd0 0%, #330867 100%)',
+    'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
+    'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)'
+  ]
+  
+  // 根据文档ID选择颜色，确保同一文档颜色一致
+  const hash = doc.id ? doc.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) : 0
+  const colorIndex = hash % colors.length
+  
+  return {
+    background: colors[colorIndex]
+  }
+}
+
+// 获取作者头像样式
+const getAuthorAvatarStyle = (owner) => {
+  if (!owner) return {}
+  
+  const colors = [
+    '#165dff', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#06b6d4'
+  ]
+  const hash = owner.id ? owner.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) : 0
+  const colorIndex = hash % colors.length
+  
+  return {
+    background: `linear-gradient(135deg, ${colors[colorIndex]} 0%, ${colors[(colorIndex + 1) % colors.length]} 100%)`
+  }
+}
+
+// 获取文档预览（摘要前2-3行）
+const getDocPreview = (doc) => {
+  const text = doc.description || doc.content || ''
+  // 移除HTML标签（如果有）
+  const plainText = text.replace(/<[^>]*>/g, '').trim()
+  if (!plainText) return ''
+  
+  // 限制长度，显示前2-3行（约100-150字符）
+  const maxLength = 120
+  if (plainText.length <= maxLength) return plainText
+  return plainText.substring(0, maxLength) + '...'
+}
+
+// 获取相对时间（如"3天前"）
+const getRelativeTime = (timestamp) => {
+  if (!timestamp) return '未知'
+  const now = Date.now()
+  const diff = now - timestamp
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+  const hours = Math.floor(diff / (1000 * 60 * 60))
+  const minutes = Math.floor(diff / (1000 * 60))
+  
+  if (days > 0) {
+    return `${days}天前`
+  } else if (hours > 0) {
+    return `${hours}小时前`
+  } else if (minutes > 0) {
+    return `${minutes}分钟前`
+  } else {
+    return '刚刚'
+  }
 }
 
 // 点击外部关闭菜单
@@ -3598,34 +3721,49 @@ onUnmounted(() => {
 .grid-container {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 20px;
+  gap: 24px;
+  align-items: start; /* 支持可变高度卡片 */
 }
 
 .doc-card {
   background: rgba(255, 255, 255, 0.95);
   border: 1px solid rgba(0, 0, 0, 0.06);
   border-radius: 20px;
-  padding: 24px;
+  padding: 0;
   cursor: pointer;
   opacity: 1;
-  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-  opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+  opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+  box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   transform: translateZ(0);
   position: relative;
   overflow: hidden;
   box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+  display: flex;
+  flex-direction: column;
+  min-height: 280px;
+  /* 纸张感：上边缘留白 */
+  padding-top: 8px;
+  /* 可变高度，支持瀑布流 */
+  align-self: start;
 }
 
+/* 纸张折角效果 */
 .doc-card::before {
   content: '';
   position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(22, 93, 255, 0.08));
-  opacity: 0;
-  transition: opacity var(--motion-duration-fast) var(--motion-ease-soft);
+  top: 0;
+  right: 0;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 0 24px 24px 0;
+  border-color: transparent rgba(0, 0, 0, 0.03) transparent transparent;
+  z-index: 1;
   pointer-events: none;
 }
 
+/* 背景光效 */
 .doc-card::after {
   content: '';
   position: absolute;
@@ -3635,31 +3773,40 @@ onUnmounted(() => {
   opacity: 0;
   transition: opacity var(--motion-duration-fast) var(--motion-ease-soft);
   pointer-events: none;
+  background: radial-gradient(circle at 50% 0%, rgba(22, 93, 255, 0.1) 0%, transparent 70%);
 }
 
 .doc-card.is-folder {
-  background: rgba(99, 102, 241, 0.08);
-  border: 1px solid rgba(99, 102, 241, 0.35);
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.08) 100%);
+  border: 1px solid rgba(99, 102, 241, 0.25);
   box-shadow:
-    0 18px 36px rgba(99, 102, 241, 0.14),
-    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    0 8px 20px rgba(99, 102, 241, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
 .doc-card.is-folder::before {
-  background: linear-gradient(135deg, rgba(129, 140, 248, 0.5), rgba(59, 130, 246, 0.2));
-  opacity: 0.25;
+  border-color: transparent rgba(99, 102, 241, 0.15) transparent transparent;
 }
 
 .doc-card.is-folder::after {
-  border-color: rgba(99, 102, 241, 0.45);
-  opacity: 1;
+  border-color: rgba(99, 102, 241, 0.3);
+  opacity: 0.6;
+  background: radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+}
+
+.doc-card.is-folder:hover {
+  box-shadow:
+    0 16px 40px rgba(99, 102, 241, 0.18),
+    0 0 0 1px rgba(99, 102, 241, 0.2);
 }
 
 .doc-card:hover {
-  transform: translateY(-4px) scale(1.02);
+  transform: translateY(-6px) scale(1.02);
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.12),
+              0 0 0 1px rgba(22, 93, 255, 0.1);
 }
 
-.doc-card:hover::before {
+.doc-card:hover::after {
   opacity: 1;
 }
 
@@ -3721,21 +3868,28 @@ onUnmounted(() => {
   align-items: center;
   justify-content: space-between;
   margin-bottom: 16px;
+  padding: 0 24px;
+  padding-top: 16px;
+  position: relative;
+  z-index: 3;
 }
 
 .doc-icon {
   color: #165dff;
   transform: translateZ(0);
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  /* 移除 will-change，避免 hover 时触发重新渲染 */
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+              filter 0.3s ease;
+  filter: drop-shadow(0 2px 4px rgba(22, 93, 255, 0.2));
 }
 
 .doc-icon.is-folder {
   color: #6366f1;
+  filter: drop-shadow(0 2px 4px rgba(99, 102, 241, 0.2));
 }
 
 .doc-card:hover .doc-icon {
-  transform: scale(1.1) rotate(4deg) translateZ(0);
+  transform: scale(1.15) rotate(6deg) translateZ(0);
+  filter: drop-shadow(0 4px 8px rgba(22, 93, 255, 0.3));
 }
 
 .doc-actions {
@@ -3753,50 +3907,137 @@ onUnmounted(() => {
   transform: translateX(0) translateZ(0);
 }
 
+/* 改进操作按钮样式 */
 .doc-action-btn {
   width: 28px;
   height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: none;
-  background: rgba(0, 0, 0, 0.04);
-  border-radius: 6px;
-  cursor: pointer;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(0, 0, 0, 0.05);
   color: #6b7280;
-  /* 移除 will-change，避免 hover 时触发重新渲染 */
-  transform: translateZ(0);
-  /* 优化：只使用 transform，避免 background 和 color 变化导致重绘 */
-  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.2s ease;
 }
 
 .doc-action-btn:hover {
-  transform: translateY(-2px) scale(1.05) translateZ(0);
-}
-
-.doc-action-btn:active {
-  transform: translateY(0) scale(0.95) translateZ(0);
+  background: rgba(22, 93, 255, 0.1);
+  color: #165dff;
+  transform: scale(1.1);
+  box-shadow: 0 2px 8px rgba(22, 93, 255, 0.2);
 }
 
 .doc-action-btn.active {
-  background: rgba(22, 93, 255, 0.15);
-  color: #165dff;
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  color: white;
+  border-color: transparent;
   animation: pulseActive 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 @keyframes pulseActive {
   0%, 100% {
-    transform: scale(1) translateZ(0);
+    transform: scale(1);
   }
   50% {
-    transform: scale(1.15) translateZ(0);
+    transform: scale(1.15);
   }
 }
 
+/* 文档类型条（纸张感顶部条） */
+.doc-type-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  z-index: 2;
+  border-radius: 20px 20px 0 0;
+}
+
+.doc-type-bar.type-pdf {
+  background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%);
+}
+
+.doc-type-bar.type-doc {
+  background: linear-gradient(90deg, #2563eb 0%, #1d4ed8 100%);
+}
+
+.doc-type-bar.type-sheet {
+  background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+}
+
+.doc-type-bar.type-slide {
+  background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%);
+}
+
+.doc-type-bar.type-mindmap {
+  background: linear-gradient(90deg, #8b5cf6 0%, #7c3aed 100%);
+}
+
+.doc-type-bar.type-board {
+  background: linear-gradient(90deg, #06b6d4 0%, #0891b2 100%);
+}
+
+.doc-type-bar.type-markdown {
+  background: linear-gradient(90deg, #6366f1 0%, #4f46e5 100%);
+}
+
+.doc-type-bar.type-text {
+  background: linear-gradient(90deg, #64748b 0%, #475569 100%);
+}
+
+.doc-type-bar.type-default {
+  background: linear-gradient(90deg, #94a3b8 0%, #64748b 100%);
+}
+
+.doc-type-label {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  font-size: 10px;
+  font-weight: 700;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(4px);
+}
+
+/* 文档封面色块（左侧） */
+.doc-cover {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  z-index: 1;
+  border-radius: 20px 0 0 20px;
+  box-shadow: inset -2px 0 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 卡片内容区域 */
 .doc-card-body {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  padding: 20px 24px 20px 30px; /* 左侧留出封面空间 */
+  flex: 1;
+  position: relative;
+  z-index: 2;
+}
+
+.doc-card-body.has-cover {
+  padding-left: 30px;
+}
+
+/* 文件夹卡片内容区域 */
+.doc-card-body.folder-card-body {
+  padding: 20px 24px;
+  padding-top: 16px;
 }
 
 .folder-card-body {
@@ -3888,18 +4129,20 @@ onUnmounted(() => {
 }
 
 .doc-title {
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 17px;
+  font-weight: 700;
   color: #111827;
-  margin: 0;
+  margin: 0 0 8px 0;
   line-height: 1.4;
   transform: translateZ(0);
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  /* 移除 will-change，避免 hover 时触发重新渲染 */
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+              color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  letter-spacing: -0.3px;
 }
 
 .doc-card:hover .doc-title {
   transform: translateY(-2px) translateZ(0);
+  color: #165dff;
 }
 
 .doc-desc {
@@ -3911,6 +4154,69 @@ onUnmounted(() => {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+/* 文档预览（摘要） */
+.doc-preview {
+  font-size: 13px;
+  color: #64748b;
+  line-height: 1.6;
+  margin: 8px 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 60px;
+}
+
+/* 作者和元信息区域 */
+.doc-author-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.doc-author-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.doc-author-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  flex-shrink: 0;
+}
+
+.doc-author-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.doc-author-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.doc-time-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: #9ca3af;
 }
 
 .doc-collaborators {
@@ -3984,6 +4290,27 @@ onUnmounted(() => {
   }
 }
 
+/* 底部元信息 */
+.doc-meta-footer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.doc-size-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: #9ca3af;
+  padding: 4px 8px;
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 6px;
+}
+
 .doc-meta {
   display: flex;
   align-items: center;
@@ -3997,6 +4324,67 @@ onUnmounted(() => {
   align-items: center;
   gap: 4px;
   color: #f59e0b;
+}
+
+/* 彩色标签 */
+.doc-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.doc-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: default;
+}
+
+/* 标签颜色方案 */
+.doc-tag.tag-color-1 {
+  background: linear-gradient(135deg, rgba(22, 93, 255, 0.15) 0%, rgba(22, 93, 255, 0.25) 100%);
+  color: #165dff;
+  border: 1px solid rgba(22, 93, 255, 0.2);
+}
+
+.doc-tag.tag-color-2 {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(139, 92, 246, 0.25) 100%);
+  color: #8b5cf6;
+  border: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+.doc-tag.tag-color-3 {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(16, 185, 129, 0.25) 100%);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.doc-tag.tag-color-4 {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(245, 158, 11, 0.25) 100%);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.doc-tag.tag-color-5 {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(239, 68, 68, 0.25) 100%);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.doc-tag.tag-color-6 {
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(6, 182, 212, 0.25) 100%);
+  color: #06b6d4;
+  border: 1px solid rgba(6, 182, 212, 0.2);
+}
+
+.doc-card:hover .doc-tag {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 /* 列表视图 */
